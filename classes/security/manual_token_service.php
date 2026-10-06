@@ -29,8 +29,6 @@ use local_mcp\event\manual_token_created;
 use local_mcp\event\manual_token_revoked;
 use local_mcp\exception\api_exception;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class manual_token_service.
  */

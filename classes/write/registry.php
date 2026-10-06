@@ -35,8 +35,6 @@ use local_mcp\write\tool\unenrol_user;
 use local_mcp\write\tool\update_course;
 use local_mcp\write\tool\update_user;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class registry.
  */

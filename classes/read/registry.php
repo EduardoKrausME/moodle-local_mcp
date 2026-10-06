@@ -34,8 +34,6 @@ use local_mcp\read\tool\get_user_courses;
 use local_mcp\read\tool\search_courses;
 use local_mcp\read\tool\search_users;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class registry.
  */

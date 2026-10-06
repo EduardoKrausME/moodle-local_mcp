@@ -28,8 +28,6 @@ use local_mcp\exception\api_exception;
 use moodle_url;
 use Throwable;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class http.
  */

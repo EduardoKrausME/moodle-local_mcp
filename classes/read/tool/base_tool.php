@@ -28,8 +28,6 @@ use context_course;
 use context_user;
 use local_mcp\read\tool_interface;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class base_tool.
  */

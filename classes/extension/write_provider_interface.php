@@ -26,8 +26,6 @@ namespace local_mcp\extension;
 
 use local_mcp\write\tool_interface;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Interface write_provider_interface.
  */

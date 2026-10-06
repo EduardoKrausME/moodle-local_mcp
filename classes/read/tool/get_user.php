@@ -27,8 +27,6 @@ namespace local_mcp\read\tool;
 use context;
 use local_mcp\security\authenticated_identity;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class get_user.
  */

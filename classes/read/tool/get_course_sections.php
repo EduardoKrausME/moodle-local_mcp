@@ -23,7 +23,6 @@
  */
 
 namespace local_mcp\read\tool;
-defined('MOODLE_INTERNAL') || die;
 
 /**
  * Class get_course_sections.

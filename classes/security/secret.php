@@ -24,8 +24,6 @@
 
 namespace local_mcp\security;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class secret.
  */

@@ -26,8 +26,6 @@ namespace local_mcp\extension;
 
 use local_mcp\read\tool_interface;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Interface read_provider_interface.
  */

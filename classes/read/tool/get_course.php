@@ -28,8 +28,6 @@ use context;
 use context_course;
 use local_mcp\security\authenticated_identity;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class get_course.
  */

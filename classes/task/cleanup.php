@@ -26,8 +26,6 @@ namespace local_mcp\task;
 
 use core\task\scheduled_task;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class cleanup.
  */

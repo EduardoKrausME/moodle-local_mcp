@@ -26,8 +26,6 @@ namespace local_mcp\event;
 
 use core\event\base;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class connection_revoked.
  */

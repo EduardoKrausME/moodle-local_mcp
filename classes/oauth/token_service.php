@@ -29,8 +29,6 @@ use local_mcp\event\connection_authorized;
 use local_mcp\exception\api_exception;
 use local_mcp\security\secret;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class token_service.
  */

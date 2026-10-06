@@ -27,8 +27,6 @@ namespace local_mcp\oauth;
 use context_system;
 use local_mcp\event\connection_revoked;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class connection_service.
  */

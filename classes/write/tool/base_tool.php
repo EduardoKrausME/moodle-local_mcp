@@ -27,8 +27,6 @@ namespace local_mcp\write\tool;
 use local_mcp\security\authenticated_identity;
 use local_mcp\write\tool_interface;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class base_tool.
  */

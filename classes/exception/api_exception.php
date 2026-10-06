@@ -26,8 +26,6 @@ namespace local_mcp\exception;
 
 use moodle_exception;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class api_exception.
  */

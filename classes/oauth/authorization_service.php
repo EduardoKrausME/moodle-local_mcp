@@ -29,8 +29,6 @@ use local_mcp\security\scope;
 use local_mcp\security\secret;
 use stdClass;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class authorization_service.
  */

@@ -26,8 +26,6 @@ namespace local_mcp\extension;
 
 use coding_exception;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class manager.
  */

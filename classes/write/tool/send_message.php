@@ -29,8 +29,6 @@ use context_user;
 use core\message\message;
 use local_mcp\security\authenticated_identity;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class send_message.
  */

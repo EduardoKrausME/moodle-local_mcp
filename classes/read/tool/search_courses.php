@@ -29,8 +29,6 @@ use context_course;
 use context_system;
 use local_mcp\security\authenticated_identity;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class search_courses.
  */

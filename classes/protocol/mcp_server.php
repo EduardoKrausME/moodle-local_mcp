@@ -38,8 +38,6 @@ use local_mcp\security\token_resolver;
 use local_mcp\write\registry;
 use Throwable;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class mcp_server.
  */

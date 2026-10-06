@@ -27,8 +27,6 @@ namespace local_mcp\oauth;
 use local_mcp\exception\api_exception;
 use stdClass;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class client_service.
  */

@@ -27,8 +27,6 @@ namespace local_mcp\security;
 use cache;
 use local_mcp\exception\api_exception;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class rate_limiter.
  */
