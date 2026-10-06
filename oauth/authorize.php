@@ -1,5 +1,5 @@
 <?php
-require_once(__DIR__ . '/../../../config.php');
+require_once(__DIR__ . '/../../../config.php');\n\n\\local_mcp\\security\\transport::require_secure();
 
 $clientid = required_param('client_id', PARAM_RAW_TRIMMED);
 $redirecturi = required_param('redirect_uri', PARAM_URL);
