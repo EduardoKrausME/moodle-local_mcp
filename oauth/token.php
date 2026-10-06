@@ -23,7 +23,7 @@
  */
 
 define('NO_DEBUG_DISPLAY', true);
-require_once(__DIR__ . '/../../../config.php');\n\n\\local_mcp\\security\\transport::require_secure();
+require_once(__DIR__ . '/../../../config.php');\n\n\local_mcp\\security\\transport::require_secure();
 
 try {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
