@@ -146,7 +146,7 @@ final class mcp_server {
         if ($this->side === 'read') {
             $started = microtime(true);
             $result = $tool->execute($arguments, $identity);
-            \local_mcp\\audit\\logger::record('tool_called', $identity, $name, 'read', $context, [],
+            \local_mcp\audit\logger::record('tool_called', $identity, $name, 'read', $context, [],
                 false, false, false, 'ok', (int)round((microtime(true) - $started) * 1000));
             return $result;
         }
@@ -157,7 +157,7 @@ final class mcp_server {
                 throw new \local_mcp\exception\api_exception('dry_run_not_supported', 400);
             }
             $preview = $tool->preview($arguments, $identity);
-            \local_mcp\\audit\\logger::record('tool_called', $identity, $name, 'write', $context, [],
+            \local_mcp\audit\logger::record('tool_called', $identity, $name, 'write', $context, [],
                 $tool->is_destructive(), true, false, 'preview');
             return ['dry_run' => true, 'preview' => $preview];
         }
@@ -177,12 +177,12 @@ final class mcp_server {
         }
         $started = microtime(true);
         $result = $tool->execute($arguments, $identity);
-        \local_mcp\\audit\\logger::record('tool_called', $identity, $name, 'write', $context, [],
+        \local_mcp\audit\logger::record('tool_called', $identity, $name, 'write', $context, [],
             $tool->is_destructive(), false, ($tool->requires_confirmation() || $tool->is_destructive()),
             'ok', (int)round((microtime(true) - $started) * 1000));
         $eventclass = $tool->is_destructive()
-            ? \local_mcp\\event\\destructive_operation_executed::class
-            : \local_mcp\\event\\write_operation_executed::class;
+            ? \local_mcp\event\destructive_operation_executed::class
+            : \local_mcp\event\write_operation_executed::class;
         $eventclass::create([
             'context' => $context,
             'relateduserid' => $identity->userid,
