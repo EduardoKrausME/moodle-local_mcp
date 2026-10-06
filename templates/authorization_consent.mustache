@@ -1,0 +1,28 @@
+<div class="local-mcp-consent">
+    <h2>{{#str}}authorizeheading, local_mcp, {{clientname}}{{/str}}</h2>
+    <p>{{#str}}authorizeintro, local_mcp, {{clientname}}{{/str}}</p>
+
+    <dl>
+        <dt>Application</dt><dd>{{clientname}}</dd>
+        <dt>Origin</dt><dd>{{origin}}</dd>
+        <dt>Date</dt><dd>{{date}}</dd>
+    </dl>
+
+    {{#read}}
+        <h3>{{#str}}readpermissions, local_mcp{{/str}}</h3>
+        <ul><li>Moodle MCP READ</li></ul>
+    {{/read}}
+
+    {{#write}}
+        <h3>{{#str}}writepermissions, local_mcp{{/str}}</h3>
+        <ul><li>Moodle MCP WRITE</li></ul>
+    {{/write}}
+
+    <p>This application can only perform operations also allowed by the connected Moodle user's capabilities.</p>
+
+    <form method="post" action="{{action}}">
+        <input type="hidden" name="sesskey" value="{{sesskey}}">
+        <button class="btn btn-secondary" type="submit" name="decision" value="cancel">{{#str}}cancel, local_mcp{{/str}}</button>
+        <button class="btn btn-primary" type="submit" name="decision" value="authorize">{{#str}}authorize, local_mcp{{/str}}</button>
+    </form>
+</div>
