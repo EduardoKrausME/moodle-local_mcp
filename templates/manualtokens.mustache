@@ -1,0 +1,12 @@
+{{#secret}}<div class="alert alert-warning"><strong>Copy this token now. It will not be shown again.</strong><pre>{{secret}}</pre></div>{{/secret}}
+<form method="post" class="mb-4">
+<input type="hidden" name="sesskey" value="{{sesskey}}">
+<div class="mb-2"><label>Name <input class="form-control" name="name" required></label></div>
+<div class="mb-2"><label>User ID <input class="form-control" type="number" name="userid" min="1" required></label></div>
+<div class="mb-2"><label><input type="checkbox" name="read" value="1" checked> MCP READ</label> <label class="ml-3"><input type="checkbox" name="write" value="1"> MCP WRITE</label></div>
+<div class="mb-2"><label>Expiration (days) <input class="form-control" type="number" name="days" value="90" min="1"></label></div>
+<button class="btn btn-primary" type="submit">Create manual token</button>
+</form>
+<table class="generaltable"><thead><tr><th>Name</th><th>User</th><th>Prefix</th><th>READ</th><th>WRITE</th><th>Expires</th><th></th></tr></thead><tbody>
+{{#rows}}<tr><td>{{name}}</td><td>{{user}}</td><td><code>{{prefix}}</code></td><td>{{read}}</td><td>{{write}}</td><td>{{expires}}</td><td>{{#enabled}}<form method="post"><input type="hidden" name="sesskey" value="{{sesskey}}"><input type="hidden" name="revoke" value="{{id}}"><button class="btn btn-danger btn-sm">Revoke</button></form>{{/enabled}}</td></tr>{{/rows}}
+</tbody></table>
