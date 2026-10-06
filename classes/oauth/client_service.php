@@ -72,6 +72,13 @@ final class client_service {
             if (!filter_var($uri, FILTER_VALIDATE_URL)) {
                 throw new \local_mcp\exception\api_exception('invalid_redirect_uri', 400);
             }
+            $parts = parse_url($uri);
+            $scheme = strtolower((string)($parts['scheme'] ?? ''));
+            $host = strtolower((string)($parts['host'] ?? ''));
+            $loopback = in_array($host, ['localhost', '127.0.0.1', '::1'], true);
+            if ($scheme !== 'https' && !($loopback && $scheme === 'http')) {
+                throw new \local_mcp\exception\api_exception('invalid_redirect_uri', 400);
+            }
         }
         $clientid = 'mcp_client_' . bin2hex(random_bytes(16));
         $record = (object) [
