@@ -69,10 +69,16 @@ final class token_service {
             $DB->update_record('local_mcp_connection', $rec);
             return $rec->id;
         }
-        return $DB->insert_record('local_mcp_connection', (object) [
+        $id = $DB->insert_record('local_mcp_connection', (object) [
             'userid' => $userid, 'clientid' => $clientid, 'scopes' => $scopes, 'enabled' => 1,
             'timecreated' => time(), 'lastused' => null, 'lastip' => null, 'revokedat' => null,
         ]);
+        \\local_mcp\\event\\connection_authorized::create([
+            'context' => \\context_system::instance(),
+            'objectid' => (int)$id,
+            'relateduserid' => $userid,
+        ])->trigger();
+        return (int)$id;
     }
 
     public static function revoke_family(string $family): void {
