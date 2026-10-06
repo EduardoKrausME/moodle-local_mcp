@@ -24,40 +24,53 @@
 
 namespace local_mcp\write\tool;
 
+use local_mcp\security\authenticated_identity;
+use local_mcp\write\tool_interface;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
  * Class base_tool.
  */
-abstract class base_tool implements \local_mcp\write\tool_interface {
+abstract class base_tool implements tool_interface {
     /**
      * Method supports_dry_run.
      *
      * @return bool Return value.
      */
-    public function supports_dry_run(): bool { return false; }
+    public function supports_dry_run(): bool {
+        return false;
+    }
+
     /**
      * Method requires_confirmation.
      *
      * @return bool Return value.
      */
-    public function requires_confirmation(): bool { return true; }
+    public function requires_confirmation(): bool {
+        return true;
+    }
+
     /**
      * Method is_destructive.
      *
      * @return bool Return value.
      */
-    public function is_destructive(): bool { return false; }
+    public function is_destructive(): bool {
+        return false;
+    }
+
     /**
      * Method preview.
      *
      * @param array $arguments Parameter arguments.
-     * @param \local_mcp\security\authenticated_identity $identity Parameter identity.
+     * @param authenticated_identity $identity Parameter identity.
      * @return array Return value.
      */
-    public function preview(array $arguments, \local_mcp\security\authenticated_identity $identity): array {
-        return ['tool'=>$this->get_name(),'arguments'=>$arguments];
+    public function preview(array $arguments, authenticated_identity $identity): array {
+        return ['tool' => $this->get_name(), 'arguments' => $arguments];
     }
+
     /**
      * Method object_schema.
      *
@@ -65,7 +78,7 @@ abstract class base_tool implements \local_mcp\write\tool_interface {
      * @param array $required Parameter required.
      * @return array Return value.
      */
-    protected function object_schema(array $properties, array $required=[]): array {
-        return ['type'=>'object','properties'=>$properties,'required'=>$required,'additionalProperties'=>false];
+    protected function object_schema(array $properties, array $required = []): array {
+        return ['type' => 'object', 'properties' => $properties, 'required' => $required, 'additionalProperties' => false];
     }
 }

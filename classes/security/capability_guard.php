@@ -24,6 +24,9 @@
 
 namespace local_mcp\security;
 
+use context;
+use local_mcp\exception\api_exception;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
@@ -34,13 +37,13 @@ final class capability_guard {
      * Method check.
      *
      * @param string $capability Parameter capability.
-     * @param \context $context Parameter context.
+     * @param context $context Parameter context.
      * @param int $userid Parameter userid.
      * @return void Return value.
      */
-    public static function check(string $capability, \context $context, int $userid): void {
+    public static function check(string $capability, context $context, int $userid): void {
         if (!has_capability($capability, $context, $userid)) {
-            throw new \local_mcp\exception\api_exception('permission_denied', 403);
+            throw new api_exception('permission_denied', 403);
         }
     }
 }

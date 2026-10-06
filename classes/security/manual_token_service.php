@@ -24,6 +24,11 @@
 
 namespace local_mcp\security;
 
+use context_system;
+use local_mcp\event\manual_token_created;
+use local_mcp\event\manual_token_revoked;
+use local_mcp\exception\api_exception;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
@@ -43,7 +48,7 @@ final class manual_token_service {
     public static function create(string $name, int $userid, bool $read, bool $write, ?int $expires): array {
         global $DB;
         if (!$read && !$write) {
-            throw new \local_mcp\exception\api_exception('invalid_scope', 400);
+            throw new api_exception('invalid_scope', 400);
         }
         $token = secret::generate('mcp_', 40);
         $now = time();
@@ -61,8 +66,8 @@ final class manual_token_service {
             'lastused' => null,
             'lastip' => null,
         ]);
-        \local_mcp\event\manual_token_created::create([
-            'context' => \context_system::instance(),
+        manual_token_created::create([
+            'context' => context_system::instance(),
             'objectid' => (int)$id,
             'relateduserid' => $userid,
         ])->trigger();
@@ -83,8 +88,8 @@ final class manual_token_service {
             'enabled' => 0,
             'timemodified' => time(),
         ]);
-        \local_mcp\event\manual_token_revoked::create([
-            'context' => \context_system::instance(),
+        manual_token_revoked::create([
+            'context' => context_system::instance(),
             'objectid' => $id,
             'relateduserid' => (int)$record->userid,
         ])->trigger();

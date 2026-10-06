@@ -24,6 +24,9 @@
 
 namespace local_mcp\read\tool;
 
+use context;
+use local_mcp\security\authenticated_identity;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
@@ -35,50 +38,70 @@ final class get_course_participants extends base_tool {
      *
      * @return string Return value.
      */
-    public function get_name(): string { return 'get_course_participants'; }
+    public function get_name(): string {
+        return 'get_course_participants';
+    }
+
     /**
      * Method get_title.
      *
      * @return string Return value.
      */
-    public function get_title(): string { return 'Get course participants'; }
+    public function get_title(): string {
+        return 'Get course participants';
+    }
+
     /**
      * Method get_description.
      *
      * @return string Return value.
      */
-    public function get_description(): string { return 'Return enrolled users in a course.'; }
+    public function get_description(): string {
+        return 'Return enrolled users in a course.';
+    }
+
     /**
      * Method get_required_capability.
      *
      * @return string Return value.
      */
-    public function get_required_capability(): string { return 'moodle/course:viewparticipants'; }
+    public function get_required_capability(): string {
+        return 'moodle/course:viewparticipants';
+    }
+
     /**
      * Method get_input_schema.
      *
      * @return array Return value.
      */
-    public function get_input_schema(): array { return $this->object_schema(['courseid'=>['type'=>'integer','minimum'=>1]], ['courseid']); }
+    public function get_input_schema(): array {
+        return $this->object_schema(['courseid' => ['type' => 'integer', 'minimum' => 1]], ['courseid']);
+    }
+
     /**
      * Method resolve_context.
      *
      * @param array $arguments Parameter arguments.
-     * @return \context Return value.
+     * @return context Return value.
      */
-    public function resolve_context(array $arguments): \context { return $this->course_context((int)$arguments['courseid']); }
+    public function resolve_context(array $arguments): context {
+        return $this->course_context((int)$arguments['courseid']);
+    }
+
     /**
      * Method execute.
      *
      * @param array $arguments Parameter arguments.
-     * @param \local_mcp\security\authenticated_identity $identity Parameter identity.
+     * @param authenticated_identity $identity Parameter identity.
      * @return array Return value.
      */
-    public function execute(array $arguments, \local_mcp\security\authenticated_identity $identity): array {
+    public function execute(array $arguments, authenticated_identity $identity): array {
         $ctx = $this->course_context((int)$arguments['courseid']);
         $users = get_enrolled_users($ctx, '', 0, 'u.id,u.firstname,u.lastname,u.email', 'u.lastname,u.firstname', 0, 200);
         $out = [];
-        foreach ($users as $user) { $out[] = ['id'=>(int)$user->id,'fullname'=>fullname($user),'email'=>$user->email]; }
-        return ['participants'=>$out];
+        foreach ($users as $user) {
+            $out[] = ['id' => (int)$user->id, 'fullname' => fullname($user), 'email' => $user->email];
+        }
+        return ['participants' => $out];
     }
 }

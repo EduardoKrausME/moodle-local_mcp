@@ -23,7 +23,12 @@
  */
 
 namespace local_mcp\read\tool;
+use context;
+use context_course;
+use local_mcp\security\authenticated_identity;
+
 defined('MOODLE_INTERNAL') || die;
+
 /**
  * Class get_grades.
  */
@@ -33,57 +38,75 @@ final class get_grades extends base_tool {
      *
      * @return string Return value.
      */
-    public function get_name(): string { return 'get_grades'; }
+    public function get_name(): string {
+        return 'get_grades';
+    }
+
     /**
      * Method get_title.
      *
      * @return string Return value.
      */
-    public function get_title(): string { return 'Get grades'; }
+    public function get_title(): string {
+        return 'Get grades';
+    }
+
     /**
      * Method get_description.
      *
      * @return string Return value.
      */
-    public function get_description(): string { return 'Return course grades for one user.'; }
+    public function get_description(): string {
+        return 'Return course grades for one user.';
+    }
+
     /**
      * Method get_required_capability.
      *
      * @return string Return value.
      */
-    public function get_required_capability(): string { return 'moodle/grade:viewall'; }
+    public function get_required_capability(): string {
+        return 'moodle/grade:viewall';
+    }
+
     /**
      * Method get_input_schema.
      *
      * @return array Return value.
      */
-    public function get_input_schema(): array { return $this->object_schema([
-        'courseid'=>['type'=>'integer','minimum'=>1],'userid'=>['type'=>'integer','minimum'=>1]
-    ],['courseid','userid']); }
+    public function get_input_schema(): array {
+        return $this->object_schema([
+            'courseid' => ['type' => 'integer', 'minimum' => 1], 'userid' => ['type' => 'integer', 'minimum' => 1]
+        ], ['courseid', 'userid']);
+    }
+
     /**
      * Method resolve_context.
      *
      * @param array $arguments Parameter arguments.
-     * @return \context Return value.
+     * @return context Return value.
      */
-    public function resolve_context(array $arguments): \context { return \context_course::instance((int)$arguments['courseid'],MUST_EXIST); }
+    public function resolve_context(array $arguments): context {
+        return context_course::instance((int)$arguments['courseid'], MUST_EXIST);
+    }
+
     /**
      * Method execute.
      *
      * @param array $arguments Parameter arguments.
-     * @param \local_mcp\security\authenticated_identity $identity Parameter identity.
+     * @param authenticated_identity $identity Parameter identity.
      * @return array Return value.
      */
-    public function execute(array $arguments, \local_mcp\security\authenticated_identity $identity): array {
+    public function execute(array $arguments, authenticated_identity $identity): array {
         global $CFG;
         require_once($CFG->libdir . '/gradelib.php');
-        $grades=grade_get_grades((int)$arguments['courseid'],'','',0,(int)$arguments['userid']);
-        $out=[];
-        foreach($grades->items ?? [] as $item){
-            $grade=$item->grades[(int)$arguments['userid']] ?? null;
-            $out[]=['name'=>$item->name,'grademin'=>$item->grademin,'grademax'=>$item->grademax,
-                'grade'=>$grade?->grade,'formatted'=>$grade?->str_grade];
+        $grades = grade_get_grades((int)$arguments['courseid'], '', '', 0, (int)$arguments['userid']);
+        $out = [];
+        foreach ($grades->items ?? [] as $item) {
+            $grade = $item->grades[(int)$arguments['userid']] ?? null;
+            $out[] = ['name' => $item->name, 'grademin' => $item->grademin, 'grademax' => $item->grademax,
+                'grade' => $grade?->grade, 'formatted' => $grade?->str_grade];
         }
-        return ['grades'=>$out];
+        return ['grades' => $out];
     }
 }

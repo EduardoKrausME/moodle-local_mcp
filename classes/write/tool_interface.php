@@ -24,6 +24,9 @@
 
 namespace local_mcp\write;
 
+use context;
+use local_mcp\security\authenticated_identity;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
@@ -36,69 +39,79 @@ interface tool_interface {
      * @return string Return value.
      */
     public function get_name(): string;
+
     /**
      * Method get_title.
      *
      * @return string Return value.
      */
     public function get_title(): string;
+
     /**
      * Method get_description.
      *
      * @return string Return value.
      */
     public function get_description(): string;
+
     /**
      * Method get_input_schema.
      *
      * @return array Return value.
      */
     public function get_input_schema(): array;
+
     /**
      * Method get_required_capability.
      *
      * @return string Return value.
      */
     public function get_required_capability(): string;
+
     /**
      * Method resolve_context.
      *
      * @param array $arguments Parameter arguments.
-     * @return \context Return value.
+     * @return context Return value.
      */
-    public function resolve_context(array $arguments): \context;
+    public function resolve_context(array $arguments): context;
+
     /**
      * Method supports_dry_run.
      *
      * @return bool Return value.
      */
     public function supports_dry_run(): bool;
+
     /**
      * Method requires_confirmation.
      *
      * @return bool Return value.
      */
     public function requires_confirmation(): bool;
+
     /**
      * Method is_destructive.
      *
      * @return bool Return value.
      */
     public function is_destructive(): bool;
+
     /**
      * Method preview.
      *
      * @param array $arguments Parameter arguments.
-     * @param \local_mcp\security\authenticated_identity $identity Parameter identity.
+     * @param authenticated_identity $identity Parameter identity.
      * @return array Return value.
      */
-    public function preview(array $arguments, \local_mcp\security\authenticated_identity $identity): array;
+    public function preview(array $arguments, authenticated_identity $identity): array;
+
     /**
      * Method execute.
      *
      * @param array $arguments Parameter arguments.
-     * @param \local_mcp\security\authenticated_identity $identity Parameter identity.
+     * @param authenticated_identity $identity Parameter identity.
      * @return array Return value.
      */
-    public function execute(array $arguments, \local_mcp\security\authenticated_identity $identity): array;
+    public function execute(array $arguments, authenticated_identity $identity): array;
 }

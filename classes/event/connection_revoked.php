@@ -24,12 +24,14 @@
 
 namespace local_mcp\event;
 
+use core\event\base;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
  * Class connection_revoked.
  */
-final class connection_revoked extends \core\event\base {
+final class connection_revoked extends base {
     /**
      * Method init.
      *

@@ -24,22 +24,29 @@
 
 namespace local_mcp\privacy;
 
+use context;
+use context_system;
+use core_privacy\local\metadata\collection;
+use core_privacy\local\request\approved_contextlist;
+use core_privacy\local\request\contextlist;
+use core_privacy\local\request\writer;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
  * Class provider.
  */
 final class provider implements
-        \core_privacy\local\metadata\provider,
-        \core_privacy\local\request\plugin\provider {
+    \core_privacy\local\metadata\provider,
+    \core_privacy\local\request\plugin\provider {
 
     /**
      * Method get_metadata.
      *
-     * @param \core_privacy\local\metadata\collection $collection Parameter collection.
-     * @return \core_privacy\local\metadata\collection Return value.
+     * @param collection $collection Parameter collection.
+     * @return collection Return value.
      */
-    public static function get_metadata(\core_privacy\local\metadata\collection $collection): \core_privacy\local\metadata\collection {
+    public static function get_metadata(collection $collection): collection {
         $collection->add_database_table('local_mcp_connection', [
             'userid' => 'privacy:metadata:local_mcp_connections',
             'scopes' => 'privacy:metadata:local_mcp_connections',
@@ -59,13 +66,13 @@ final class provider implements
      * Method get_contexts_for_userid.
      *
      * @param int $userid Parameter userid.
-     * @return \core_privacy\local\request\contextlist Return value.
+     * @return contextlist Return value.
      */
-    public static function get_contexts_for_userid(int $userid): \core_privacy\local\request\contextlist {
-        $list = new \core_privacy\local\request\contextlist();
+    public static function get_contexts_for_userid(int $userid): contextlist {
+        $list = new contextlist();
         global $DB;
         if ($DB->record_exists('local_mcp_connection', ['userid' => $userid])
-                || $DB->record_exists('local_mcp_audit', ['userid' => $userid])) {
+            || $DB->record_exists('local_mcp_audit', ['userid' => $userid])) {
             $list->add_system_context();
         }
         return $list;
@@ -74,13 +81,13 @@ final class provider implements
     /**
      * Method export_user_data.
      *
-     * @param \core_privacy\local\request\approved_contextlist $contextlist Parameter contextlist.
+     * @param approved_contextlist $contextlist Parameter contextlist.
      * @return void Return value.
      */
-    public static function export_user_data(\core_privacy\local\request\approved_contextlist $contextlist): void {
+    public static function export_user_data(approved_contextlist $contextlist): void {
         global $DB;
         $userid = $contextlist->get_user()->id;
-        $context = \context_system::instance();
+        $context = context_system::instance();
         if (!in_array($context->id, $contextlist->get_contextids(), true)) {
             return;
         }
@@ -88,16 +95,16 @@ final class provider implements
             'connections' => array_values($DB->get_records('local_mcp_connection', ['userid' => $userid])),
             'audit' => array_values($DB->get_records('local_mcp_audit', ['userid' => $userid])),
         ];
-        \core_privacy\local\request\writer::with_context($context)->export_data([], $data);
+        writer::with_context($context)->export_data([], $data);
     }
 
     /**
      * Method delete_data_for_all_users_in_context.
      *
-     * @param \context $context Parameter context.
+     * @param context $context Parameter context.
      * @return void Return value.
      */
-    public static function delete_data_for_all_users_in_context(\context $context): void {
+    public static function delete_data_for_all_users_in_context(context $context): void {
         global $DB;
         if ($context->contextlevel !== CONTEXT_SYSTEM) {
             return;
@@ -108,10 +115,10 @@ final class provider implements
     /**
      * Method delete_data_for_user.
      *
-     * @param \core_privacy\local\request\approved_contextlist $contextlist Parameter contextlist.
+     * @param approved_contextlist $contextlist Parameter contextlist.
      * @return void Return value.
      */
-    public static function delete_data_for_user(\core_privacy\local\request\approved_contextlist $contextlist): void {
+    public static function delete_data_for_user(approved_contextlist $contextlist): void {
         global $DB;
         $userid = $contextlist->get_user()->id;
         $DB->delete_records('local_mcp_audit', ['userid' => $userid]);

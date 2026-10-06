@@ -24,6 +24,9 @@
 
 namespace local_mcp\oauth;
 
+use local_mcp\exception\api_exception;
+use stdClass;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
@@ -34,9 +37,9 @@ final class client_service {
      * Method by_clientid.
      *
      * @param string $clientid Parameter clientid.
-     * @return \stdClass Return value.
+     * @return stdClass Return value.
      */
-    public static function by_clientid(string $clientid): \stdClass {
+    public static function by_clientid(string $clientid): stdClass {
         global $DB;
         $client = $DB->get_record('local_mcp_oauth_client', ['clientid' => $clientid, 'enabled' => 1], '*', MUST_EXIST);
         return $client;
@@ -45,14 +48,14 @@ final class client_service {
     /**
      * Method validate_redirect_uri.
      *
-     * @param \stdClass $client Parameter client.
+     * @param stdClass $client Parameter client.
      * @param string $redirecturi Parameter redirecturi.
      * @return void Return value.
      */
-    public static function validate_redirect_uri(\stdClass $client, string $redirecturi): void {
+    public static function validate_redirect_uri(stdClass $client, string $redirecturi): void {
         $uris = json_decode($client->redirecturis, true);
         if (!is_array($uris) || !in_array($redirecturi, $uris, true)) {
-            throw new \local_mcp\exception\api_exception('invalid_redirect_uri', 400);
+            throw new api_exception('invalid_redirect_uri', 400);
         }
     }
 
@@ -66,22 +69,22 @@ final class client_service {
         global $DB;
         $uris = array_values(array_unique($metadata['redirect_uris'] ?? []));
         if (!$uris) {
-            throw new \local_mcp\exception\api_exception('invalid_client_metadata', 400);
+            throw new api_exception('invalid_client_metadata', 400);
         }
         foreach ($uris as $uri) {
             if (!filter_var($uri, FILTER_VALIDATE_URL)) {
-                throw new \local_mcp\exception\api_exception('invalid_redirect_uri', 400);
+                throw new api_exception('invalid_redirect_uri', 400);
             }
             $parts = parse_url($uri);
             $scheme = strtolower((string)($parts['scheme'] ?? ''));
             $host = strtolower((string)($parts['host'] ?? ''));
             $loopback = in_array($host, ['localhost', '127.0.0.1', '::1'], true);
             if ($scheme !== 'https' && !($loopback && $scheme === 'http')) {
-                throw new \local_mcp\exception\api_exception('invalid_redirect_uri', 400);
+                throw new api_exception('invalid_redirect_uri', 400);
             }
         }
         $clientid = 'mcp_client_' . bin2hex(random_bytes(16));
-        $record = (object) [
+        $record = (object)[
             'clientid' => $clientid,
             'name' => clean_param($metadata['client_name'] ?? 'MCP client', PARAM_TEXT),
             'description' => '',

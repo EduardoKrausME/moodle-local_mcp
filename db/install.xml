@@ -1,156 +1,208 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <XMLDB PATH="local/mcp/db" VERSION="20261006" COMMENT="XMLDB file for Moodle MCP"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd">
-  <TABLES>
-    <TABLE NAME="local_mcp_oauth_client" COMMENT="OAuth clients">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="clientid" TYPE="char" LENGTH="128" NOTNULL="true"/>
-        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true"/>
-        <FIELD NAME="description" TYPE="text" NOTNULL="false"/>
-        <FIELD NAME="clienturi" TYPE="text" NOTNULL="false"/>
-        <FIELD NAME="redirecturis" TYPE="text" NOTNULL="true"/>
-        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>
-        <FIELD NAME="clienttype" TYPE="char" LENGTH="32" NOTNULL="true" DEFAULT="public"/>
-        <FIELD NAME="dynamic" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
-        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="lastused" TYPE="int" LENGTH="10" NOTNULL="false"/>
-      </FIELDS>
-      <KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/></KEYS>
-      <INDEXES><INDEX NAME="clientid_uix" UNIQUE="true" FIELDS="clientid"/><INDEX NAME="enabled_ix" UNIQUE="false" FIELDS="enabled"/></INDEXES>
-    </TABLE>
-    <TABLE NAME="local_mcp_connection" COMMENT="Authorized client connections">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="clientid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="scopes" TYPE="text" NOTNULL="true"/>
-        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>
-        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="lastused" TYPE="int" LENGTH="10" NOTNULL="false"/>
-        <FIELD NAME="lastip" TYPE="char" LENGTH="64" NOTNULL="false"/>
-        <FIELD NAME="revokedat" TYPE="int" LENGTH="10" NOTNULL="false"/>
-      </FIELDS>
-      <KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/></KEYS>
-      <INDEXES><INDEX NAME="user_ix" UNIQUE="false" FIELDS="userid"/><INDEX NAME="client_ix" UNIQUE="false" FIELDS="clientid"/><INDEX NAME="enabled_ix" UNIQUE="false" FIELDS="enabled"/></INDEXES>
-    </TABLE>
-    <TABLE NAME="local_mcp_auth_code" COMMENT="OAuth authorization codes">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="prefix" TYPE="char" LENGTH="20" NOTNULL="true"/>
-        <FIELD NAME="codehash" TYPE="char" LENGTH="64" NOTNULL="true"/>
-        <FIELD NAME="clientid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="redirecturi" TYPE="text" NOTNULL="true"/>
-        <FIELD NAME="scopes" TYPE="text" NOTNULL="true"/>
-        <FIELD NAME="codechallenge" TYPE="char" LENGTH="128" NOTNULL="true"/>
-        <FIELD NAME="challengemethod" TYPE="char" LENGTH="16" NOTNULL="true" DEFAULT="S256"/>
-        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="expires" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="used" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
-      </FIELDS>
-      <KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/></KEYS>
-      <INDEXES><INDEX NAME="prefix_ix" UNIQUE="false" FIELDS="prefix"/><INDEX NAME="hash_uix" UNIQUE="true" FIELDS="codehash"/><INDEX NAME="expires_ix" UNIQUE="false" FIELDS="expires"/></INDEXES>
-    </TABLE>
-    <TABLE NAME="local_mcp_access_token" COMMENT="OAuth access tokens">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="prefix" TYPE="char" LENGTH="20" NOTNULL="true"/>
-        <FIELD NAME="tokenhash" TYPE="char" LENGTH="64" NOTNULL="true"/>
-        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="clientid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="connectionid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="scopes" TYPE="text" NOTNULL="true"/>
-        <FIELD NAME="family" TYPE="char" LENGTH="64" NOTNULL="true"/>
-        <FIELD NAME="issuedat" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="expiresat" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="revokedat" TYPE="int" LENGTH="10" NOTNULL="false"/>
-        <FIELD NAME="lastused" TYPE="int" LENGTH="10" NOTNULL="false"/>
-        <FIELD NAME="lastip" TYPE="char" LENGTH="64" NOTNULL="false"/>
-      </FIELDS>
-      <KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/></KEYS>
-      <INDEXES><INDEX NAME="prefix_ix" UNIQUE="false" FIELDS="prefix"/><INDEX NAME="hash_uix" UNIQUE="true" FIELDS="tokenhash"/><INDEX NAME="connection_ix" UNIQUE="false" FIELDS="connectionid"/><INDEX NAME="expires_ix" UNIQUE="false" FIELDS="expiresat"/></INDEXES>
-    </TABLE>
-    <TABLE NAME="local_mcp_refresh_token" COMMENT="OAuth refresh tokens">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="prefix" TYPE="char" LENGTH="20" NOTNULL="true"/>
-        <FIELD NAME="tokenhash" TYPE="char" LENGTH="64" NOTNULL="true"/>
-        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="clientid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="connectionid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="scopes" TYPE="text" NOTNULL="true"/>
-        <FIELD NAME="family" TYPE="char" LENGTH="64" NOTNULL="true"/>
-        <FIELD NAME="generation" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
-        <FIELD NAME="issuedat" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="expiresat" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="usedat" TYPE="int" LENGTH="10" NOTNULL="false"/>
-        <FIELD NAME="revokedat" TYPE="int" LENGTH="10" NOTNULL="false"/>
-      </FIELDS>
-      <KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/></KEYS>
-      <INDEXES><INDEX NAME="prefix_ix" UNIQUE="false" FIELDS="prefix"/><INDEX NAME="hash_uix" UNIQUE="true" FIELDS="tokenhash"/><INDEX NAME="family_ix" UNIQUE="false" FIELDS="family"/><INDEX NAME="expires_ix" UNIQUE="false" FIELDS="expiresat"/></INDEXES>
-    </TABLE>
-    <TABLE NAME="local_mcp_manual_token" COMMENT="Administrator-created manual tokens">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true"/>
-        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="prefix" TYPE="char" LENGTH="20" NOTNULL="true"/>
-        <FIELD NAME="tokenhash" TYPE="char" LENGTH="64" NOTNULL="true"/>
-        <FIELD NAME="readenabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>
-        <FIELD NAME="writeenabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
-        <FIELD NAME="expires" TYPE="int" LENGTH="10" NOTNULL="false"/>
-        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>
-        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="lastused" TYPE="int" LENGTH="10" NOTNULL="false"/>
-        <FIELD NAME="lastip" TYPE="char" LENGTH="64" NOTNULL="false"/>
-      </FIELDS>
-      <KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/></KEYS>
-      <INDEXES><INDEX NAME="prefix_ix" UNIQUE="false" FIELDS="prefix"/><INDEX NAME="hash_uix" UNIQUE="true" FIELDS="tokenhash"/><INDEX NAME="user_ix" UNIQUE="false" FIELDS="userid"/><INDEX NAME="enabled_ix" UNIQUE="false" FIELDS="enabled"/></INDEXES>
-    </TABLE>
-    <TABLE NAME="local_mcp_confirm" COMMENT="One-time write confirmation tokens">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="prefix" TYPE="char" LENGTH="20" NOTNULL="true"/>
-        <FIELD NAME="tokenhash" TYPE="char" LENGTH="64" NOTNULL="true"/>
-        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="clientid" TYPE="int" LENGTH="10" NOTNULL="false"/>
-        <FIELD NAME="connectionid" TYPE="int" LENGTH="10" NOTNULL="false"/>
-        <FIELD NAME="accesshash" TYPE="char" LENGTH="64" NOTNULL="true"/>
-        <FIELD NAME="tool" TYPE="char" LENGTH="128" NOTNULL="true"/>
-        <FIELD NAME="argshash" TYPE="char" LENGTH="64" NOTNULL="true"/>
-        <FIELD NAME="contextid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="expires" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="used" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
-        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
-      </FIELDS>
-      <KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/></KEYS>
-      <INDEXES><INDEX NAME="prefix_ix" UNIQUE="false" FIELDS="prefix"/><INDEX NAME="hash_uix" UNIQUE="true" FIELDS="tokenhash"/><INDEX NAME="expires_ix" UNIQUE="false" FIELDS="expires"/></INDEXES>
-    </TABLE>
-    <TABLE NAME="local_mcp_audit" COMMENT="MCP security and operation audit metadata">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="connectionid" TYPE="int" LENGTH="10" NOTNULL="false"/>
-        <FIELD NAME="clientid" TYPE="int" LENGTH="10" NOTNULL="false"/>
-        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="false"/>
-        <FIELD NAME="event" TYPE="char" LENGTH="64" NOTNULL="true"/>
-        <FIELD NAME="tool" TYPE="char" LENGTH="128" NOTNULL="false"/>
-        <FIELD NAME="side" TYPE="char" LENGTH="8" NOTNULL="false"/>
-        <FIELD NAME="destructive" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
-        <FIELD NAME="contextid" TYPE="int" LENGTH="10" NOTNULL="false"/>
-        <FIELD NAME="ip" TYPE="char" LENGTH="64" NOTNULL="false"/>
-        <FIELD NAME="durationms" TYPE="int" LENGTH="10" NOTNULL="false"/>
-        <FIELD NAME="status" TYPE="char" LENGTH="64" NOTNULL="false"/>
-        <FIELD NAME="dryrun" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
-        <FIELD NAME="confirmation" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
-        <FIELD NAME="metadata" TYPE="text" NOTNULL="false"/>
-        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
-      </FIELDS>
-      <KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/></KEYS>
-      <INDEXES><INDEX NAME="connection_ix" UNIQUE="false" FIELDS="connectionid"/><INDEX NAME="client_ix" UNIQUE="false" FIELDS="clientid"/><INDEX NAME="user_ix" UNIQUE="false" FIELDS="userid"/><INDEX NAME="event_ix" UNIQUE="false" FIELDS="event"/><INDEX NAME="created_ix" UNIQUE="false" FIELDS="timecreated"/></INDEXES>
-    </TABLE>
-  </TABLES>
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd">
+    <TABLES>
+        <TABLE NAME="local_mcp_oauth_client" COMMENT="OAuth clients">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="clientid" TYPE="char" LENGTH="128" NOTNULL="true"/>
+                <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true"/>
+                <FIELD NAME="description" TYPE="text" NOTNULL="false"/>
+                <FIELD NAME="clienturi" TYPE="text" NOTNULL="false"/>
+                <FIELD NAME="redirecturis" TYPE="text" NOTNULL="true"/>
+                <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>
+                <FIELD NAME="clienttype" TYPE="char" LENGTH="32" NOTNULL="true" DEFAULT="public"/>
+                <FIELD NAME="dynamic" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="lastused" TYPE="int" LENGTH="10" NOTNULL="false"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="clientid_uix" UNIQUE="true" FIELDS="clientid"/>
+                <INDEX NAME="enabled_ix" UNIQUE="false" FIELDS="enabled"/>
+            </INDEXES>
+        </TABLE>
+        <TABLE NAME="local_mcp_connection" COMMENT="Authorized client connections">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="clientid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="scopes" TYPE="text" NOTNULL="true"/>
+                <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="lastused" TYPE="int" LENGTH="10" NOTNULL="false"/>
+                <FIELD NAME="lastip" TYPE="char" LENGTH="64" NOTNULL="false"/>
+                <FIELD NAME="revokedat" TYPE="int" LENGTH="10" NOTNULL="false"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="user_ix" UNIQUE="false" FIELDS="userid"/>
+                <INDEX NAME="client_ix" UNIQUE="false" FIELDS="clientid"/>
+                <INDEX NAME="enabled_ix" UNIQUE="false" FIELDS="enabled"/>
+            </INDEXES>
+        </TABLE>
+        <TABLE NAME="local_mcp_auth_code" COMMENT="OAuth authorization codes">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="prefix" TYPE="char" LENGTH="20" NOTNULL="true"/>
+                <FIELD NAME="codehash" TYPE="char" LENGTH="64" NOTNULL="true"/>
+                <FIELD NAME="clientid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="redirecturi" TYPE="text" NOTNULL="true"/>
+                <FIELD NAME="scopes" TYPE="text" NOTNULL="true"/>
+                <FIELD NAME="codechallenge" TYPE="char" LENGTH="128" NOTNULL="true"/>
+                <FIELD NAME="challengemethod" TYPE="char" LENGTH="16" NOTNULL="true" DEFAULT="S256"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="expires" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="used" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="prefix_ix" UNIQUE="false" FIELDS="prefix"/>
+                <INDEX NAME="hash_uix" UNIQUE="true" FIELDS="codehash"/>
+                <INDEX NAME="expires_ix" UNIQUE="false" FIELDS="expires"/>
+            </INDEXES>
+        </TABLE>
+        <TABLE NAME="local_mcp_access_token" COMMENT="OAuth access tokens">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="prefix" TYPE="char" LENGTH="20" NOTNULL="true"/>
+                <FIELD NAME="tokenhash" TYPE="char" LENGTH="64" NOTNULL="true"/>
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="clientid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="connectionid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="scopes" TYPE="text" NOTNULL="true"/>
+                <FIELD NAME="family" TYPE="char" LENGTH="64" NOTNULL="true"/>
+                <FIELD NAME="issuedat" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="expiresat" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="revokedat" TYPE="int" LENGTH="10" NOTNULL="false"/>
+                <FIELD NAME="lastused" TYPE="int" LENGTH="10" NOTNULL="false"/>
+                <FIELD NAME="lastip" TYPE="char" LENGTH="64" NOTNULL="false"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="prefix_ix" UNIQUE="false" FIELDS="prefix"/>
+                <INDEX NAME="hash_uix" UNIQUE="true" FIELDS="tokenhash"/>
+                <INDEX NAME="connection_ix" UNIQUE="false" FIELDS="connectionid"/>
+                <INDEX NAME="expires_ix" UNIQUE="false" FIELDS="expiresat"/>
+            </INDEXES>
+        </TABLE>
+        <TABLE NAME="local_mcp_refresh_token" COMMENT="OAuth refresh tokens">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="prefix" TYPE="char" LENGTH="20" NOTNULL="true"/>
+                <FIELD NAME="tokenhash" TYPE="char" LENGTH="64" NOTNULL="true"/>
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="clientid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="connectionid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="scopes" TYPE="text" NOTNULL="true"/>
+                <FIELD NAME="family" TYPE="char" LENGTH="64" NOTNULL="true"/>
+                <FIELD NAME="generation" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+                <FIELD NAME="issuedat" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="expiresat" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="usedat" TYPE="int" LENGTH="10" NOTNULL="false"/>
+                <FIELD NAME="revokedat" TYPE="int" LENGTH="10" NOTNULL="false"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="prefix_ix" UNIQUE="false" FIELDS="prefix"/>
+                <INDEX NAME="hash_uix" UNIQUE="true" FIELDS="tokenhash"/>
+                <INDEX NAME="family_ix" UNIQUE="false" FIELDS="family"/>
+                <INDEX NAME="expires_ix" UNIQUE="false" FIELDS="expiresat"/>
+            </INDEXES>
+        </TABLE>
+        <TABLE NAME="local_mcp_manual_token" COMMENT="Administrator-created manual tokens">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true"/>
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="prefix" TYPE="char" LENGTH="20" NOTNULL="true"/>
+                <FIELD NAME="tokenhash" TYPE="char" LENGTH="64" NOTNULL="true"/>
+                <FIELD NAME="readenabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>
+                <FIELD NAME="writeenabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
+                <FIELD NAME="expires" TYPE="int" LENGTH="10" NOTNULL="false"/>
+                <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="lastused" TYPE="int" LENGTH="10" NOTNULL="false"/>
+                <FIELD NAME="lastip" TYPE="char" LENGTH="64" NOTNULL="false"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="prefix_ix" UNIQUE="false" FIELDS="prefix"/>
+                <INDEX NAME="hash_uix" UNIQUE="true" FIELDS="tokenhash"/>
+                <INDEX NAME="user_ix" UNIQUE="false" FIELDS="userid"/>
+                <INDEX NAME="enabled_ix" UNIQUE="false" FIELDS="enabled"/>
+            </INDEXES>
+        </TABLE>
+        <TABLE NAME="local_mcp_confirm" COMMENT="One-time write confirmation tokens">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="prefix" TYPE="char" LENGTH="20" NOTNULL="true"/>
+                <FIELD NAME="tokenhash" TYPE="char" LENGTH="64" NOTNULL="true"/>
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="clientid" TYPE="int" LENGTH="10" NOTNULL="false"/>
+                <FIELD NAME="connectionid" TYPE="int" LENGTH="10" NOTNULL="false"/>
+                <FIELD NAME="accesshash" TYPE="char" LENGTH="64" NOTNULL="true"/>
+                <FIELD NAME="tool" TYPE="char" LENGTH="128" NOTNULL="true"/>
+                <FIELD NAME="argshash" TYPE="char" LENGTH="64" NOTNULL="true"/>
+                <FIELD NAME="contextid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="expires" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="used" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="prefix_ix" UNIQUE="false" FIELDS="prefix"/>
+                <INDEX NAME="hash_uix" UNIQUE="true" FIELDS="tokenhash"/>
+                <INDEX NAME="expires_ix" UNIQUE="false" FIELDS="expires"/>
+            </INDEXES>
+        </TABLE>
+        <TABLE NAME="local_mcp_audit" COMMENT="MCP security and operation audit metadata">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="connectionid" TYPE="int" LENGTH="10" NOTNULL="false"/>
+                <FIELD NAME="clientid" TYPE="int" LENGTH="10" NOTNULL="false"/>
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="false"/>
+                <FIELD NAME="event" TYPE="char" LENGTH="64" NOTNULL="true"/>
+                <FIELD NAME="tool" TYPE="char" LENGTH="128" NOTNULL="false"/>
+                <FIELD NAME="side" TYPE="char" LENGTH="8" NOTNULL="false"/>
+                <FIELD NAME="destructive" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
+                <FIELD NAME="contextid" TYPE="int" LENGTH="10" NOTNULL="false"/>
+                <FIELD NAME="ip" TYPE="char" LENGTH="64" NOTNULL="false"/>
+                <FIELD NAME="durationms" TYPE="int" LENGTH="10" NOTNULL="false"/>
+                <FIELD NAME="status" TYPE="char" LENGTH="64" NOTNULL="false"/>
+                <FIELD NAME="dryrun" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
+                <FIELD NAME="confirmation" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
+                <FIELD NAME="metadata" TYPE="text" NOTNULL="false"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="connection_ix" UNIQUE="false" FIELDS="connectionid"/>
+                <INDEX NAME="client_ix" UNIQUE="false" FIELDS="clientid"/>
+                <INDEX NAME="user_ix" UNIQUE="false" FIELDS="userid"/>
+                <INDEX NAME="event_ix" UNIQUE="false" FIELDS="event"/>
+                <INDEX NAME="created_ix" UNIQUE="false" FIELDS="timecreated"/>
+            </INDEXES>
+        </TABLE>
+    </TABLES>
 </XMLDB>

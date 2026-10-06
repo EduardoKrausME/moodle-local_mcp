@@ -1,8 +1,10 @@
 # Moodle MCP
 
-Moodle MCP turns a Moodle installation into an extensible Model Context Protocol server with a deliberately separated READ and WRITE architecture.
+Moodle MCP turns a Moodle installation into an extensible Model Context Protocol server with a deliberately separated
+READ and WRITE architecture.
 
-This is a **local plugin**: `local_mcp`. It does not use Moodle's traditional `wstoken` mechanism as its primary authentication layer.
+This is a **local plugin**: `local_mcp`. It does not use Moodle's traditional `wstoken` mechanism as its primary
+authentication layer.
 
 ## Architecture
 
@@ -42,7 +44,8 @@ MCP Client
 - WRITE: `/local/mcp/write.php`
 - Plugin discovery: `/local/mcp/discovery.php`
 
-The READ endpoint publishes only `local_mcp\read\registry`. The WRITE endpoint publishes only `local_mcp\write\registry`. There is no combined registry followed by a risk filter.
+The READ endpoint publishes only `local_mcp\read\registry`. The WRITE endpoint publishes
+only `local_mcp\write\registry`. There is no combined registry followed by a risk filter.
 
 ## OAuth 2.1
 
@@ -54,7 +57,8 @@ The authorization server uses Authorization Code + PKCE S256.
 - Authorization Server Metadata: `/local/mcp/.well-known/oauth-authorization-server.php`
 - Protected Resource Metadata: `/local/mcp/.well-known/oauth-protected-resource.php`
 
-OAuth access tokens are short-lived opaque secrets. Refresh tokens rotate. Authorization codes are short-lived and single-use. Database records store SHA-256 hashes, never the complete secret.
+OAuth access tokens are short-lived opaque secrets. Refresh tokens rotate. Authorization codes are short-lived and
+single-use. Database records store SHA-256 hashes, never the complete secret.
 
 The consent page deliberately uses:
 
@@ -66,7 +70,8 @@ if (!has_capability('moodle/site:config', $context)) {
 }
 ```
 
-It does **not** use `require_capability()` for the authorization experience, because a normal non-admin user must receive an understandable Moodle page rather than an uncaught authorization exception.
+It does **not** use `require_capability()` for the authorization experience, because a normal non-admin user must
+receive an understandable Moodle page rather than an uncaught authorization exception.
 
 ## Scopes and Moodle capabilities
 
@@ -77,7 +82,8 @@ Initial scopes are independent:
 
 `mcp:write` does not imply `mcp:read`.
 
-A scope is only the outer protocol permission. Every tool still resolves the Moodle user and Moodle context and checks the required Moodle capability before execution.
+A scope is only the outer protocol permission. Every tool still resolves the Moodle user and Moodle context and checks
+the required Moodle capability before execution.
 
 The intended decision chain is:
 
@@ -108,7 +114,9 @@ WRITE tools declare additional security behavior:
 - `is_destructive()`
 - `preview()`
 
-Confirmation is not a boolean such as `confirmed=true`. The server issues a short-lived, single-use confirmation token bound to the connected user, client/connection, access token, tool, resolved context and a canonical SHA-256 hash of the exact arguments.
+Confirmation is not a boolean such as `confirmed=true`. The server issues a short-lived, single-use confirmation token
+bound to the connected user, client/connection, access token, tool, resolved context and a canonical SHA-256 hash of the
+exact arguments.
 
 Changing a course id, user id or any other argument after preview invalidates the confirmation.
 
@@ -142,9 +150,11 @@ function local_example_mcp_read_provider() {
 }
 ```
 
-The provider implements `local_mcp\extension\read_provider_interface` and returns only `local_mcp\read\tool_interface` instances.
+The provider implements `local_mcp\extension\read_provider_interface` and returns only `local_mcp\read\tool_interface`
+instances.
 
-WRITE providers use `local_mcp\extension\write_provider_interface`. A provider cannot accidentally register a WRITE tool on the READ side.
+WRITE providers use `local_mcp\extension\write_provider_interface`. A provider cannot accidentally register a WRITE tool
+on the READ side.
 
 ## Connections and revocation
 
@@ -176,7 +186,8 @@ Sensitive secrets are explicitly excluded from audit metadata.
 
 ## ChatGPT and other MCP clients
 
-The plugin contains no ChatGPT-specific authentication code. ChatGPT is expected to behave like any other standards-based MCP/OAuth client.
+The plugin contains no ChatGPT-specific authentication code. ChatGPT is expected to behave like any other
+standards-based MCP/OAuth client.
 
 The future flow is:
 
@@ -194,4 +205,5 @@ Moodle URL
 
 ## Development
 
-Run Moodle PHPUnit tests for `local_mcp` and the repository CI. GitHub Actions validates PHP syntax and the Moodle plugin package.
+Run Moodle PHPUnit tests for `local_mcp` and the repository CI. GitHub Actions validates PHP syntax and the Moodle
+plugin package.

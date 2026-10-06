@@ -24,6 +24,7 @@
 
 namespace local_mcp\read\tool;
 defined('MOODLE_INTERNAL') || die;
+
 /**
  * Class get_course_sections.
  */
@@ -33,17 +34,25 @@ final class get_course_sections extends get_course_contents {
      *
      * @return string Return value.
      */
-    public function get_name(): string { return 'get_course_sections'; }
+    public function get_name(): string {
+        return 'get_course_sections';
+    }
+
     /**
      * Method get_title.
      *
      * @return string Return value.
      */
-    public function get_title(): string { return 'Get course sections'; }
+    public function get_title(): string {
+        return 'Get course sections';
+    }
+
     /**
      * Method get_description.
      *
      * @return string Return value.
      */
-    public function get_description(): string { return 'Return visible course sections with their activities.'; }
+    public function get_description(): string {
+        return 'Return visible course sections with their activities.';
+    }
 }

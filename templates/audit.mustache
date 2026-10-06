@@ -22,6 +22,30 @@
         Aqui tem que criar o context em inglês
     }
 }}
-<table class="generaltable"><thead><tr><th>Time</th><th>Event</th><th>Side</th><th>Tool</th><th>User</th><th>IP</th><th>Status</th><th>Destructive</th></tr></thead><tbody>
-{{#rows}}<tr><td>{{time}}</td><td>{{event}}</td><td>{{side}}</td><td><code>{{tool}}</code></td><td>{{userid}}</td><td>{{ip}}</td><td>{{status}}</td><td>{{destructive}}</td></tr>{{/rows}}
-</tbody></table>
+<table class="generaltable">
+    <thead>
+    <tr>
+        <th>Time</th>
+        <th>Event</th>
+        <th>Side</th>
+        <th>Tool</th>
+        <th>User</th>
+        <th>IP</th>
+        <th>Status</th>
+        <th>Destructive</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{#rows}}
+        <tr>
+            <td>{{time}}</td>
+            <td>{{event}}</td>
+            <td>{{side}}</td>
+            <td><code>{{tool}}</code></td>
+            <td>{{userid}}</td>
+            <td>{{ip}}</td>
+            <td>{{status}}</td>
+            <td>{{destructive}}</td>
+        </tr>{{/rows}}
+    </tbody>
+</table>

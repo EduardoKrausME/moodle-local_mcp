@@ -24,6 +24,20 @@
 
 namespace local_mcp\protocol;
 
+use coding_exception;
+use local_mcp\audit\logger;
+use local_mcp\event\destructive_operation_executed;
+use local_mcp\event\write_operation_executed;
+use local_mcp\exception\api_exception;
+use local_mcp\security\authenticated_identity;
+use local_mcp\security\capability_guard;
+use local_mcp\security\confirmation_service;
+use local_mcp\security\rate_limiter;
+use local_mcp\security\scope;
+use local_mcp\security\token_resolver;
+use local_mcp\write\registry;
+use Throwable;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
@@ -37,7 +51,7 @@ final class mcp_server {
      */
     public function __construct(private readonly string $side) {
         if (!in_array($side, ['read', 'write'], true)) {
-            throw new \coding_exception('Invalid MCP side.');
+            throw new coding_exception('Invalid MCP side.');
         }
     }
 
@@ -49,15 +63,15 @@ final class mcp_server {
     public function handle(): never {
         try {
             [$authheader, $rawtoken] = http::bearer();
-            $identity = \local_mcp\security\token_resolver::from_bearer($authheader);
+            $identity = token_resolver::from_bearer($authheader);
             $requiredscope = $this->side === 'read'
-                ? \local_mcp\security\scope::READ
-                : \local_mcp\security\scope::WRITE;
+                ? scope::READ
+                : scope::WRITE;
             if (!$identity->has_scope($requiredscope)) {
-                throw new \local_mcp\exception\api_exception('insufficient_scope', 403);
+                throw new api_exception('insufficient_scope', 403);
             }
             $limit = (int)get_config('local_mcp', $this->side === 'read' ? 'rateread' : 'ratewrite');
-            \local_mcp\security\rate_limiter::check('mcp_' . $this->side,
+            rate_limiter::check('mcp_' . $this->side,
                 $identity->type . ':' . ($identity->tokenid ?? $identity->userid), $limit ?: ($this->side === 'read' ? 120 : 30));
 
             $request = http::request_json();
@@ -95,7 +109,7 @@ final class mcp_server {
                         'structuredContent' => $result,
                         'isError' => false,
                     ]]);
-                } catch (\local_mcp\exception\api_exception $e) {
+                } catch (api_exception $e) {
                     $error = [
                         'error' => $e->machinecode,
                         'message' => $e->getMessage(),
@@ -116,7 +130,7 @@ final class mcp_server {
                 'id' => $id,
                 'error' => ['code' => -32601, 'message' => 'Method not found'],
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             http::error($e);
         }
     }
@@ -129,7 +143,7 @@ final class mcp_server {
     private function tool_definitions(): array {
         $tools = $this->side === 'read'
             ? \local_mcp\read\registry::get_tools()
-            : \local_mcp\write\registry::get_tools();
+            : registry::get_tools();
         $out = [];
         foreach ($tools as $tool) {
             $item = [
@@ -155,26 +169,26 @@ final class mcp_server {
      * @param string $name Parameter name.
      * @param array $arguments Parameter arguments.
      * @param array $params Parameter params.
-     * @param \local_mcp\security\authenticated_identity $identity Parameter identity.
+     * @param authenticated_identity $identity Parameter identity.
      * @param string $rawtoken Parameter rawtoken.
      * @return array Return value.
      */
-    private function call_tool(string $name, array $arguments, array $params,
-            \local_mcp\security\authenticated_identity $identity, string $rawtoken): array {
+    private function call_tool(string                                     $name, array $arguments, array $params,
+                               authenticated_identity $identity, string $rawtoken): array {
         $tools = $this->side === 'read'
             ? \local_mcp\read\registry::get_tools()
-            : \local_mcp\write\registry::get_tools();
+            : registry::get_tools();
         if (!isset($tools[$name])) {
-            throw new \local_mcp\exception\api_exception('tool_not_found', 404);
+            throw new api_exception('tool_not_found', 404);
         }
         $tool = $tools[$name];
         $context = $tool->resolve_context($arguments);
-        \local_mcp\security\capability_guard::check($tool->get_required_capability(), $context, $identity->userid);
+        capability_guard::check($tool->get_required_capability(), $context, $identity->userid);
 
         if ($this->side === 'read') {
             $started = microtime(true);
             $result = $tool->execute($arguments, $identity);
-            \local_mcp\audit\logger::record('tool_called', $identity, $name, 'read', $context, [],
+            logger::record('tool_called', $identity, $name, 'read', $context, [],
                 false, false, false, 'ok', (int)round((microtime(true) - $started) * 1000));
             return $result;
         }
@@ -182,10 +196,10 @@ final class mcp_server {
         $dryrun = !empty($params['dry_run']);
         if ($dryrun) {
             if (!$tool->supports_dry_run()) {
-                throw new \local_mcp\exception\api_exception('dry_run_not_supported', 400);
+                throw new api_exception('dry_run_not_supported', 400);
             }
             $preview = $tool->preview($arguments, $identity);
-            \local_mcp\audit\logger::record('tool_called', $identity, $name, 'write', $context, [],
+            logger::record('tool_called', $identity, $name, 'write', $context, [],
                 $tool->is_destructive(), true, false, 'preview');
             return ['dry_run' => true, 'preview' => $preview];
         }
@@ -194,23 +208,23 @@ final class mcp_server {
             $confirmation = (string)($params['confirmation_token'] ?? '');
             if ($confirmation === '') {
                 $preview = $tool->preview($arguments, $identity);
-                $token = \local_mcp\security\confirmation_service::issue(
+                $token = confirmation_service::issue(
                     $identity, $rawtoken, $name, $arguments, $context);
-                throw new \local_mcp\exception\api_exception('confirmation_required', 409, '', [
+                throw new api_exception('confirmation_required', 409, '', [
                     'preview' => $preview, 'confirmation_token' => $token,
                 ]);
             }
-            \local_mcp\security\confirmation_service::consume(
+            confirmation_service::consume(
                 $confirmation, $identity, $rawtoken, $name, $arguments, $context);
         }
         $started = microtime(true);
         $result = $tool->execute($arguments, $identity);
-        \local_mcp\audit\logger::record('tool_called', $identity, $name, 'write', $context, [],
+        logger::record('tool_called', $identity, $name, 'write', $context, [],
             $tool->is_destructive(), false, ($tool->requires_confirmation() || $tool->is_destructive()),
             'ok', (int)round((microtime(true) - $started) * 1000));
         $eventclass = $tool->is_destructive()
-            ? \local_mcp\event\destructive_operation_executed::class
-            : \local_mcp\event\write_operation_executed::class;
+            ? destructive_operation_executed::class
+            : write_operation_executed::class;
         $eventclass::create([
             'context' => $context,
             'relateduserid' => $identity->userid,

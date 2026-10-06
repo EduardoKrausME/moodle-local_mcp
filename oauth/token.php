@@ -22,36 +22,42 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_mcp\exception\api_exception;
+use local_mcp\oauth\token_service;
+use local_mcp\protocol\http;
+use local_mcp\security\rate_limiter;
+use local_mcp\security\transport;
+
 define('NO_DEBUG_DISPLAY', true);
 require_once(__DIR__ . '/../../../config.php');
 
-\local_mcp\security\transport::require_secure();
+transport::require_secure();
 
 try {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        throw new \local_mcp\exception\api_exception('invalid_request', 405);
+        throw new api_exception('invalid_request', 405);
     }
-    \local_mcp\security\rate_limiter::check('oauth_token', getremoteaddr(),
+    rate_limiter::check('oauth_token', getremoteaddr(),
         (int)get_config('local_mcp', 'rateoauth') ?: 30);
 
     $grant = required_param('grant_type', PARAM_ALPHANUMEXT);
     $clientid = required_param('client_id', PARAM_RAW_TRIMMED);
     if ($grant === 'authorization_code') {
-        $result = \local_mcp\oauth\token_service::exchange_code(
+        $result = token_service::exchange_code(
             $clientid,
             required_param('code', PARAM_RAW_TRIMMED),
             required_param('redirect_uri', PARAM_URL),
             required_param('code_verifier', PARAM_RAW_TRIMMED)
         );
     } else if ($grant === 'refresh_token') {
-        $result = \local_mcp\oauth\token_service::refresh(
+        $result = token_service::refresh(
             $clientid,
             required_param('refresh_token', PARAM_RAW_TRIMMED)
         );
     } else {
-        throw new \local_mcp\exception\api_exception('unsupported_grant_type', 400);
+        throw new api_exception('unsupported_grant_type', 400);
     }
-    \local_mcp\protocol\http::json($result);
-} catch (\Throwable $e) {
-    \local_mcp\protocol\http::error($e);
+    http::json($result);
+} catch (Throwable $e) {
+    http::error($e);
 }

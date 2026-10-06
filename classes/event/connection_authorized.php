@@ -24,12 +24,14 @@
 
 namespace local_mcp\event;
 
+use core\event\base;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
  * Class connection_authorized.
  */
-final class connection_authorized extends \core\event\base {
+final class connection_authorized extends base {
     /**
      * Method init.
      *

@@ -24,12 +24,17 @@
 
 namespace local_mcp;
 
+use advanced_testcase;
+use local_mcp\exception\api_exception;
+use local_mcp\oauth\authorization_service;
+use local_mcp\oauth\client_service;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
  * Class oauth_test.
  */
-final class oauth_test extends \advanced_testcase {
+final class oauth_test extends advanced_testcase {
     /**
      * Method test_redirect_uri_requires_exact_match.
      *
@@ -37,9 +42,9 @@ final class oauth_test extends \advanced_testcase {
      */
     public function test_redirect_uri_requires_exact_match(): void {
         $client = (object)['redirecturis' => json_encode(['https://client.example/callback'])];
-        \local_mcp\oauth\client_service::validate_redirect_uri($client, 'https://client.example/callback');
-        $this->expectException(\local_mcp\exception\api_exception::class);
-        \local_mcp\oauth\client_service::validate_redirect_uri($client, 'https://client.example/callback/evil');
+        client_service::validate_redirect_uri($client, 'https://client.example/callback');
+        $this->expectException(api_exception::class);
+        client_service::validate_redirect_uri($client, 'https://client.example/callback/evil');
     }
 
     /**
@@ -52,14 +57,14 @@ final class oauth_test extends \advanced_testcase {
         global $DB;
         $clientid = 'test_' . bin2hex(random_bytes(4));
         $DB->insert_record('local_mcp_oauth_client', (object)[
-            'clientid'=>$clientid,'name'=>'Test','description'=>'','clienturi'=>'https://client.example',
-            'redirecturis'=>json_encode(['https://client.example/callback']),'enabled'=>1,'clienttype'=>'public',
-            'dynamic'=>0,'timecreated'=>time(),'timemodified'=>time(),'lastused'=>null,
+            'clientid' => $clientid, 'name' => 'Test', 'description' => '', 'clienturi' => 'https://client.example',
+            'redirecturis' => json_encode(['https://client.example/callback']), 'enabled' => 1, 'clienttype' => 'public',
+            'dynamic' => 0, 'timecreated' => time(), 'timemodified' => time(), 'lastused' => null,
         ]);
-        $this->expectException(\local_mcp\exception\api_exception::class);
-        \local_mcp\oauth\authorization_service::validate_request([
-            'client_id'=>$clientid,'redirect_uri'=>'https://client.example/callback','response_type'=>'code',
-            'scope'=>'mcp:read','state'=>'state','code_challenge'=>str_repeat('a',43),'code_challenge_method'=>'plain',
+        $this->expectException(api_exception::class);
+        authorization_service::validate_request([
+            'client_id' => $clientid, 'redirect_uri' => 'https://client.example/callback', 'response_type' => 'code',
+            'scope' => 'mcp:read', 'state' => 'state', 'code_challenge' => str_repeat('a', 43), 'code_challenge_method' => 'plain',
         ]);
     }
 }

@@ -24,12 +24,17 @@
 
 namespace local_mcp;
 
+use advanced_testcase;
+use context_system;
+use local_mcp\security\confirmation_service;
+use local_mcp\security\secret;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
  * Class security_test.
  */
-final class security_test extends \advanced_testcase {
+final class security_test extends advanced_testcase {
     /**
      * Method test_pkce_s256_matches_rfc7636_shape.
      *
@@ -37,7 +42,7 @@ final class security_test extends \advanced_testcase {
      */
     public function test_pkce_s256_matches_rfc7636_shape(): void {
         $verifier = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';
-        $challenge = \local_mcp\security\secret::base64url(hash('sha256', $verifier, true));
+        $challenge = secret::base64url(hash('sha256', $verifier, true));
         $this->assertSame('E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM', $challenge);
     }
 
@@ -52,12 +57,12 @@ final class security_test extends \advanced_testcase {
         $c = ['nested' => ['a' => 1, 'b' => 2], 'courseid' => 4, 'userid' => 7];
 
         $this->assertSame(
-            \local_mcp\security\confirmation_service::args_hash($a),
-            \local_mcp\security\confirmation_service::args_hash($b)
+            confirmation_service::args_hash($a),
+            confirmation_service::args_hash($b)
         );
         $this->assertNotSame(
-            \local_mcp\security\confirmation_service::args_hash($a),
-            \local_mcp\security\confirmation_service::args_hash($c)
+            confirmation_service::args_hash($a),
+            confirmation_service::args_hash($c)
         );
     }
 
@@ -69,7 +74,7 @@ final class security_test extends \advanced_testcase {
     public function test_non_admin_does_not_have_site_config(): void {
         $this->resetAfterTest();
         $user = $this->getDataGenerator()->create_user();
-        $this->assertFalse(has_capability('moodle/site:config', \context_system::instance(), $user->id));
+        $this->assertFalse(has_capability('moodle/site:config', context_system::instance(), $user->id));
     }
 
     /**
@@ -80,6 +85,6 @@ final class security_test extends \advanced_testcase {
     public function test_admin_has_site_config(): void {
         $this->resetAfterTest();
         $admin = get_admin();
-        $this->assertTrue(has_capability('moodle/site:config', \context_system::instance(), $admin->id));
+        $this->assertTrue(has_capability('moodle/site:config', context_system::instance(), $admin->id));
     }
 }

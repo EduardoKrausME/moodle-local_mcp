@@ -24,6 +24,16 @@
 
 namespace local_mcp\read;
 
+use coding_exception;
+use local_mcp\extension\manager;
+use local_mcp\read\tool\get_course;
+use local_mcp\read\tool\get_course_contents;
+use local_mcp\read\tool\get_course_participants;
+use local_mcp\read\tool\get_user;
+use local_mcp\read\tool\get_user_courses;
+use local_mcp\read\tool\search_courses;
+use local_mcp\read\tool\search_users;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
@@ -33,18 +43,18 @@ final class registry {
     /** @return tool_interface[] */
     public static function get_tools(): array {
         $tools = [
-            new \local_mcp\read\tool\search_courses(),
-            new \local_mcp\read\tool\get_course(),
-            new \local_mcp\read\tool\get_course_contents(),
-            new \local_mcp\read\tool\get_course_participants(),
-            new \local_mcp\read\tool\search_users(),
-            new \local_mcp\read\tool\get_user(),
-            new \local_mcp\read\tool\get_user_courses(),
+            new search_courses(),
+            new get_course(),
+            new get_course_contents(),
+            new get_course_participants(),
+            new search_users(),
+            new get_user(),
+            new get_user_courses(),
         ];
-        foreach (\local_mcp\extension\manager::read_providers() as $provider) {
+        foreach (manager::read_providers() as $provider) {
             foreach ($provider->get_read_tools() as $tool) {
                 if (!$tool instanceof tool_interface) {
-                    throw new \coding_exception('READ provider returned a non-READ tool.');
+                    throw new coding_exception('READ provider returned a non-READ tool.');
                 }
                 $tools[] = $tool;
             }
@@ -63,7 +73,7 @@ final class registry {
         foreach ($tools as $tool) {
             $name = $tool->get_name();
             if (isset($indexed[$name])) {
-                throw new \coding_exception('Duplicate MCP READ tool: ' . $name);
+                throw new coding_exception('Duplicate MCP READ tool: ' . $name);
             }
             $indexed[$name] = $tool;
         }

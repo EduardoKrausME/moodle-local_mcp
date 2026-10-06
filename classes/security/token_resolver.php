@@ -24,6 +24,8 @@
 
 namespace local_mcp\security;
 
+use local_mcp\exception\api_exception;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
@@ -39,7 +41,7 @@ final class token_resolver {
     public static function from_bearer(?string $authorization): authenticated_identity {
         global $DB;
         if (!$authorization || !preg_match('/^Bearer\s+(.+)$/i', trim($authorization), $m)) {
-            throw new \local_mcp\exception\api_exception('invalid_token', 401);
+            throw new api_exception('invalid_token', 401);
         }
         $token = trim($m[1]);
         $prefix = secret::prefix($token);
@@ -52,11 +54,11 @@ final class token_resolver {
                     continue;
                 }
                 if ($rec->revokedat || $rec->expiresat < time()) {
-                    throw new \local_mcp\exception\api_exception('expired_token', 401);
+                    throw new api_exception('expired_token', 401);
                 }
                 $connection = $DB->get_record('local_mcp_connection', ['id' => $rec->connectionid, 'enabled' => 1]);
                 if (!$connection || $connection->revokedat) {
-                    throw new \local_mcp\exception\api_exception('invalid_token', 401);
+                    throw new api_exception('invalid_token', 401);
                 }
                 self::touch('local_mcp_access_token', $rec->id);
                 return new authenticated_identity(
@@ -78,7 +80,7 @@ final class token_resolver {
                     continue;
                 }
                 if ($rec->expires && $rec->expires < time()) {
-                    throw new \local_mcp\exception\api_exception('expired_token', 401);
+                    throw new api_exception('expired_token', 401);
                 }
                 self::touch('local_mcp_manual_token', $rec->id);
                 $scopes = [];
@@ -92,7 +94,7 @@ final class token_resolver {
             }
         }
 
-        throw new \local_mcp\exception\api_exception('invalid_token', 401);
+        throw new api_exception('invalid_token', 401);
     }
 
     /**

@@ -24,12 +24,14 @@
 
 namespace local_mcp\event;
 
+use core\event\base;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
  * Class write_operation_executed.
  */
-final class write_operation_executed extends \core\event\base {
+final class write_operation_executed extends base {
     /**
      * Method init.
      *

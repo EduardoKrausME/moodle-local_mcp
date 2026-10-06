@@ -24,12 +24,14 @@
 
 namespace local_mcp\event;
 
+use core\event\base;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
  * Class manual_token_created.
  */
-final class manual_token_created extends \core\event\base {
+final class manual_token_created extends base {
     /**
      * Method init.
      *

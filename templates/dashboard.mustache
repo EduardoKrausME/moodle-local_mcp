@@ -23,10 +23,35 @@
     }
 }}
 <div class="row">
-{{#connections}}<div class="col-md-4"><div class="card p-3 mb-3"><strong>Active connections</strong><div class="h2">{{connections}}</div></div></div>{{/connections}}
-<div class="col-md-4"><div class="card p-3 mb-3"><strong>OAuth clients</strong><div class="h2">{{clients}}</div></div></div>
-<div class="col-md-4"><div class="card p-3 mb-3"><strong>Manual tokens</strong><div class="h2">{{manualtokens}}</div></div></div>
-<div class="col-md-4"><div class="card p-3 mb-3"><strong>READ calls today</strong><div class="h2">{{readtoday}}</div></div></div>
-<div class="col-md-4"><div class="card p-3 mb-3"><strong>WRITE calls today</strong><div class="h2">{{writetoday}}</div></div></div>
-<div class="col-md-4"><div class="card p-3 mb-3"><strong>Destructive WRITE today</strong><div class="h2">{{destructive}}</div></div></div>
+    {{#connections}}
+        <div class="col-md-4">
+            <div class="card p-3 mb-3"><strong>Active connections</strong>
+                <div class="h2">{{connections}}</div>
+            </div>
+        </div>{{/connections}}
+    <div class="col-md-4">
+        <div class="card p-3 mb-3"><strong>OAuth clients</strong>
+            <div class="h2">{{clients}}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 mb-3"><strong>Manual tokens</strong>
+            <div class="h2">{{manualtokens}}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 mb-3"><strong>READ calls today</strong>
+            <div class="h2">{{readtoday}}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 mb-3"><strong>WRITE calls today</strong>
+            <div class="h2">{{writetoday}}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 mb-3"><strong>Destructive WRITE today</strong>
+            <div class="h2">{{destructive}}</div>
+        </div>
+    </div>
 </div>

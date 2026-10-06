@@ -24,6 +24,9 @@
 
 namespace local_mcp\security;
 
+use cache;
+use local_mcp\exception\api_exception;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
@@ -42,12 +45,12 @@ final class rate_limiter {
         if ($limit <= 0) {
             return;
         }
-        $cache = \cache::make('local_mcp', 'ratelimit');
-        $window = (int) floor(time() / 60);
+        $cache = cache::make('local_mcp', 'ratelimit');
+        $window = (int)floor(time() / 60);
         $key = sha1($bucket . ':' . $subject . ':' . $window);
-        $count = (int) ($cache->get($key) ?: 0);
+        $count = (int)($cache->get($key) ?: 0);
         if ($count >= $limit) {
-            throw new \local_mcp\exception\api_exception('rate_limit_exceeded', 429);
+            throw new api_exception('rate_limit_exceeded', 429);
         }
         $cache->set($key, $count + 1);
     }

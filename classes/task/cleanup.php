@@ -24,12 +24,14 @@
 
 namespace local_mcp\task;
 
+use core\task\scheduled_task;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
  * Class cleanup.
  */
-final class cleanup extends \core\task\scheduled_task {
+final class cleanup extends scheduled_task {
     /**
      * Method get_name.
      *

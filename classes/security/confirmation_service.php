@@ -24,6 +24,9 @@
 
 namespace local_mcp\security;
 
+use context;
+use local_mcp\exception\api_exception;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
@@ -48,11 +51,11 @@ final class confirmation_service {
      * @param string $rawaccess Parameter rawaccess.
      * @param string $tool Parameter tool.
      * @param array $arguments Parameter arguments.
-     * @param \context $context Parameter context.
+     * @param context $context Parameter context.
      * @return string Return value.
      */
     public static function issue(authenticated_identity $identity, string $rawaccess, string $tool,
-            array $arguments, \context $context): string {
+                                 array                  $arguments, context $context): string {
         global $DB;
         $token = secret::generate('mcp_confirm_', 32);
         $ttl = (int)get_config('local_mcp', 'confirmationttl') ?: 300;
@@ -81,11 +84,11 @@ final class confirmation_service {
      * @param string $rawaccess Parameter rawaccess.
      * @param string $tool Parameter tool.
      * @param array $arguments Parameter arguments.
-     * @param \context $context Parameter context.
+     * @param context $context Parameter context.
      * @return void Return value.
      */
     public static function consume(string $token, authenticated_identity $identity, string $rawaccess,
-            string $tool, array $arguments, \context $context): void {
+                                   string $tool, array $arguments, context $context): void {
         global $DB;
         $rec = $DB->get_record('local_mcp_confirm', ['tokenhash' => secret::hash($token)], '*', MUST_EXIST);
         $valid = !$rec->used && $rec->expires >= time()
@@ -97,7 +100,7 @@ final class confirmation_service {
             && (($rec->clientid === null && $identity->clientid === null) || (int)$rec->clientid === (int)$identity->clientid)
             && (($rec->connectionid === null && $identity->connectionid === null) || (int)$rec->connectionid === (int)$identity->connectionid);
         if (!$valid) {
-            throw new \local_mcp\exception\api_exception('confirmation_expired', 409);
+            throw new api_exception('confirmation_expired', 409);
         }
         $DB->set_field('local_mcp_confirm', 'used', 1, ['id' => $rec->id]);
     }

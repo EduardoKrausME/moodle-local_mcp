@@ -22,29 +22,35 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_mcp\exception\api_exception;
+use local_mcp\oauth\client_service;
+use local_mcp\protocol\http;
+use local_mcp\security\rate_limiter;
+use local_mcp\security\transport;
+
 define('NO_DEBUG_DISPLAY', true);
 require_once(__DIR__ . '/../../../config.php');
 
-\local_mcp\security\transport::require_secure();
+transport::require_secure();
 
 try {
     if (!get_config('local_mcp', 'dynamicregistration')) {
-        throw new \local_mcp\exception\api_exception('registration_disabled', 403);
+        throw new api_exception('registration_disabled', 403);
     }
-    \local_mcp\security\rate_limiter::check('oauth_register', getremoteaddr(),
+    rate_limiter::check('oauth_register', getremoteaddr(),
         (int)get_config('local_mcp', 'rateoauth') ?: 30);
-    $data = \local_mcp\protocol\http::request_json();
+    $data = http::request_json();
 
     $granttypes = $data['grant_types'] ?? ['authorization_code', 'refresh_token'];
     $responsetypes = $data['response_types'] ?? ['code'];
     $authmethod = $data['token_endpoint_auth_method'] ?? 'none';
     if (array_diff($granttypes, ['authorization_code', 'refresh_token'])
-            || array_diff($responsetypes, ['code']) || $authmethod !== 'none') {
-        throw new \local_mcp\exception\api_exception('invalid_client_metadata', 400);
+        || array_diff($responsetypes, ['code']) || $authmethod !== 'none') {
+        throw new api_exception('invalid_client_metadata', 400);
     }
 
-    $result = \local_mcp\oauth\client_service::register_public($data);
-    \local_mcp\protocol\http::json($result, 201);
-} catch (\Throwable $e) {
-    \local_mcp\protocol\http::error($e);
+    $result = client_service::register_public($data);
+    http::json($result, 201);
+} catch (Throwable $e) {
+    http::error($e);
 }

@@ -24,12 +24,14 @@
 
 namespace local_mcp\extension;
 
+use local_mcp\read\tool_interface;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
  * Interface read_provider_interface.
  */
 interface read_provider_interface {
-    /** @return \local_mcp\read\tool_interface[] */
+    /** @return tool_interface[] */
     public function get_read_tools(): array;
 }

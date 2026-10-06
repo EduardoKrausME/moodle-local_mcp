@@ -22,9 +22,12 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_mcp\protocol\mcp_server;
+use local_mcp\security\transport;
+
 define('NO_DEBUG_DISPLAY', true);
 require_once(__DIR__ . '/../../config.php');
 
-\local_mcp\security\transport::require_secure();
+transport::require_secure();
 
-(new \local_mcp\protocol\mcp_server('read'))->handle();
+(new mcp_server('read'))->handle();

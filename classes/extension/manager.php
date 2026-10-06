@@ -24,6 +24,8 @@
 
 namespace local_mcp\extension;
 
+use coding_exception;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
@@ -54,7 +56,7 @@ final class manager {
             foreach ($functions as $function) {
                 $provider = $function();
                 if (!$provider instanceof $interface) {
-                    throw new \coding_exception($component . ' returned an invalid MCP provider.');
+                    throw new coding_exception($component . ' returned an invalid MCP provider.');
                 }
                 $providers[] = $provider;
             }

@@ -22,6 +22,26 @@
         Aqui tem que criar o context em inglês
     }
 }}
-<table class="generaltable"><thead><tr><th>Client</th><th>User</th><th>Scopes</th><th>Connected</th><th>Last used</th><th></th></tr></thead><tbody>
-{{#rows}}<tr><td>{{clientname}}</td><td>{{user}}</td><td>{{scopes}}</td><td>{{created}}</td><td>{{lastused}}</td><td>{{#enabled}}<a class="btn btn-danger btn-sm" href="{{revokeurl}}">Revoke</a>{{/enabled}}</td></tr>{{/rows}}
-</tbody></table>
+<table class="generaltable">
+    <thead>
+    <tr>
+        <th>Client</th>
+        <th>User</th>
+        <th>Scopes</th>
+        <th>Connected</th>
+        <th>Last used</th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    {{#rows}}
+        <tr>
+            <td>{{clientname}}</td>
+            <td>{{user}}</td>
+            <td>{{scopes}}</td>
+            <td>{{created}}</td>
+            <td>{{lastused}}</td>
+            <td>{{#enabled}}<a class="btn btn-danger btn-sm" href="{{{revokeurl}}}">Revoke</a>{{/enabled}}</td>
+        </tr>{{/rows}}
+    </tbody>
+</table>

@@ -24,6 +24,10 @@
 
 namespace local_mcp\protocol;
 
+use local_mcp\exception\api_exception;
+use moodle_url;
+use Throwable;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
@@ -69,7 +73,7 @@ final class http {
         $raw = file_get_contents('php://input');
         $data = json_decode($raw ?: '{}', true);
         if (!is_array($data)) {
-            throw new \local_mcp\exception\api_exception('invalid_request', 400);
+            throw new api_exception('invalid_request', 400);
         }
         return $data;
     }
@@ -82,7 +86,7 @@ final class http {
     public static function bearer(): array {
         $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
         if (!preg_match('/^Bearer\s+(.+)$/i', trim($header), $m)) {
-            throw new \local_mcp\exception\api_exception('invalid_token', 401);
+            throw new api_exception('invalid_token', 401);
         }
         return [$header, trim($m[1])];
     }
@@ -90,14 +94,14 @@ final class http {
     /**
      * Method error.
      *
-     * @param \Throwable $e Parameter e.
+     * @param Throwable $e Parameter e.
      * @return never Return value.
      */
-    public static function error(\Throwable $e): never {
-        if ($e instanceof \local_mcp\exception\api_exception) {
+    public static function error(Throwable $e): never {
+        if ($e instanceof api_exception) {
             $headers = [];
             if ($e->httpstatus === 401) {
-                $metadata = (new \moodle_url('/local/mcp/.well-known/oauth-protected-resource.php'))->out(false);
+                $metadata = (new moodle_url('/local/mcp/.well-known/oauth-protected-resource.php'))->out(false);
                 $headers[] = 'WWW-Authenticate: Bearer resource_metadata="' . $metadata . '"';
             }
             self::json(['error' => $e->machinecode, 'message' => $e->getMessage(), 'details' => $e->details],

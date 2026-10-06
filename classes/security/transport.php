@@ -24,6 +24,8 @@
 
 namespace local_mcp\security;
 
+use local_mcp\exception\api_exception;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
@@ -44,7 +46,7 @@ final class transport {
             || str_ends_with($host, '.localhost')
             || str_ends_with($host, '.test');
         if ($scheme !== 'https' && !$local) {
-            throw new \local_mcp\exception\api_exception('https_required', 400);
+            throw new api_exception('https_required', 400);
         }
     }
 }

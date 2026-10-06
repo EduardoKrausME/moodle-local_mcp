@@ -24,12 +24,16 @@
 
 namespace local_mcp\read\tool;
 
+use context_course;
+use context_user;
+use local_mcp\read\tool_interface;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
  * Class base_tool.
  */
-abstract class base_tool implements \local_mcp\read\tool_interface {
+abstract class base_tool implements tool_interface {
     /**
      * Method object_schema.
      *
@@ -45,19 +49,19 @@ abstract class base_tool implements \local_mcp\read\tool_interface {
      * Method course_context.
      *
      * @param int $courseid Parameter courseid.
-     * @return \context_course Return value.
+     * @return context_course Return value.
      */
-    protected function course_context(int $courseid): \context_course {
-        return \context_course::instance($courseid, MUST_EXIST);
+    protected function course_context(int $courseid): context_course {
+        return context_course::instance($courseid, MUST_EXIST);
     }
 
     /**
      * Method user_context.
      *
      * @param int $userid Parameter userid.
-     * @return \context_user Return value.
+     * @return context_user Return value.
      */
-    protected function user_context(int $userid): \context_user {
-        return \context_user::instance($userid, MUST_EXIST);
+    protected function user_context(int $userid): context_user {
+        return context_user::instance($userid, MUST_EXIST);
     }
 }

@@ -22,10 +22,12 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_mcp\protocol\http;
+
 require_once(__DIR__ . '/../../config.php');
 
 $base = $CFG->wwwroot . '/local/mcp';
-\local_mcp\protocol\http::json([
+http::json([
     'name' => 'Moodle MCP',
     'mcp' => [
         'read' => $base . '/read.php',

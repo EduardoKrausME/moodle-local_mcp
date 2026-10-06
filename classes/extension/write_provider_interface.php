@@ -24,12 +24,14 @@
 
 namespace local_mcp\extension;
 
+use local_mcp\write\tool_interface;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
  * Interface write_provider_interface.
  */
 interface write_provider_interface {
-    /** @return \local_mcp\write\tool_interface[] */
+    /** @return tool_interface[] */
     public function get_write_tools(): array;
 }

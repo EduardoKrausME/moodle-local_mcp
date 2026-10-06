@@ -23,7 +23,12 @@
  */
 
 namespace local_mcp\read\tool;
+use context;
+use context_module;
+use local_mcp\security\authenticated_identity;
+
 defined('MOODLE_INTERNAL') || die;
+
 /**
  * Class get_assignment.
  */
@@ -33,50 +38,68 @@ final class get_assignment extends base_tool {
      *
      * @return string Return value.
      */
-    public function get_name(): string { return 'get_assignment'; }
+    public function get_name(): string {
+        return 'get_assignment';
+    }
+
     /**
      * Method get_title.
      *
      * @return string Return value.
      */
-    public function get_title(): string { return 'Get assignment'; }
+    public function get_title(): string {
+        return 'Get assignment';
+    }
+
     /**
      * Method get_description.
      *
      * @return string Return value.
      */
-    public function get_description(): string { return 'Return one assignment activity.'; }
+    public function get_description(): string {
+        return 'Return one assignment activity.';
+    }
+
     /**
      * Method get_required_capability.
      *
      * @return string Return value.
      */
-    public function get_required_capability(): string { return 'mod/assign:view'; }
+    public function get_required_capability(): string {
+        return 'mod/assign:view';
+    }
+
     /**
      * Method get_input_schema.
      *
      * @return array Return value.
      */
-    public function get_input_schema(): array { return $this->object_schema(['cmid'=>['type'=>'integer','minimum'=>1]],['cmid']); }
+    public function get_input_schema(): array {
+        return $this->object_schema(['cmid' => ['type' => 'integer', 'minimum' => 1]], ['cmid']);
+    }
+
     /**
      * Method resolve_context.
      *
      * @param array $arguments Parameter arguments.
-     * @return \context Return value.
+     * @return context Return value.
      */
-    public function resolve_context(array $arguments): \context { return \context_module::instance((int)$arguments['cmid'],MUST_EXIST); }
+    public function resolve_context(array $arguments): context {
+        return context_module::instance((int)$arguments['cmid'], MUST_EXIST);
+    }
+
     /**
      * Method execute.
      *
      * @param array $arguments Parameter arguments.
-     * @param \local_mcp\security\authenticated_identity $identity Parameter identity.
+     * @param authenticated_identity $identity Parameter identity.
      * @return array Return value.
      */
-    public function execute(array $arguments, \local_mcp\security\authenticated_identity $identity): array {
-        [$course,$cm]=get_course_and_cm_from_cmid((int)$arguments['cmid'],'assign');
+    public function execute(array $arguments, authenticated_identity $identity): array {
+        [$course, $cm] = get_course_and_cm_from_cmid((int)$arguments['cmid'], 'assign');
         global $DB;
-        $a=$DB->get_record('assign',['id'=>$cm->instance],'id,name,intro,introformat,duedate,cutoffdate,grade',MUST_EXIST);
-        return ['cmid'=>(int)$cm->id,'id'=>(int)$a->id,'name'=>$a->name,
-            'intro'=>format_module_intro('assign',$a,$cm->id),'duedate'=>(int)$a->duedate,'cutoffdate'=>(int)$a->cutoffdate,'grade'=>$a->grade];
+        $a = $DB->get_record('assign', ['id' => $cm->instance], 'id,name,intro,introformat,duedate,cutoffdate,grade', MUST_EXIST);
+        return ['cmid' => (int)$cm->id, 'id' => (int)$a->id, 'name' => $a->name,
+            'intro' => format_module_intro('assign', $a, $cm->id), 'duedate' => (int)$a->duedate, 'cutoffdate' => (int)$a->cutoffdate, 'grade' => $a->grade];
     }
 }

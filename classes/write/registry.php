@@ -24,6 +24,17 @@
 
 namespace local_mcp\write;
 
+use coding_exception;
+use local_mcp\extension\manager;
+use local_mcp\write\tool\create_course;
+use local_mcp\write\tool\create_user;
+use local_mcp\write\tool\enrol_user;
+use local_mcp\write\tool\send_message;
+use local_mcp\write\tool\suspend_user;
+use local_mcp\write\tool\unenrol_user;
+use local_mcp\write\tool\update_course;
+use local_mcp\write\tool\update_user;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
@@ -33,19 +44,19 @@ final class registry {
     /** @return tool_interface[] */
     public static function get_tools(): array {
         $tools = [
-            new \local_mcp\write\tool\create_course(),
-            new \local_mcp\write\tool\update_course(),
-            new \local_mcp\write\tool\enrol_user(),
-            new \local_mcp\write\tool\unenrol_user(),
-            new \local_mcp\write\tool\create_user(),
-            new \local_mcp\write\tool\update_user(),
-            new \local_mcp\write\tool\suspend_user(),
-            new \local_mcp\write\tool\send_message(),
+            new create_course(),
+            new update_course(),
+            new enrol_user(),
+            new unenrol_user(),
+            new create_user(),
+            new update_user(),
+            new suspend_user(),
+            new send_message(),
         ];
-        foreach (\local_mcp\extension\manager::write_providers() as $provider) {
+        foreach (manager::write_providers() as $provider) {
             foreach ($provider->get_write_tools() as $tool) {
                 if (!$tool instanceof tool_interface) {
-                    throw new \coding_exception('WRITE provider returned a non-WRITE tool.');
+                    throw new coding_exception('WRITE provider returned a non-WRITE tool.');
                 }
                 $tools[] = $tool;
             }
@@ -64,7 +75,7 @@ final class registry {
         foreach ($tools as $tool) {
             $name = $tool->get_name();
             if (isset($indexed[$name])) {
-                throw new \coding_exception('Duplicate MCP WRITE tool: ' . $name);
+                throw new coding_exception('Duplicate MCP WRITE tool: ' . $name);
             }
             $indexed[$name] = $tool;
         }

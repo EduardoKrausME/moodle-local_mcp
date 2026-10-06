@@ -42,14 +42,15 @@ final class authenticated_identity {
      * @param ?string $family Parameter family.
      */
     public function __construct(
-        public readonly int $userid,
-        public readonly string $type,
-        public readonly array $scopes,
-        public readonly ?int $clientid = null,
-        public readonly ?int $connectionid = null,
-        public readonly ?int $tokenid = null,
+        public readonly int     $userid,
+        public readonly string  $type,
+        public readonly array   $scopes,
+        public readonly ?int    $clientid = null,
+        public readonly ?int    $connectionid = null,
+        public readonly ?int    $tokenid = null,
         public readonly ?string $family = null,
-    ) {}
+    ) {
+    }
 
     /**
      * Method has_scope.

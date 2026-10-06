@@ -24,6 +24,9 @@
 
 namespace local_mcp\audit;
 
+use context;
+use local_mcp\security\authenticated_identity;
+
 /**
  * Class logger.
  */
@@ -32,10 +35,10 @@ final class logger {
      * Method record.
      *
      * @param string $event Parameter event.
-     * @param ?\local_mcp\security\authenticated_identity $identity Parameter identity.
+     * @param ?authenticated_identity $identity Parameter identity.
      * @param ?string $tool Parameter tool.
      * @param ?string $side Parameter side.
-     * @param ?\context $context Parameter context.
+     * @param ?context $context Parameter context.
      * @param array $metadata Parameter metadata.
      * @param bool $destructive Parameter destructive.
      * @param bool $dryrun Parameter dryrun.
@@ -44,10 +47,10 @@ final class logger {
      * @param ?int $durationms Parameter durationms.
      * @return void Return value.
      */
-    public static function record(string $event, ?\local_mcp\security\authenticated_identity $identity = null,
-            ?string $tool = null, ?string $side = null, ?\context $context = null, array $metadata = [],
-            bool $destructive = false, bool $dryrun = false, bool $confirmation = false,
-            ?string $status = null, ?int $durationms = null): void {
+    public static function record(string  $event, ?authenticated_identity $identity = null,
+                                  ?string $tool = null, ?string $side = null, ?context $context = null, array $metadata = [],
+                                  bool    $destructive = false, bool $dryrun = false, bool $confirmation = false,
+                                  ?string $status = null, ?int $durationms = null): void {
         global $DB;
         $safe = [];
         foreach ($metadata as $key => $value) {

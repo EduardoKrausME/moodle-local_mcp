@@ -22,9 +22,12 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_mcp\oauth\authorization_service;
+use local_mcp\security\transport;
+
 require_once(__DIR__ . '/../../../config.php');
 
-\local_mcp\security\transport::require_secure();
+transport::require_secure();
 
 $clientid = required_param('client_id', PARAM_RAW_TRIMMED);
 $redirecturi = required_param('redirect_uri', PARAM_URL);
@@ -64,7 +67,7 @@ if (!has_capability('moodle/site:config', $context)) {
 }
 
 try {
-    [$client, $scopes] = \local_mcp\oauth\authorization_service::validate_request([
+    [$client, $scopes] = authorization_service::validate_request([
         'client_id' => $clientid,
         'redirect_uri' => $redirecturi,
         'response_type' => $responsetype,
@@ -86,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($decision !== 'authorize') {
         throw new moodle_exception('invalidrequest', 'error');
     }
-    $code = \local_mcp\oauth\authorization_service::issue_code(
+    $code = authorization_service::issue_code(
         $client, $USER->id, $redirecturi, $scopes, $challenge);
     redirect(new moodle_url($redirecturi, ['code' => $code, 'state' => $state]));
 }

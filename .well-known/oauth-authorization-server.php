@@ -22,6 +22,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_mcp\protocol\http;
+
 require_once(__DIR__ . '/../../../config.php');
 
 $base = $CFG->wwwroot . '/local/mcp';
@@ -38,4 +40,4 @@ $data = [
 if (get_config('local_mcp', 'dynamicregistration')) {
     $data['registration_endpoint'] = $base . '/oauth/register.php';
 }
-\local_mcp\protocol\http::json($data);
+http::json($data);
