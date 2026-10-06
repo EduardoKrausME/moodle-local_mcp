@@ -129,6 +129,14 @@ final class mcp_server {
         \\local_mcp\\audit\\logger::record('tool_called', $identity, $name, 'write', $context, [],
             $tool->is_destructive(), false, ($tool->requires_confirmation() || $tool->is_destructive()),
             'ok', (int)round((microtime(true) - $started) * 1000));
+        $eventclass = $tool->is_destructive()
+            ? \\local_mcp\\event\\destructive_operation_executed::class
+            : \\local_mcp\\event\\write_operation_executed::class;
+        $eventclass::create([
+            'context' => $context,
+            'relateduserid' => $identity->userid,
+            'other' => ['tool' => $name],
+        ])->trigger();
         return $result;
     }
 }
