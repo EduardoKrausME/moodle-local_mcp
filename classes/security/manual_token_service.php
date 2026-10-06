@@ -25,15 +25,26 @@ final class manual_token_service {
             'lastused' => null,
             'lastip' => null,
         ]);
+        \\local_mcp\\event\\manual_token_created::create([
+            'context' => \\context_system::instance(),
+            'objectid' => (int)$id,
+            'relateduserid' => $userid,
+        ])->trigger();
         return ['id' => (int)$id, 'token' => $token];
     }
 
     public static function revoke(int $id): void {
         global $DB;
+        $record = $DB->get_record('local_mcp_manual_token', ['id' => $id], '*', MUST_EXIST);
         $DB->update_record('local_mcp_manual_token', (object)[
             'id' => $id,
             'enabled' => 0,
             'timemodified' => time(),
         ]);
+        \\local_mcp\\event\\manual_token_revoked::create([
+            'context' => \\context_system::instance(),
+            'objectid' => $id,
+            'relateduserid' => (int)$record->userid,
+        ])->trigger();
     }
 }
