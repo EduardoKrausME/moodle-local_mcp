@@ -73,21 +73,49 @@ final class mcp_server {
                 ]]);
             }
             if ($method === 'notifications/initialized') {
-                http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => (object)[]]);
+                http::accepted();
             }
             if ($method === 'tools/list') {
                 http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => ['tools' => $this->tool_definitions()]]);
             }
             if ($method === 'tools/call') {
-                $result = $this->call_tool((string)($params['name'] ?? ''), (array)($params['arguments'] ?? []),
-                    $params, $identity, $rawtoken);
-                http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => [
-                    'content' => [['type' => 'text', 'text' => json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)]],
-                    'structuredContent' => $result,
-                    'isError' => false,
-                ]]);
+                try {
+                    $result = $this->call_tool(
+                        (string)($params['name'] ?? ''),
+                        (array)($params['arguments'] ?? []),
+                        $params,
+                        $identity,
+                        $rawtoken
+                    );
+                    http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => [
+                        'content' => [[
+                            'type' => 'text',
+                            'text' => json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                        ]],
+                        'structuredContent' => $result,
+                        'isError' => false,
+                    ]]);
+                } catch (\local_mcp\exception\api_exception $e) {
+                    $error = [
+                        'error' => $e->machinecode,
+                        'message' => $e->getMessage(),
+                        'details' => $e->details,
+                    ];
+                    http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => [
+                        'content' => [[
+                            'type' => 'text',
+                            'text' => json_encode($error, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                        ]],
+                        'structuredContent' => $error,
+                        'isError' => true,
+                    ]]);
+                }
             }
-            throw new \local_mcp\exception\api_exception('method_not_found', 404);
+            http::json([
+                'jsonrpc' => '2.0',
+                'id' => $id,
+                'error' => ['code' => -32601, 'message' => 'Method not found'],
+            ]);
         } catch (\Throwable $e) {
             http::error($e);
         }
