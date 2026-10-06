@@ -61,7 +61,7 @@ final class manual_token_service {
             'lastused' => null,
             'lastip' => null,
         ]);
-        \local_mcp\\event\\manual_token_created::create([
+        \local_mcp\event\manual_token_created::create([
             'context' => \context_system::instance(),
             'objectid' => (int)$id,
             'relateduserid' => $userid,
@@ -83,7 +83,7 @@ final class manual_token_service {
             'enabled' => 0,
             'timemodified' => time(),
         ]);
-        \local_mcp\\event\\manual_token_revoked::create([
+        \local_mcp\event\manual_token_revoked::create([
             'context' => \context_system::instance(),
             'objectid' => $id,
             'relateduserid' => (int)$record->userid,
