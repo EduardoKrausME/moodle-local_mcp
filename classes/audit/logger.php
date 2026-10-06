@@ -24,8 +24,6 @@
 
 namespace local_mcp\audit;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class logger.
  */
