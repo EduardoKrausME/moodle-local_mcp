@@ -134,8 +134,8 @@ final class token_service {
             'userid' => $userid, 'clientid' => $clientid, 'scopes' => $scopes, 'enabled' => 1,
             'timecreated' => time(), 'lastused' => null, 'lastip' => null, 'revokedat' => null,
         ]);
-        \\local_mcp\\event\\connection_authorized::create([
-            'context' => \\context_system::instance(),
+        \local_mcp\\event\\connection_authorized::create([
+            'context' => \context_system::instance(),
             'objectid' => (int)$id,
             'relateduserid' => $userid,
         ])->trigger();
