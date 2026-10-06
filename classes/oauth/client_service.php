@@ -1,15 +1,54 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * client_service.php
+ *
+ * @package   local_mcp
+ * @copyright 2026 Eduardo Kraus {@link https://eduardokraus.com}
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace local_mcp\oauth;
 
 defined('MOODLE_INTERNAL') || die;
 
+/**
+ * Class client_service.
+ */
 final class client_service {
+    /**
+     * Method by_clientid.
+     *
+     * @param string $clientid Parameter clientid.
+     * @return \stdClass Return value.
+     */
     public static function by_clientid(string $clientid): \stdClass {
         global $DB;
         $client = $DB->get_record('local_mcp_oauth_client', ['clientid' => $clientid, 'enabled' => 1], '*', MUST_EXIST);
         return $client;
     }
 
+    /**
+     * Method validate_redirect_uri.
+     *
+     * @param \stdClass $client Parameter client.
+     * @param string $redirecturi Parameter redirecturi.
+     * @return void Return value.
+     */
     public static function validate_redirect_uri(\stdClass $client, string $redirecturi): void {
         $uris = json_decode($client->redirecturis, true);
         if (!is_array($uris) || !in_array($redirecturi, $uris, true)) {
@@ -17,6 +56,12 @@ final class client_service {
         }
     }
 
+    /**
+     * Method register_public.
+     *
+     * @param array $metadata Parameter metadata.
+     * @return array Return value.
+     */
     public static function register_public(array $metadata): array {
         global $DB;
         $uris = array_values(array_unique($metadata['redirect_uris'] ?? []));

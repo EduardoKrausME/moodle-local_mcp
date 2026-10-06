@@ -1,12 +1,44 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * provider.php
+ *
+ * @package   local_mcp
+ * @copyright 2026 Eduardo Kraus {@link https://eduardokraus.com}
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace local_mcp\privacy;
 
 defined('MOODLE_INTERNAL') || die;
 
+/**
+ * Class provider.
+ */
 final class provider implements
         \core_privacy\local\metadata\provider,
         \core_privacy\local\request\plugin\provider {
 
+    /**
+     * Method get_metadata.
+     *
+     * @param \core_privacy\local\metadata\collection $collection Parameter collection.
+     * @return \core_privacy\local\metadata\collection Return value.
+     */
     public static function get_metadata(\core_privacy\local\metadata\collection $collection): \core_privacy\local\metadata\collection {
         $collection->add_database_table('local_mcp_connection', [
             'userid' => 'privacy:metadata:local_mcp_connections',
@@ -23,6 +55,12 @@ final class provider implements
         return $collection;
     }
 
+    /**
+     * Method get_contexts_for_userid.
+     *
+     * @param int $userid Parameter userid.
+     * @return \core_privacy\local\request\contextlist Return value.
+     */
     public static function get_contexts_for_userid(int $userid): \core_privacy\local\request\contextlist {
         $list = new \core_privacy\local\request\contextlist();
         global $DB;
@@ -33,6 +71,12 @@ final class provider implements
         return $list;
     }
 
+    /**
+     * Method export_user_data.
+     *
+     * @param \core_privacy\local\request\approved_contextlist $contextlist Parameter contextlist.
+     * @return void Return value.
+     */
     public static function export_user_data(\core_privacy\local\request\approved_contextlist $contextlist): void {
         global $DB;
         $userid = $contextlist->get_user()->id;
@@ -47,6 +91,12 @@ final class provider implements
         \core_privacy\local\request\writer::with_context($context)->export_data([], $data);
     }
 
+    /**
+     * Method delete_data_for_all_users_in_context.
+     *
+     * @param \context $context Parameter context.
+     * @return void Return value.
+     */
     public static function delete_data_for_all_users_in_context(\context $context): void {
         global $DB;
         if ($context->contextlevel !== CONTEXT_SYSTEM) {
@@ -55,6 +105,12 @@ final class provider implements
         $DB->delete_records('local_mcp_audit');
     }
 
+    /**
+     * Method delete_data_for_user.
+     *
+     * @param \core_privacy\local\request\approved_contextlist $contextlist Parameter contextlist.
+     * @return void Return value.
+     */
     public static function delete_data_for_user(\core_privacy\local\request\approved_contextlist $contextlist): void {
         global $DB;
         $userid = $contextlist->get_user()->id;

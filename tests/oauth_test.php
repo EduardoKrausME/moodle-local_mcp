@@ -1,9 +1,40 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * oauth_test.php
+ *
+ * @package   local_mcp
+ * @copyright 2026 Eduardo Kraus {@link https://eduardokraus.com}
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace local_mcp;
 
 defined('MOODLE_INTERNAL') || die;
 
+/**
+ * Class oauth_test.
+ */
 final class oauth_test extends \advanced_testcase {
+    /**
+     * Method test_redirect_uri_requires_exact_match.
+     *
+     * @return void Return value.
+     */
     public function test_redirect_uri_requires_exact_match(): void {
         $client = (object)['redirecturis' => json_encode(['https://client.example/callback'])];
         \local_mcp\oauth\client_service::validate_redirect_uri($client, 'https://client.example/callback');
@@ -11,6 +42,11 @@ final class oauth_test extends \advanced_testcase {
         \local_mcp\oauth\client_service::validate_redirect_uri($client, 'https://client.example/callback/evil');
     }
 
+    /**
+     * Method test_authorization_request_rejects_non_s256.
+     *
+     * @return void Return value.
+     */
     public function test_authorization_request_rejects_non_s256(): void {
         $this->resetAfterTest();
         global $DB;

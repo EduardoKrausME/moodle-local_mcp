@@ -1,9 +1,41 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * authorization_service.php
+ *
+ * @package   local_mcp
+ * @copyright 2026 Eduardo Kraus {@link https://eduardokraus.com}
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace local_mcp\oauth;
 
 defined('MOODLE_INTERNAL') || die;
 
+/**
+ * Class authorization_service.
+ */
 final class authorization_service {
+    /**
+     * Method validate_request.
+     *
+     * @param array $params Parameter params.
+     * @return array Return value.
+     */
     public static function validate_request(array $params): array {
         foreach (['client_id', 'redirect_uri', 'response_type', 'scope', 'state', 'code_challenge', 'code_challenge_method'] as $required) {
             if (!isset($params[$required]) || $params[$required] === '') {
@@ -25,6 +57,16 @@ final class authorization_service {
         return [$client, $scopes];
     }
 
+    /**
+     * Method issue_code.
+     *
+     * @param \stdClass $client Parameter client.
+     * @param int $userid Parameter userid.
+     * @param string $redirecturi Parameter redirecturi.
+     * @param array $scopes Parameter scopes.
+     * @param string $challenge Parameter challenge.
+     * @return string Return value.
+     */
     public static function issue_code(\stdClass $client, int $userid, string $redirecturi, array $scopes,
             string $challenge): string {
         global $DB;

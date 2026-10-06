@@ -1,15 +1,51 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * mcp_server.php
+ *
+ * @package   local_mcp
+ * @copyright 2026 Eduardo Kraus {@link https://eduardokraus.com}
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace local_mcp\protocol;
 
 defined('MOODLE_INTERNAL') || die;
 
+/**
+ * Class mcp_server.
+ */
 final class mcp_server {
+    /**
+     * Method __construct.
+     *
+     * @param string $side Parameter side.
+     */
     public function __construct(private readonly string $side) {
         if (!in_array($side, ['read', 'write'], true)) {
             throw new \coding_exception('Invalid MCP side.');
         }
     }
 
+    /**
+     * Method handle.
+     *
+     * @return never Return value.
+     */
     public function handle(): never {
         try {
             [$authheader, $rawtoken] = http::bearer();
@@ -57,6 +93,11 @@ final class mcp_server {
         }
     }
 
+    /**
+     * Method tool_definitions.
+     *
+     * @return array Return value.
+     */
     private function tool_definitions(): array {
         $tools = $this->side === 'read'
             ? \local_mcp\read\registry::get_tools()
@@ -80,6 +121,16 @@ final class mcp_server {
         return $out;
     }
 
+    /**
+     * Method call_tool.
+     *
+     * @param string $name Parameter name.
+     * @param array $arguments Parameter arguments.
+     * @param array $params Parameter params.
+     * @param \local_mcp\security\authenticated_identity $identity Parameter identity.
+     * @param string $rawtoken Parameter rawtoken.
+     * @return array Return value.
+     */
     private function call_tool(string $name, array $arguments, array $params,
             \local_mcp\security\authenticated_identity $identity, string $rawtoken): array {
         $tools = $this->side === 'read'
