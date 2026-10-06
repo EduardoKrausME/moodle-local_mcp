@@ -93,7 +93,11 @@ final class mcp_server {
         \local_mcp\security\capability_guard::check($tool->get_required_capability(), $context, $identity->userid);
 
         if ($this->side === 'read') {
-            return $tool->execute($arguments, $identity);
+            $started = microtime(true);
+            $result = $tool->execute($arguments, $identity);
+            \\local_mcp\\audit\\logger::record('tool_called', $identity, $name, 'read', $context, [],
+                false, false, false, 'ok', (int)round((microtime(true) - $started) * 1000));
+            return $result;
         }
 
         $dryrun = !empty($params['dry_run']);
@@ -101,7 +105,10 @@ final class mcp_server {
             if (!$tool->supports_dry_run()) {
                 throw new \local_mcp\exception\api_exception('dry_run_not_supported', 400);
             }
-            return ['dry_run' => true, 'preview' => $tool->preview($arguments, $identity)];
+            $preview = $tool->preview($arguments, $identity);
+            \\local_mcp\\audit\\logger::record('tool_called', $identity, $name, 'write', $context, [],
+                $tool->is_destructive(), true, false, 'preview');
+            return ['dry_run' => true, 'preview' => $preview];
         }
 
         if ($tool->requires_confirmation() || $tool->is_destructive()) {
@@ -117,6 +124,11 @@ final class mcp_server {
             \local_mcp\security\confirmation_service::consume(
                 $confirmation, $identity, $rawtoken, $name, $arguments, $context);
         }
-        return $tool->execute($arguments, $identity);
+        $started = microtime(true);
+        $result = $tool->execute($arguments, $identity);
+        \\local_mcp\\audit\\logger::record('tool_called', $identity, $name, 'write', $context, [],
+            $tool->is_destructive(), false, ($tool->requires_confirmation() || $tool->is_destructive()),
+            'ok', (int)round((microtime(true) - $started) * 1000));
+        return $result;
     }
 }
