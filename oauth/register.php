@@ -1,6 +1,6 @@
 <?php
 define('NO_DEBUG_DISPLAY', true);
-require_once(__DIR__ . '/../../../config.php');
+require_once(__DIR__ . '/../../../config.php');\n\n\\local_mcp\\security\\transport::require_secure();
 
 try {
     if (!get_config('local_mcp', 'dynamicregistration')) {
