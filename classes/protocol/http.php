@@ -50,6 +50,17 @@ final class http {
     }
 
     /**
+     * Send an empty 202 Accepted response for JSON-RPC notifications.
+     *
+     * @return never
+     */
+    public static function accepted(): never {
+        http_response_code(202);
+        header('Cache-Control: no-store');
+        exit;
+    }
+
+    /**
      * Method request_json.
      *
      * @return array Return value.
