@@ -21,5 +21,10 @@ final class connection_service {
         $DB->delete_records('local_mcp_auth_code', ['clientid' => $connection->clientid, 'userid' => $connection->userid, 'used' => 0]);
         $DB->delete_records('local_mcp_confirm', ['connectionid' => $connectionid, 'used' => 0]);
         $transaction->allow_commit();
+        \\local_mcp\\event\\connection_revoked::create([
+            'context' => \\context_system::instance(),
+            'objectid' => $connectionid,
+            'relateduserid' => (int)$connection->userid,
+        ])->trigger();
     }
 }
