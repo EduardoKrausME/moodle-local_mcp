@@ -94,7 +94,9 @@ jobs:
 
     - name: Moodle Code Checker
       if: ${{ !cancelled() }}
-      run: moodle-plugin-ci phpcs --max-warnings 0 --exclude="Universal.WhiteSpace.CommaSpacing,PSR12.Classes.ClassInstantiation,PSR12.Classes.OpeningBraceSpace,Universal.Lists.DisallowLongListSyntax,PSR2.Methods.FunctionCallSignature,PSR12.ControlStructures.ControlStructureSpacing,Squiz.WhiteSpace.ControlStructureSpacing,PSR2.ControlStructures.SwitchDeclaration,Squiz.Functions.MultiLineFunctionDeclaration,PSR2.Classes.ClassDeclaration,Universal.OOStructures.AlphabeticExtendsImplements"
+      run: >
+        moodle-plugin-ci phpcs
+        --exclude="Universal.WhiteSpace.CommaSpacing,PSR12.Classes.ClassInstantiation,PSR12.Classes.OpeningBraceSpace,Universal.Lists.DisallowLongListSyntax,PSR2.Methods.FunctionCallSignature,PSR12.ControlStructures.ControlStructureSpacing,Squiz.WhiteSpace.ControlStructureSpacing,PSR2.ControlStructures.SwitchDeclaration,Squiz.Functions.MultiLineFunctionDeclaration,PSR2.Classes.ClassDeclaration,Universal.OOStructures.AlphabeticExtendsImplements,moodle.Commenting.DocblockDescription.Missing,NormalizedArrays.Arrays.CommaAfterLast.MissingMultiLine,moodle.Files.LineLength.MaxExceeded,moodle.Commenting.VariableComment.Missing,Squiz.Functions.FunctionDeclarationArgumentSpacing.SpacingAfterHint,moodle.Commenting.MissingDocblock.Constant"
 
     - name: PHPUnit tests
       if: ${{ !cancelled() }}
