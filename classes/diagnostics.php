@@ -42,6 +42,8 @@ final class diagnostics {
         'line', 'message', 'httpstatus', 'limit', 'used', 'dry_run',
         'confirmation', 'args_keys', 'protocol', 'read', 'write', 'catalog_sha256',
         'provider', 'schema_path', 'expected', 'actual', 'resolution',
+        'courseid', 'source', 'source_bytes', 'bytes', 'width', 'height', 'mime',
+        'download_status', 'download_bytes', 'existing_images', 'replaced',
     ];
 
     /**
