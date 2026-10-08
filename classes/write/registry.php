@@ -43,6 +43,7 @@ final class registry {
     public static function get_tools(): array {
         $tools = [
             new \local_mcp\write\tool\create_category(),
+            new \local_mcp\write\tool\bulk_create_courses(),
             new \local_mcp\write\tool\create_course(),
             new \local_mcp\write\tool\create_section(),
             new \local_mcp\write\tool\create_user(),

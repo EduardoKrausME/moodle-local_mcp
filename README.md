@@ -62,6 +62,56 @@ with that reference. No bearer tokens or tool arguments are logged.
 
 After updating Moodle, refresh the custom MCP connector in ChatGPT so its
 advertised input schemas and list of tools reflect the new plugin version.
+## Create a batch of up to 30 courses
+
+`bulk_create_courses` is a WRITE tool designed for importing complete Moodle courses
+with one preview and one confirmation. It accepts the following structure:
+
+```json
+{
+  "courses": [
+    {
+      "fullname": "Fundamentos de Cidades Inteligentes",
+      "shortname": "FUN-001",
+      "idnumber": "CITY-FUN-001",
+      "categoryid": 2,
+      "summary": "<p>Introdução às cidades inteligentes.</p>",
+      "summaryformat": 1,
+      "visible": false
+    }
+  ],
+  "skip_existing": true,
+  "excluded_categoryids": [1]
+}
+```
+
+Every item requires a nonempty HTML `summary`, `fullname`, `shortname` and
+`categoryid`; `summaryformat` is optional (HTML/1 is the only supported format).
+`idnumber` is optional. An item may additionally include `image_base64` or
+`image_url`, using the existing 5 MiB course image API. Very large image batches
+may exceed the MCP client or PHP request-body limit; covers can also be uploaded
+later with `set_course_image`.
+
+The preview lists each requested course and whether it will be created or skipped,
+without returning HTML bodies or Base64 image data. The operation rejects
+duplicate identifiers *within* the batch. Existing courses matching `shortname`
+or a nonempty `idnumber` are skipped by default and are never edited; optionally
+set `skip_existing: false` to reject the request instead. If shortname and
+idnumber refer to different existing courses, the request is rejected.
+
+Use `list_categories` to identify the root category named `Teste` and pass its
+ID in `excluded_categoryids`. Every category below an excluded root is also
+blocked, so old test courses are not accidentally mixed with new ones.
+The tool verifies `moodle/course:create` on every destination category and
+revalidates the batch immediately before writing. Creation uses a delegated
+database transaction; Moodle integrations may have external side effects that
+transactions cannot undo.
+
+**If ChatGPT still shows `create_course` with only four fields or does not show
+`list_categories`, it is using an old connector schema. Deploy the updated
+plugin in Moodle and refresh/reinstall the custom ChatGPT MCP connection to
+fetch the new tool definitions. Changing repository files alone does not
+update an already-installed Moodle server or a cached connector.**
 ## Creating complete courses and organizing categories
 
 The combined MCP server exposes the following operations:
