@@ -102,6 +102,37 @@
 {{/serverurl}}
 {{/shownew}}
 
+{{#editing}}
+<section class="card mb-4" aria-labelledby="mcp-edit-permissions-heading">
+    <div class="card-body">
+        <h3 class="h4" id="mcp-edit-permissions-heading">
+            {{#str}}testconnectioneditpermissions, local_mcp{{/str}}: {{name}}
+        </h3>
+        <p>{{#str}}testconnectioneditintro, local_mcp{{/str}}</p>
+        <form method="post" action="{{cancelurl}}">
+            <input type="hidden" name="sesskey" value="{{sesskey}}">
+            <input type="hidden" name="action" value="updatepermissions">
+            <input type="hidden" name="tokenid" value="{{id}}">
+            <div class="form-group">
+                <label class="mr-3">
+                    <input type="checkbox" name="read" value="1" {{#readenabled}}checked{{/readenabled}}>
+                    MCP READ
+                </label>
+                <label>
+                    <input type="checkbox" name="write" value="1" {{#writeenabled}}checked{{/writeenabled}}>
+                    MCP WRITE
+                </label>
+            </div>
+            <p class="small text-muted">{{#str}}testconnectioneditwarning, local_mcp{{/str}}</p>
+            <button type="submit" class="btn btn-primary">
+                {{#str}}testconnectionsavepermissions, local_mcp{{/str}}
+            </button>
+            <a href="{{cancelurl}}" class="btn btn-link">{{#str}}cancel, local_mcp{{/str}}</a>
+        </form>
+    </div>
+</section>
+{{/editing}}
+
 <h3 class="h5">{{#str}}testconnectionsheading, local_mcp{{/str}}</h3>
 {{#hastesttokens}}
 <table class="generaltable">
@@ -125,6 +156,9 @@
             <td>{{#enabled}}{{#str}}testconnectionactive, local_mcp{{/str}}{{/enabled}}{{^enabled}}{{#str}}testconnectioninactive, local_mcp{{/str}}{{/enabled}}</td>
             <td>
                 {{#enabled}}
+                <a class="btn btn-outline-primary btn-sm mb-1" href="{{editurl}}">
+                    {{#str}}testconnectioneditpermissions, local_mcp{{/str}}
+                </a>
                 <form method="post" action="{{cancelurl}}">
                     <input type="hidden" name="sesskey" value="{{sesskey}}">
                     <input type="hidden" name="action" value="revoketest">

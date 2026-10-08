@@ -73,6 +73,44 @@ final class manual_token_service {
     }
 
     /**
+     * Update READ and WRITE on an existing, active manual token.
+     *
+     * Keeps the same token so the existing MCP server URL remains valid.
+     * Any pending WRITE confirmations are invalidated on scope changes.
+     *
+     * @param int $id Manual token record ID.
+     * @param bool $read Whether READ is allowed.
+     * @param bool $write Whether WRITE is allowed.
+     * @return void
+     */
+    public static function update_permissions(int $id, bool $read, bool $write): void {
+        global $DB;
+
+        if (!$read && !$write) {
+            throw new api_exception('invalid_scope', 400);
+        }
+
+        $transaction = $DB->start_delegated_transaction();
+        $record = $DB->get_record('local_mcp_manual_token', ['id' => $id], '*', MUST_EXIST);
+        if (!$record->enabled || ($record->expires && $record->expires <= time())) {
+            throw new api_exception('invalid_token', 403);
+        }
+
+        if ((bool)$record->readenabled !== $read || (bool)$record->writeenabled !== $write) {
+            $DB->update_record('local_mcp_manual_token', (object)[
+                'id' => $id,
+                'readenabled' => (int)$read,
+                'writeenabled' => (int)$write,
+                'timemodified' => time(),
+            ]);
+
+            // Confirmation records are bound to the token hash, even for manual tokens.
+            $DB->delete_records('local_mcp_confirm', ['accesshash' => $record->tokenhash]);
+        }
+        $transaction->allow_commit();
+    }
+
+    /**
      * Method revoke.
      *
      * @param int $id Parameter id.

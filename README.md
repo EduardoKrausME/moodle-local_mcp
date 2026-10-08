@@ -227,6 +227,13 @@ Copy this value into ChatGPT's **MCP Server URL** field and select
 **No authentication**. Do not configure OAuth for this temporary test connection.
 `?token=...` is accepted as an alias, but the interface always generates `?toke=...`.
 
+After a test connection is created, **Connections → Edit permissions** can change
+its READ and WRITE scopes without creating a new token or changing the MCP
+server URL. Only active, non-expired test connections can be edited, and at
+least one permission must remain selected. Saving immediately changes which
+tools the token can access and clears outstanding WRITE confirmation tokens.
+ChatGPT may need to reload or reconnect the plugin to refresh its tool listing.
+
 The URL is displayed once, immediately after token creation, and is not saved
 in plaintext. The token is SHA-256 hashed in Moodle's database, has a 7-day
 expiration, can be revoked on the Connections page, and inherits the permissions

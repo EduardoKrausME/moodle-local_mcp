@@ -39,6 +39,7 @@ $PAGE->set_heading(get_string('connections', 'local_mcp'));
 global $DB, $USER;
 $serverurl = null;
 $shownew = optional_param('new', 0, PARAM_BOOL);
+$editid = optional_param('edit', 0, PARAM_INT);
 $expiresat = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -72,6 +73,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Referrer-Policy: no-referrer');
         header('X-Robots-Tag: noindex, nofollow');
         unset($created);
+    } else if ($action === 'updatepermissions') {
+        $tokenid = required_param('tokenid', PARAM_INT);
+        $read = optional_param('read', 0, PARAM_BOOL);
+        $write = optional_param('write', 0, PARAM_BOOL);
+        if (!$read && !$write) {
+            throw new moodle_exception('invalidrequest', 'error');
+        }
+        $token = $DB->get_record('local_mcp_manual_token', ['id' => $tokenid], '*', MUST_EXIST);
+        if (!str_starts_with($token->name, 'ChatGPT (teste) - ')) {
+            throw new moodle_exception('invalidrequest', 'error');
+        }
+        manual_token_service::update_permissions($tokenid, (bool)$read, (bool)$write);
+        redirect($PAGE->url);
     } else if ($action === 'revoketest') {
         $tokenid = required_param('tokenid', PARAM_INT);
         $token = $DB->get_record('local_mcp_manual_token', [
@@ -89,6 +103,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         throw new moodle_exception('invalidrequest', 'error');
     }
+}
+
+$editing = false;
+if ($editid > 0) {
+    $token = $DB->get_record('local_mcp_manual_token', ['id' => $editid], '*', MUST_EXIST);
+    if (!str_starts_with($token->name, 'ChatGPT (teste) - ')
+            || !$token->enabled || ($token->expires && $token->expires <= time())) {
+        throw new moodle_exception('invalidrequest', 'error');
+    }
+    $editing = [
+        'id' => (int)$token->id,
+        'name' => substr($token->name, strlen('ChatGPT (teste) - ')),
+        'readenabled' => (bool)$token->readenabled,
+        'writeenabled' => (bool)$token->writeenabled,
+    ];
 }
 
 // OAuth connections remain listed and revocable, but the test setup requires no OAuth.
@@ -125,6 +154,8 @@ foreach ($DB->get_records_sql($sql, ['nameprefix' => $DB->sql_like_escape('ChatG
         'name' => substr($record->name, strlen('ChatGPT (teste) - ')),
         'user' => fullname($record),
         'prefix' => $record->prefix,
+        'editurl' => (new moodle_url('/local/mcp/admin/connections.php',
+            ['edit' => (int)$record->id]))->out(false),
         'readenabled' => (bool)$record->readenabled,
         'writeenabled' => (bool)$record->writeenabled,
         'expires' => $record->expires ? userdate($record->expires) : '-',
@@ -138,6 +169,7 @@ $data = [
     'hastesttokens' => !empty($testtokens),
     'hasoauthrows' => !empty($rows),
     'shownew' => (bool)$shownew,
+    'editing' => $editing,
     'newurl' => (new moodle_url('/local/mcp/admin/connections.php', ['new' => 1]))->out(false),
     'cancelurl' => (new moodle_url('/local/mcp/admin/connections.php'))->out(false),
     'chatgpturl' => 'https://chatgpt.com/',

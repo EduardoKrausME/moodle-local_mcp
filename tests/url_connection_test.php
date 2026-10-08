@@ -138,4 +138,95 @@ final class url_connection_test extends advanced_testcase {
             }
         }
     }
+    /**
+     * Existing test URLs retain the same token while READ/WRITE are edited.
+     *
+     * @return void
+     */
+    public function test_update_permissions_keeps_existing_token_and_takes_effect_immediately(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $user = $this->getDataGenerator()->create_user();
+        $created = manual_token_service::create('ChatGPT (teste) - Update permissions',
+            (int)$user->id, true, false, time() + DAYSECS);
+        $authorization = 'Bearer ' . $created['token'];
+
+        $before = token_resolver::from_bearer($authorization);
+        $this->assertTrue($before->has_scope(scope::READ));
+        $this->assertFalse($before->has_scope(scope::WRITE));
+
+        manual_token_service::update_permissions((int)$created['id'], true, true);
+        $after = token_resolver::from_bearer($authorization);
+        $this->assertTrue($after->has_scope(scope::READ));
+        $this->assertTrue($after->has_scope(scope::WRITE));
+        $this->assertSame($before->tokenid, $after->tokenid);
+        $record = $DB->get_record('local_mcp_manual_token', ['id' => $created['id']], '*', MUST_EXIST);
+        $this->assertSame(secret::hash($created['token']), $record->tokenhash);
+
+        manual_token_service::update_permissions((int)$created['id'], false, true);
+        $writeonly = token_resolver::from_bearer($authorization);
+        $this->assertFalse($writeonly->has_scope(scope::READ));
+        $this->assertTrue($writeonly->has_scope(scope::WRITE));
+
+        manual_token_service::update_permissions((int)$created['id'], true, false);
+        $readonly = token_resolver::from_bearer($authorization);
+        $this->assertTrue($readonly->has_scope(scope::READ));
+        $this->assertFalse($readonly->has_scope(scope::WRITE));
+    }
+
+    /**
+     * @return void
+     */
+    public function test_update_permissions_rejects_zero_permissions(): void {
+        $this->resetAfterTest();
+        $user = $this->getDataGenerator()->create_user();
+        $created = manual_token_service::create('ChatGPT (teste) - Invalid permissions',
+            (int)$user->id, true, false, time() + DAYSECS);
+        $this->expectException(api_exception::class);
+        manual_token_service::update_permissions((int)$created['id'], false, false);
+    }
+
+    /**
+     * @return void
+     */
+    public function test_update_permissions_rejects_revoked_tokens(): void {
+        $this->resetAfterTest();
+        $user = $this->getDataGenerator()->create_user();
+        $created = manual_token_service::create('ChatGPT (teste) - Revoked token',
+            (int)$user->id, true, false, time() + DAYSECS);
+        manual_token_service::revoke((int)$created['id']);
+        $this->expectException(api_exception::class);
+        manual_token_service::update_permissions((int)$created['id'], true, true);
+    }
+
+    /**
+     * @return void
+     */
+    public function test_update_permissions_clears_outstanding_write_confirmations(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $user = $this->getDataGenerator()->create_user();
+        $created = manual_token_service::create('ChatGPT (teste) - Confirmation',
+            (int)$user->id, true, true, time() + DAYSECS);
+        $DB->insert_record('local_mcp_confirm', (object)[
+            'prefix' => 'mcp_confirm_test',
+            'tokenhash' => hash('sha256', 'testconfirmation'),
+            'userid' => (int)$user->id,
+            'clientid' => null,
+            'connectionid' => null,
+            'accesshash' => secret::hash($created['token']),
+            'tool' => 'test_tool',
+            'argshash' => hash('sha256', '{}'),
+            'contextid' => \context_system::instance()->id,
+            'expires' => time() + 300,
+            'used' => 0,
+            'timecreated' => time(),
+        ]);
+        $this->assertEquals(1, $DB->count_records('local_mcp_confirm'));
+        manual_token_service::update_permissions((int)$created['id'], true, false);
+        $this->assertEquals(0, $DB->count_records('local_mcp_confirm'));
+    }
+
 }
