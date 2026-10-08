@@ -31,7 +31,7 @@
     }
 }}
 <div class="mb-3">
-    <a href="{{newurl}}" class="btn btn-primary">{{#str}}newconnection, local_mcp{{/str}}</a>
+    <a href="{{{newurl}}}" class="btn btn-primary">{{#str}}newconnection, local_mcp{{/str}}</a>
 </div>
 
 {{#serverurl}}
@@ -59,7 +59,7 @@
         <h4 class="h5">{{#str}}testconnectionhowtotitle, local_mcp{{/str}}</h4>
         <ol>
             <li>{{#str}}testconnectionstep1, local_mcp{{/str}}
-                <a href="{{chatgpturl}}" target="_blank" rel="noopener noreferrer">ChatGPT</a>.
+                <a href="{{{chatgpturl}}}" target="_blank" rel="noopener noreferrer">ChatGPT</a>.
             </li>
             <li>{{#str}}testconnectionstep2, local_mcp{{/str}}</li>
             <li>{{#str}}testconnectionstep3, local_mcp{{/str}}</li>
@@ -95,7 +95,7 @@
             </div>
             <p class="small text-muted">{{#str}}testconnectionpermissions, local_mcp{{/str}}</p>
             <button class="btn btn-primary" type="submit">{{#str}}testconnectioncreate, local_mcp{{/str}}</button>
-            <a class="btn btn-link" href="{{cancelurl}}">{{#str}}cancel, local_mcp{{/str}}</a>
+            <a class="btn btn-link" href="{{{cancelurl}}}">{{#str}}cancel, local_mcp{{/str}}</a>
         </form>
     </div>
 </section>
@@ -127,7 +127,7 @@
             <button type="submit" class="btn btn-primary">
                 {{#str}}testconnectionsavepermissions, local_mcp{{/str}}
             </button>
-            <a href="{{cancelurl}}" class="btn btn-link">{{#str}}cancel, local_mcp{{/str}}</a>
+            <a href="{{{cancelurl}}}" class="btn btn-link">{{#str}}cancel, local_mcp{{/str}}</a>
         </form>
     </div>
 </section>
@@ -156,7 +156,7 @@
             <td>{{#enabled}}{{#str}}testconnectionactive, local_mcp{{/str}}{{/enabled}}{{^enabled}}{{#str}}testconnectioninactive, local_mcp{{/str}}{{/enabled}}</td>
             <td>
                 {{#enabled}}
-                <a class="btn btn-outline-primary btn-sm mb-1" href="{{editurl}}">
+                <a class="btn btn-outline-primary btn-sm mb-1" href="{{{editurl}}}">
                     {{#str}}testconnectioneditpermissions, local_mcp{{/str}}
                 </a>
                 <form method="post" action="{{cancelurl}}">

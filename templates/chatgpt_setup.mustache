@@ -41,7 +41,7 @@
         {{#registrationdisabled}}
             <div class="alert alert-warning" role="alert">
                 {{#str}}chatgptsetupdcrdisabled, local_mcp{{/str}}
-                <a href="{{settingsurl}}">{{#str}}chatgptsetupopensettings, local_mcp{{/str}}</a>
+                <a href="{{{settingsurl}}}">{{#str}}chatgptsetupopensettings, local_mcp{{/str}}</a>
             </div>
         {{/registrationdisabled}}
         {{#httpsdisabled}}
@@ -54,7 +54,7 @@
             <li class="mb-3">
                 <strong>{{#str}}chatgptsetupstep1title, local_mcp{{/str}}</strong>
                 <p class="mb-2">{{#str}}chatgptsetupstep1body, local_mcp{{/str}}</p>
-                <a href="{{chatgpturl}}" class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">
+                <a href="{{{chatgpturl}}}" class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">
                     {{#str}}chatgptsetupopenchatgpt, local_mcp{{/str}}
                     <span class="sr-only">({{#str}}chatgptsetupnewtab, local_mcp{{/str}})</span>
                 </a>
