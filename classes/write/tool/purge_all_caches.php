@@ -15,8 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
-Purge all Moodle caches via Moodle core APIs.
-
+ * Purge all Moodle caches via Moodle core APIs.
+ *
  * @package   local_mcp
  * @copyright 2026 Eduardo Kraus {@link https://eduardokraus.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
