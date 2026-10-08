@@ -353,6 +353,43 @@ Revoking a Connection immediately invalidates:
 - unused authorization codes for that user/client;
 - unused confirmation tokens.
 
+## Always-on PHP error log diagnostics
+
+The MCP server records significant lifecycle events and errors through PHP
+`error_log()` in both test and production installations. Each line starts with
+`[local_mcp]` followed by a single-line JSON object. The `request` field is
+a random 12-character correlation identifier shared by the request's log entries.
+
+Logged milestones include incoming requests (without their URL/query string),
+authenticated Moodle user ID and MCP scopes, protocol methods, discovery,
+tool counts, requested tool names and input **key names only**, resolved
+context/capability, dry runs, confirmation issuance and acceptance, execution
+success, and elapsed time. Authentication failures, permission denials, rate
+limit errors, unexpected JSON-RPC methods and exceptions are recorded too.
+Exceptions include their class, sanitized message, source file's basename,
+line and protocol HTTP status.
+
+**Secrets stay out of diagnostic messages:** the logger never serializes raw
+MCP requests, tool argument values, authorization headers, URL query strings,
+confirmation tokens, HTML content or uploaded Base64 images. Exception message
+strings are length-limited and redacted before being logged. Protocol response
+bodies remain unlogged. HTTP server access logs are managed separately from
+PHP; when using test `?toke=` URLs, configure Nginx/Apache not to record query
+strings, and rotate any token already exposed in server logs.
+
+Example:
+
+```text
+[local_mcp] {"request":"a1b2c3d4e5f6","level":"INFO","event":"protocol_method","side":"server","method":"tools/list","userid":2}
+[local_mcp] {"request":"a1b2c3d4e5f6","level":"INFO","event":"tools_listed","side":"server","userid":2,"count":26}
+```
+
+To follow events on a typical Apache/PHP installation:
+
+```bash
+tail -f /var/log/httpd/php-error.log | grep --line-buffered '\[local_mcp\]'
+```
+
 ## Audit
 
 The audit schema stores operation and security metadata, not ChatGPT conversations or complete model prompts/responses.

@@ -25,6 +25,7 @@
 namespace local_mcp\protocol;
 
 use coding_exception;
+use local_mcp\diagnostics;
 use core\session\manager;
 use local_mcp\audit\logger;
 use local_mcp\event\destructive_operation_executed;
@@ -74,6 +75,13 @@ final class mcp_server {
      * @return never Return value.
      */
     public function handle(): never {
+        $startedrequest = microtime(true);
+        diagnostics::event('request_received', [
+            'side' => $this->side,
+            'http_method' => (string)($_SERVER['REQUEST_METHOD'] ?? ''),
+            'auth_source' => (isset($_GET['toke']) || isset($_GET['token']))
+                ? 'url_token' : (isset($_SERVER['HTTP_AUTHORIZATION']) ? 'header' : 'none'),
+        ]);
         try {
             // Stateless Streamable HTTP: clients can use POST without an SSE session.
             if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
@@ -92,6 +100,14 @@ final class mcp_server {
                 throw new api_exception('invalid_user', 401);
             }
             manager::set_user($user);
+            diagnostics::event('authenticated', [
+                'side' => $this->side,
+                'userid' => $identity->userid,
+                'tokenid' => $identity->tokenid,
+                'clientid' => $identity->clientid,
+                'connectionid' => $identity->connectionid,
+                'scopes' => $identity->scopes,
+            ]);
             if ($this->side !== 'server') {
                 $requiredscope = $this->side === 'read' ? scope::READ : scope::WRITE;
                 if (!$identity->has_scope($requiredscope)) {
@@ -109,12 +125,19 @@ final class mcp_server {
             $id = $request['id'] ?? null;
             $method = $request['method'] ?? '';
             $params = $request['params'] ?? [];
+            diagnostics::event('protocol_method', [
+                'side' => $this->side,
+                'method' => (string)$method,
+                'userid' => $identity->userid,
+            ]);
 
             if ($method === 'server/discover') {
+                diagnostics::event('discovery_completed', ['side' => $this->side]);
                 http::json(['jsonrpc' => '2.0', 'id' => $id,
                     'result' => discovery::result($this->side, self::plugin_release())]);
             }
             if ($method === 'initialize') {
+                diagnostics::event('initialize_completed', ['side' => $this->side]);
                 http::json(['jsonrpc' => '2.0', 'id' => $id,
                     'result' => discovery::initialize_result($this->side, self::plugin_release())]);
             }
@@ -126,10 +149,26 @@ final class mcp_server {
                 (string)($_SERVER['HTTP_MCP_PROTOCOL_VERSION'] ?? '')
             );
             if ($method === 'tools/list') {
+                $definitions = $this->tool_definitions($identity);
+                diagnostics::event('tools_listed', [
+                    'side' => $this->side,
+                    'userid' => $identity->userid,
+                    'count' => count($definitions),
+                    'protocol' => $modern ? '2026-07-28' : 'legacy',
+                ]);
                 http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => discovery::decorate_result(
-                    ['tools' => $this->tool_definitions($identity)], $modern, true)]);
+                    ['tools' => $definitions], $modern, true)]);
             }
             if ($method === 'tools/call') {
+                $toolname = (string)($params['name'] ?? '');
+                $argumentkeys = is_array($params['arguments'] ?? null)
+                    ? array_keys($params['arguments']) : [];
+                diagnostics::event('tool_call_received', [
+                    'side' => $this->side,
+                    'tool' => $toolname,
+                    'userid' => $identity->userid,
+                    'args_keys' => $argumentkeys,
+                ]);
                 try {
                     $result = $this->call_tool(
                         (string)($params['name'] ?? ''),
@@ -153,12 +192,20 @@ final class mcp_server {
                             }
                         }
                     }
+                    diagnostics::event('tool_response_ready', [
+                        'tool' => $toolname,
+                        'userid' => $identity->userid,
+                        'duration_ms' => (int)round((microtime(true) - $startedrequest) * 1000),
+                    ]);
                     http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => [
                         'content' => $content,
                         'structuredContent' => $result,
                         'isError' => false,
                     ] + ($modern ? ['resultType' => 'complete'] : [])]);
                 } catch (api_exception $e) {
+                    diagnostics::exception($e, ['side' => $this->side, 'tool' => $toolname,
+                        'userid' => $identity->userid],
+                        $e->machinecode === 'confirmation_required' ? 'INFO' : 'WARNING');
                     $error = [
                         'error' => $e->machinecode,
                         'message' => $e->getMessage(),
@@ -175,12 +222,9 @@ final class mcp_server {
                 } catch (Throwable $e) {
                     // Keep internal details out of responses, but make 500-like
                     // failures diagnosable in the Moodle/PHP server log.
-                    $reference = bin2hex(random_bytes(6));
-                    $safeclassname = get_class($e);
-                    $safefile = basename($e->getFile());
-                    $safeline = (int)$e->getLine();
-                    error_log("local_mcp tools/call error {$reference}: {$safeclassname} "
-                        . "at {$safefile}:{$safeline}");
+                    $reference = diagnostics::request_id();
+                    diagnostics::exception($e, ['side' => $this->side,
+                        'tool' => $toolname, 'userid' => $identity->userid]);
                     $error = [
                         'error' => 'internal_error',
                         'message' => 'The Moodle tool failed internally. Check the server PHP log '
@@ -197,6 +241,11 @@ final class mcp_server {
                     ] + ($modern ? ['resultType' => 'complete'] : [])]);
                 }
             }
+            diagnostics::event('unknown_method', [
+                'side' => $this->side,
+                'method' => (string)$method,
+                'userid' => $identity->userid,
+            ], 'WARNING');
             http::json([
                 'jsonrpc' => '2.0',
                 'id' => $id,
@@ -310,11 +359,24 @@ final class mcp_server {
         $context = $tool->resolve_context($arguments);
         capability_guard::check($tool->get_required_capability(), $context, $identity->userid);
 
+        diagnostics::event('tool_permission_granted', [
+            'tool' => $name,
+            'side' => $iswrite ? 'write' : 'read',
+            'userid' => $identity->userid,
+            'contextid' => (int)$context->id,
+            'capability' => $tool->get_required_capability(),
+            'dry_run' => $dryrun,
+            'confirmation' => $confirmation !== '',
+        ]);
         if (!$iswrite) {
             $started = microtime(true);
             $result = $tool->execute($arguments, $identity);
             logger::record('tool_called', $identity, $name, 'read', $context, [],
                 false, false, false, 'ok', (int)round((microtime(true) - $started) * 1000));
+            diagnostics::event('tool_read_completed', [
+                'tool' => $name, 'contextid' => (int)$context->id,
+                'duration_ms' => (int)round((microtime(true) - $started) * 1000),
+            ]);
             return $result;
         }
 
@@ -325,6 +387,9 @@ final class mcp_server {
             $preview = $tool->preview($arguments, $identity);
             logger::record('tool_called', $identity, $name, 'write', $context, [],
                 $tool->is_destructive(), true, false, 'preview');
+            diagnostics::event('tool_dry_run_completed', [
+                'tool' => $name, 'contextid' => (int)$context->id,
+            ]);
             return ['dry_run' => true, 'preview' => $preview];
         }
 
@@ -333,12 +398,20 @@ final class mcp_server {
                 $preview = $tool->preview($arguments, $identity);
                 $token = confirmation_service::issue(
                     $identity, $rawtoken, $name, $arguments, $context);
+                diagnostics::event('confirmation_issued', [
+                    'tool' => $name, 'userid' => $identity->userid,
+                    'contextid' => (int)$context->id,
+                ]);
                 throw new api_exception('confirmation_required', 409, '', [
                     'preview' => $preview, 'confirmation_token' => $token,
                 ]);
             }
             confirmation_service::consume(
                 $confirmation, $identity, $rawtoken, $name, $arguments, $context);
+            diagnostics::event('confirmation_accepted', [
+                'tool' => $name, 'userid' => $identity->userid,
+                'contextid' => (int)$context->id,
+            ]);
         }
         $started = microtime(true);
         $result = $tool->execute($arguments, $identity);
@@ -353,6 +426,11 @@ final class mcp_server {
             'relateduserid' => $identity->userid,
             'other' => ['tool' => $name],
         ])->trigger();
+        diagnostics::event('tool_write_completed', [
+            'tool' => $name, 'userid' => $identity->userid,
+            'contextid' => (int)$context->id,
+            'duration_ms' => (int)round((microtime(true) - $started) * 1000),
+        ]);
         return $result;
     }
 }

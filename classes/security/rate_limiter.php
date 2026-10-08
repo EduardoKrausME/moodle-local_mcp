@@ -27,6 +27,7 @@ namespace local_mcp\security;
 use cache;
 use core\lock\lock_config;
 use local_mcp\exception\api_exception;
+use local_mcp\diagnostics;
 
 /**
  * Class rate_limiter.
@@ -56,12 +57,18 @@ final class rate_limiter {
         $factory = lock_config::get_lock_factory('local_mcp');
         $lock = $factory->get_lock('ratelimit_' . $key, 10);
         if (!$lock) {
+            diagnostics::event('rate_limit_lock_busy', [
+                'phase' => $bucket, 'limit' => $limit,
+            ], 'WARNING');
             throw new api_exception('rate_limit_busy', 503,
                 'The rate limiter could not obtain its lock. Please retry.');
         }
         try {
             $count = (int)($cache->get($key) ?: 0);
             if ($count >= $limit) {
+                diagnostics::event('rate_limit_exceeded', [
+                    'phase' => $bucket, 'limit' => $limit, 'used' => $count,
+                ], 'WARNING');
                 throw new api_exception('rate_limit_exceeded', 429);
             }
             $cache->set($key, $count + 1);

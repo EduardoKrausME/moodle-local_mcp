@@ -26,6 +26,7 @@ namespace local_mcp\security;
 
 use context;
 use local_mcp\exception\api_exception;
+use local_mcp\diagnostics;
 
 /**
  * Class capability_guard.
@@ -41,6 +42,10 @@ final class capability_guard {
      */
     public static function check(string $capability, context $context, int $userid): void {
         if (!has_capability($capability, $context, $userid)) {
+            diagnostics::event('capability_denied', [
+                'userid' => $userid, 'capability' => $capability,
+                'contextid' => (int)$context->id,
+            ], 'WARNING');
             throw new api_exception('permission_denied', 403);
         }
     }

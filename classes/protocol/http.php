@@ -25,6 +25,7 @@
 namespace local_mcp\protocol;
 
 use local_mcp\exception\api_exception;
+use local_mcp\diagnostics;
 use moodle_url;
 use Throwable;
 
@@ -118,6 +119,8 @@ final class http {
      * @return never Return value.
      */
     public static function error(Throwable $e, string $side = 'server'): never {
+        diagnostics::exception($e, ['side' => $side, 'phase' => 'http_dispatch'],
+            $e instanceof api_exception ? 'WARNING' : 'ERROR');
         if ($e instanceof api_exception) {
             $headers = [];
             // Query-token clients intentionally do not use OAuth discovery.
