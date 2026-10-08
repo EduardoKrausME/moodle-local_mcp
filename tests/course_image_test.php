@@ -91,6 +91,19 @@ final class course_image_test extends advanced_testcase {
     }
 
     /** @return void */
+    public function test_png_data_uri_is_accepted_without_conversion(): void {
+        [$bytes, $mime, $extension, $width, $height] = image_service::decode([
+            'courseid' => 39,
+            'image_base64' => 'data:image/png;base64,' . base64_encode(self::png()),
+        ]);
+        $this->assertSame(self::png(), $bytes);
+        $this->assertSame('image/png', $mime);
+        $this->assertSame('png', $extension);
+        $this->assertSame(1, $width);
+        $this->assertSame(1, $height);
+    }
+
+    /** @return void */
     public function test_invalid_or_outdated_upload_is_rejected(): void {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course();
