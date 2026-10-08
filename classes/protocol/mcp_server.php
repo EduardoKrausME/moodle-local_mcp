@@ -110,21 +110,24 @@ final class mcp_server {
             $method = $request['method'] ?? '';
             $params = $request['params'] ?? [];
 
-            error_log("method: {$method}");
-            error_log("params: " . print_r($params, 1));
-
+            if ($method === 'server/discover') {
+                http::json(['jsonrpc' => '2.0', 'id' => $id,
+                    'result' => discovery::result($this->side, self::plugin_release())]);
+            }
             if ($method === 'initialize') {
-                http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => [
-                    'protocolVersion' => '2025-06-18',
-                    'capabilities' => ['tools' => (object)[]],
-                    'serverInfo' => ['name' => 'Moodle MCP ' . strtoupper($this->side), 'version' => self::plugin_release()],
-                ]]);
+                http::json(['jsonrpc' => '2.0', 'id' => $id,
+                    'result' => discovery::initialize_result($this->side, self::plugin_release())]);
             }
             if ($method === 'notifications/initialized') {
                 http::accepted();
             }
+            $modern = discovery::is_modern(
+                is_array($params) ? $params : [],
+                (string)($_SERVER['HTTP_MCP_PROTOCOL_VERSION'] ?? '')
+            );
             if ($method === 'tools/list') {
-                http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => ['tools' => $this->tool_definitions($identity)]]);
+                http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => discovery::decorate_result(
+                    ['tools' => $this->tool_definitions($identity)], $modern, true)]);
             }
             if ($method === 'tools/call') {
                 try {
@@ -154,7 +157,7 @@ final class mcp_server {
                         'content' => $content,
                         'structuredContent' => $result,
                         'isError' => false,
-                    ]]);
+                    ] + ($modern ? ['resultType' => 'complete'] : [])]);
                 } catch (api_exception $e) {
                     $error = [
                         'error' => $e->machinecode,
@@ -168,7 +171,7 @@ final class mcp_server {
                         ]],
                         'structuredContent' => $error,
                         'isError' => true,
-                    ]]);
+                    ] + ($modern ? ['resultType' => 'complete'] : [])]);
                 } catch (Throwable $e) {
                     // Keep internal details out of responses, but make 500-like
                     // failures diagnosable in the Moodle/PHP server log.
@@ -191,7 +194,7 @@ final class mcp_server {
                         ]],
                         'structuredContent' => $error,
                         'isError' => true,
-                    ]]);
+                    ] + ($modern ? ['resultType' => 'complete'] : [])]);
                 }
             }
             http::json([

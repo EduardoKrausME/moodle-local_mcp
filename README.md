@@ -138,6 +138,32 @@ This does **not** require publishing the image URL. The limit is 5 MiB decoded p
 Sending only a local filename or sandbox path does not upload an image. Base64 content is
 not included in tool previews or application audit metadata.
 
+## MCP 2026-07-28 discovery and response envelopes
+
+New ChatGPT connectors may begin with `server/discover` (request protocol
+`2026-07-28`) instead of the legacy `initialize` handshake. All three MCP
+endpoints (`server.php`, `read.php`, `write.php`) accept `server/discover`
+and return `resultType: complete`, supported protocol versions, accurate tools
+capabilities and server identity using the installed plugin's release.
+
+The discovery response uses `cacheScope: private` and `ttlMs: 0`, because
+authorization and available tools can change between requests. Modern
+`tools/list` responses also use those cache hints; modern `tools/call`
+responses include `resultType: complete`. Existing clients using the
+`2025-06-18` `initialize` handshake continue to receive the legacy layout.
+
+For troubleshooting, this plugin does **not** write MCP request parameters,
+tool inputs, Base64 images or complete JSON-RPC responses to PHP logs.
+Unexpected exceptions retain a short reference and sanitized source location.
+
+**Important when using the temporary `?toke=` URL:** Nginx access logs
+commonly capture the entire request URL, including the bearer token. Rotate
+tokens exposed in logs and configure the Nginx access log format to omit query
+strings from the request target. For example, log
+`"$request_method $uri $server_protocol"` rather than `"$request"`
+or `"$request_uri"` for requests to the MCP endpoint. Prefer OAuth/Bearer
+headers to URL tokens for long-lived production connections.
+
 ## MCP endpoints
 
 - Combined READ + WRITE: `/local/mcp/server.php` (recommended for ChatGPT)

@@ -48,7 +48,6 @@ final class http {
             header($header);
         }
         $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        error_log("Return: {$json}");
         exit;
     }
 
