@@ -286,6 +286,28 @@ final class mcp_server {
                     'description' => 'Preview without changing Moodle data.',
                 ];
             }
+            // Validate provider schemas here because client-side MCP errors never reach PHP.
+            $issues = [];
+            $schema = tool_schema::normalize($schema, $issues);
+            $invalid = false;
+            foreach ($issues as $issue) {
+                $repaired = $issue['repaired'];
+                diagnostics::event('tool_schema_invalid', [
+                    'side' => $this->side,
+                    'tool' => $tool->get_name(),
+                    'provider' => get_class($tool),
+                    'schema_path' => $issue['path'],
+                    'expected' => $issue['expected'],
+                    'actual' => $issue['actual'],
+                    'resolution' => $repaired ? 'normalized' : 'excluded',
+                ], $repaired ? 'WARNING' : 'ERROR');
+                if (!$repaired) {
+                    $invalid = true;
+                }
+            }
+            if ($invalid) {
+                continue;
+            }
             $item = [
                 'name' => $tool->get_name(),
                 'title' => $tool->get_title(),

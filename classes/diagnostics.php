@@ -41,6 +41,7 @@ final class diagnostics {
         'count', 'duration_ms', 'status', 'error_code', 'error_class', 'file',
         'line', 'message', 'httpstatus', 'limit', 'used', 'dry_run',
         'confirmation', 'args_keys', 'protocol', 'read', 'write', 'catalog_sha256',
+        'provider', 'schema_path', 'expected', 'actual', 'resolution',
     ];
 
     /**
