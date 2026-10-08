@@ -27,6 +27,7 @@ namespace local_mcp\write\tool;
 use context;
 use context_course;
 use local_mcp\course\image_service;
+use local_mcp\diagnostics;
 use local_mcp\security\authenticated_identity;
 use local_mcp\security\capability_guard;
 
@@ -81,7 +82,18 @@ final class set_course_image extends base_tool {
     public function preview(array $arguments, authenticated_identity $identity): array {
         $context = $this->resolve_context($arguments);
         capability_guard::check('moodle/course:changesummary', $context, $identity->userid);
-        $images = image_service::read((int)$arguments['courseid'], false);
+        $courseid = (int)$arguments['courseid'];
+        diagnostics::event('course_image_preview_started', [
+            'tool' => 'set_course_image', 'courseid' => $courseid,
+            'userid' => $identity->userid, 'phase' => 'preview',
+            'source' => !empty($arguments['image_url']) ? 'https_url' : 'base64',
+        ]);
+        $images = image_service::read($courseid, false);
+        diagnostics::event('course_image_preview_ready', [
+            'tool' => 'set_course_image', 'courseid' => $courseid,
+            'userid' => $identity->userid, 'phase' => 'preview',
+            'existing_images' => count($images['images']),
+        ]);
         return [
             'courseid' => (int)$arguments['courseid'],
             'current_image' => $images['image'],
