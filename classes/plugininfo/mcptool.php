@@ -24,8 +24,10 @@
 
 namespace local_mcp\plugininfo;
 
+use core\plugininfo\base;
+
 /**
  * A separately installable activity integration for MCP.
  */
-class mcptool extends \core\plugininfo\base {
+class mcptool extends base {
 }

@@ -24,10 +24,17 @@
 
 namespace mcptool_book\write;
 
+use context;
+use context_module;
+use local_mcp\exception\api_exception;
+use local_mcp\security\authenticated_identity;
+use local_mcp\write\tool\base_tool;
+use mod_book\event\chapter_created;
+
 /**
  * Append a new chapter to an existing Book; requires confirmation.
  */
-final class create_chapter extends \local_mcp\write\tool\base_tool {
+final class create_chapter extends base_tool {
     /** @return string */
     public function get_name(): string {
         return 'book_create_chapter';
@@ -55,28 +62,28 @@ final class create_chapter extends \local_mcp\write\tool\base_tool {
 
     /**
      * @param array $arguments Tool input.
-     * @return \context
+     * @return context
      */
-    public function resolve_context(array $arguments): \context {
-        return \context_module::instance((int)$arguments['cmid'], MUST_EXIST);
+    public function resolve_context(array $arguments): context {
+        return context_module::instance((int)$arguments['cmid'], MUST_EXIST);
     }
 
     /**
      * @param array $arguments Tool input.
-     * @param \local_mcp\security\authenticated_identity $identity OAuth identity.
+     * @param authenticated_identity $identity OAuth identity.
      * @return array
      */
     public function execute(array $arguments,
-            \local_mcp\security\authenticated_identity $identity): array {
+            authenticated_identity $identity): array {
         global $DB;
         $cm = get_coursemodule_from_id('book', (int)$arguments['cmid'], 0, false, MUST_EXIST);
         $book = $DB->get_record('book', ['id' => $cm->instance], '*', MUST_EXIST);
-        $context = \context_module::instance($cm->id);
+        $context = context_module::instance($cm->id);
         $transaction = $DB->start_delegated_transaction();
         $lastpage = (int)$DB->get_field_sql('SELECT MAX(pagenum) FROM {book_chapters} WHERE bookid = ?',
             [$book->id]);
         if (!$lastpage && !empty($arguments['subchapter'])) {
-            throw new \local_mcp\exception\api_exception('first_chapter_cannot_be_subchapter', 400);
+            throw new api_exception('first_chapter_cannot_be_subchapter', 400);
         }
         $chapter = (object)[
             'bookid' => $book->id, 'pagenum' => $lastpage + 1,
@@ -87,7 +94,7 @@ final class create_chapter extends \local_mcp\write\tool\base_tool {
         ];
         $chapter->id = $DB->insert_record('book_chapters', $chapter);
         $DB->set_field('book', 'revision', $book->revision + 1, ['id' => $book->id]);
-        \mod_book\event\chapter_created::create_from_chapter($book, $context, $chapter)->trigger();
+        chapter_created::create_from_chapter($book, $context, $chapter)->trigger();
         $transaction->allow_commit();
         return ['chapterid' => (int)$chapter->id, 'bookid' => (int)$book->id];
 

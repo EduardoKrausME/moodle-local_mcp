@@ -28,6 +28,7 @@ use advanced_testcase;
 use core_course_category;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
+use local_mcp\write\registry;
 use local_mcp\write\tool\bulk_create_courses;
 
 defined('MOODLE_INTERNAL') || die();
@@ -66,7 +67,7 @@ final class bulk_create_courses_test extends advanced_testcase {
      * @return void
      */
     public function test_registration_and_schema(): void {
-        $tools = \local_mcp\write\registry::get_tools();
+        $tools = registry::get_tools();
         $this->assertArrayHasKey('bulk_create_courses', $tools);
         $this->assertInstanceOf(bulk_create_courses::class, $tools['bulk_create_courses']);
         $schema = $tools['bulk_create_courses']->get_input_schema();

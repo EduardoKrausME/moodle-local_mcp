@@ -25,6 +25,7 @@
 namespace local_mcp;
 
 use advanced_testcase;
+use context_system;
 use local_mcp\exception\api_exception;
 use local_mcp\protocol\http;
 use local_mcp\security\manual_token_service;
@@ -219,7 +220,7 @@ final class url_connection_test extends advanced_testcase {
             'accesshash' => secret::hash($created['token']),
             'tool' => 'test_tool',
             'argshash' => hash('sha256', '{}'),
-            'contextid' => \context_system::instance()->id,
+            'contextid' => context_system::instance()->id,
             'expires' => time() + 300,
             'used' => 0,
             'timecreated' => time(),

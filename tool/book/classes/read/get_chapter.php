@@ -24,10 +24,16 @@
 
 namespace mcptool_book\read;
 
+use context;
+use context_module;
+use local_mcp\exception\api_exception;
+use local_mcp\read\tool\base_tool;
+use local_mcp\security\authenticated_identity;
+
 /**
  * Read the HTML content of one visible book chapter.
  */
-final class get_chapter extends \local_mcp\read\tool\base_tool {
+final class get_chapter extends base_tool {
     /** @return string */
     public function get_name(): string {
         return 'book_get_chapter';
@@ -55,32 +61,32 @@ final class get_chapter extends \local_mcp\read\tool\base_tool {
 
     /**
      * @param array $arguments Tool input.
-     * @return \context
+     * @return context
      */
-    public function resolve_context(array $arguments): \context {
+    public function resolve_context(array $arguments): context {
         global $DB;
         $chapter = $DB->get_record('book_chapters', ['id' => (int)$arguments['chapterid']], '*', MUST_EXIST);
         $book = $DB->get_record('book', ['id' => $chapter->bookid], '*', MUST_EXIST);
         $cm = get_coursemodule_from_instance('book', $book->id, $book->course, false, MUST_EXIST);
-        return \context_module::instance($cm->id);
+        return context_module::instance($cm->id);
     }
 
     /**
      * @param array $arguments Tool input.
-     * @param \local_mcp\security\authenticated_identity $identity OAuth identity.
+     * @param authenticated_identity $identity OAuth identity.
      * @return array
      */
     public function execute(array $arguments,
-            \local_mcp\security\authenticated_identity $identity): array {
+            authenticated_identity $identity): array {
         global $DB;
         $chapter = $DB->get_record('book_chapters', ['id' => (int)$arguments['chapterid']], '*', MUST_EXIST);
         $book = $DB->get_record('book', ['id' => $chapter->bookid], '*', MUST_EXIST);
         $cm = get_coursemodule_from_instance('book', $book->id, $book->course, false, MUST_EXIST);
-        $context = \context_module::instance($cm->id);
+        $context = context_module::instance($cm->id);
         if (!get_fast_modinfo($cm->course, $identity->userid)->get_cm($cm->id)->uservisible
             || ($chapter->hidden && !has_capability('mod/book:viewhiddenchapters',
                 $context, $identity->userid))) {
-            throw new \local_mcp\exception\api_exception('permission_denied', 403);
+            throw new api_exception('permission_denied', 403);
         }
         return ['id' => (int)$chapter->id, 'bookid' => (int)$book->id,
             'title' => $chapter->title, 'pagenum' => (int)$chapter->pagenum,

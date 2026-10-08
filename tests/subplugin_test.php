@@ -25,7 +25,12 @@
 namespace local_mcp;
 
 use advanced_testcase;
+use core_component;
 use local_mcp\extension\manager;
+use local_mcp\extension\read_provider_interface;
+use local_mcp\extension\write_provider_interface;
+use local_mcp\write\registry;
+use local_mcp\write\tool_interface;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -37,16 +42,16 @@ final class subplugin_test extends advanced_testcase {
      * @return void
      */
     public function test_activity_subplugins_are_discovered(): void {
-        $names = \core_component::get_plugin_list('mcptool');
+        $names = core_component::get_plugin_list('mcptool');
         foreach (['forum', 'page', 'book'] as $name) {
             $this->assertArrayHasKey($name, $names);
             $class = '\\mcptool_' . $name . '\\provider';
             $this->assertTrue(class_exists($class));
             $provider = new $class();
             $this->assertInstanceOf(
-                \local_mcp\extension\read_provider_interface::class, $provider);
+                read_provider_interface::class, $provider);
             $this->assertInstanceOf(
-                \local_mcp\extension\write_provider_interface::class, $provider);
+                write_provider_interface::class, $provider);
         }
     }
 
@@ -55,7 +60,7 @@ final class subplugin_test extends advanced_testcase {
      */
     public function test_mcp_registry_includes_activity_tools(): void {
         $read = \local_mcp\read\registry::get_tools();
-        $write = \local_mcp\write\registry::get_tools();
+        $write = registry::get_tools();
 
         foreach (['forum_list_discussions', 'forum_get_posts',
                 'page_get_content', 'book_list_chapters', 'book_get_chapter'] as $name) {
@@ -82,7 +87,7 @@ final class subplugin_test extends advanced_testcase {
         }
         foreach (manager::write_providers() as $provider) {
             foreach ($provider->get_write_tools() as $tool) {
-                $this->assertInstanceOf(\local_mcp\write\tool_interface::class, $tool);
+                $this->assertInstanceOf(tool_interface::class, $tool);
             }
         }
     }

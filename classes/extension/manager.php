@@ -25,6 +25,8 @@
 namespace local_mcp\extension;
 
 use coding_exception;
+use core_component;
+use core_plugin_manager;
 
 /**
  * Class manager.
@@ -64,12 +66,12 @@ final class manager {
     private static function class_providers(string $interface): array {
         if (self::$classproviders === null) {
             self::$classproviders = [];
-            foreach (\core_component::get_plugin_types() as $type => $directory) {
+            foreach (core_component::get_plugin_types() as $type => $directory) {
                 // MCP subplugins are handled by the existing dedicated registry.
                 if ($type === 'mcptool') {
                     continue;
                 }
-                foreach (\core_component::get_plugin_list_with_file(
+                foreach (core_component::get_plugin_list_with_file(
                     $type, 'classes/mcp/provider.php'
                 ) as $name => $file) {
                     $component = $type . '_' . $name;
@@ -108,7 +110,7 @@ final class manager {
      * @return bool
      */
     private static function plugin_enabled(string $component): bool {
-        $info = \core_plugin_manager::instance()->get_plugin_info($component);
+        $info = core_plugin_manager::instance()->get_plugin_info($component);
         return $info && $info->is_enabled() !== false;
     }
 
@@ -143,7 +145,7 @@ final class manager {
      */
     private static function subplugin_providers(string $interface): array {
         $providers = [];
-        foreach (\core_component::get_plugin_list('mcptool') as $name => $directory) {
+        foreach (core_component::get_plugin_list('mcptool') as $name => $directory) {
             $component = 'mcptool_' . $name;
             if (!self::plugin_enabled($component)) {
                 continue;

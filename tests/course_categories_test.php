@@ -29,6 +29,7 @@ use core_course_category;
 use local_mcp\exception\api_exception;
 use local_mcp\read\tool\list_categories;
 use local_mcp\security\authenticated_identity;
+use local_mcp\write\registry;
 use local_mcp\write\tool\create_category;
 use local_mcp\write\tool\update_category;
 use local_mcp\write\tool\create_course;
@@ -46,7 +47,7 @@ final class course_categories_test extends advanced_testcase {
      */
     public function test_category_tools_are_registered(): void {
         $read = \local_mcp\read\registry::get_tools();
-        $write = \local_mcp\write\registry::get_tools();
+        $write = registry::get_tools();
         $this->assertInstanceOf(list_categories::class, $read['list_categories']);
         $this->assertInstanceOf(create_category::class, $write['create_category']);
         $this->assertInstanceOf(update_category::class, $write['update_category']);

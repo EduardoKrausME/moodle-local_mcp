@@ -26,6 +26,11 @@ namespace mcptool_forum;
 
 use local_mcp\extension\read_provider_interface;
 use local_mcp\extension\write_provider_interface;
+use mcptool_forum\read\get_posts;
+use mcptool_forum\read\list_discussions;
+use mcptool_forum\write\create_activity;
+use mcptool_forum\write\create_discussion;
+use mcptool_forum\write\reply_to_post;
 
 /**
  * All Moodle forum tooling is self-contained in this subplugin.
@@ -34,17 +39,17 @@ final class provider implements read_provider_interface, write_provider_interfac
     /** @return array */
     public function get_read_tools(): array {
         return [
-            new \mcptool_forum\read\list_discussions(),
-            new \mcptool_forum\read\get_posts(),
+            new list_discussions(),
+            new get_posts(),
         ];
     }
 
     /** @return array */
     public function get_write_tools(): array {
         return [
-            new \mcptool_forum\write\create_activity(),
-            new \mcptool_forum\write\create_discussion(),
-            new \mcptool_forum\write\reply_to_post(),
+            new create_activity(),
+            new create_discussion(),
+            new reply_to_post(),
         ];
     }
 }

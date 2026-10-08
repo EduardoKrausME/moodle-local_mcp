@@ -24,10 +24,16 @@
 
 namespace mcptool_forum\write;
 
+use context;
+use context_module;
+use local_mcp\exception\api_exception;
+use local_mcp\security\authenticated_identity;
+use local_mcp\write\tool\base_tool;
+
 /**
  * Reply to an existing discussion post as the authenticated Moodle user.
  */
-final class reply_to_post extends \local_mcp\write\tool\base_tool {
+final class reply_to_post extends base_tool {
     /** @return string */
     public function get_name(): string {
         return 'forum_reply_to_post';
@@ -55,34 +61,34 @@ final class reply_to_post extends \local_mcp\write\tool\base_tool {
 
     /**
      * @param array $arguments Tool input.
-     * @return \context
+     * @return context
      */
-    public function resolve_context(array $arguments): \context {
+    public function resolve_context(array $arguments): context {
         global $DB;
         $post = $DB->get_record('forum_posts', ['id' => (int)$arguments['postid']], '*', MUST_EXIST);
         $discussion = $DB->get_record('forum_discussions', ['id' => $post->discussion], '*', MUST_EXIST);
         $cm = get_coursemodule_from_instance('forum', $discussion->forum, $discussion->course, false, MUST_EXIST);
-        return \context_module::instance($cm->id);
+        return context_module::instance($cm->id);
     }
 
     /**
      * @param array $arguments Tool input.
-     * @param \local_mcp\security\authenticated_identity $identity OAuth identity.
+     * @param authenticated_identity $identity OAuth identity.
      * @return array
      */
     public function execute(array $arguments,
-            \local_mcp\security\authenticated_identity $identity): array {
+            authenticated_identity $identity): array {
         global $DB, $CFG, $USER;
         require_once($CFG->dirroot . '/mod/forum/lib.php');
         $parent = $DB->get_record('forum_posts', ['id' => (int)$arguments['postid']], '*', MUST_EXIST);
         $discussion = $DB->get_record('forum_discussions', ['id' => $parent->discussion], '*', MUST_EXIST);
         $forum = $DB->get_record('forum', ['id' => $discussion->forum], '*', MUST_EXIST);
         $cm = get_coursemodule_from_instance('forum', $forum->id, $forum->course, false, MUST_EXIST);
-        $context = \context_module::instance($cm->id);
+        $context = context_module::instance($cm->id);
         $course = get_course($forum->course);
         if (!forum_user_can_see_post($forum, $discussion, $parent, $USER, $cm)
             || !forum_user_can_post($forum, $discussion, $USER, $cm, $course, $context)) {
-            throw new \local_mcp\exception\api_exception('permission_denied', 403);
+            throw new api_exception('permission_denied', 403);
         }
         $post = (object)[
             'discussion' => $discussion->id, 'parent' => $parent->id,

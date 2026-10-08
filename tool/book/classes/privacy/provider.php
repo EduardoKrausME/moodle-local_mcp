@@ -24,10 +24,12 @@
 
 namespace mcptool_book\privacy;
 
+use core_privacy\local\metadata\null_provider;
+
 /**
  * No local records are created by this integration.
  */
-final class provider implements \core_privacy\local\metadata\null_provider {
+final class provider implements null_provider {
     /** @return string */
     public static function get_reason(): string {
         return 'privacy:metadata';

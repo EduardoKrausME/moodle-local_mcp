@@ -22,6 +22,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_mcp\security\rate_limiter;
+
 defined('MOODLE_INTERNAL') || die;
 
 /**
@@ -47,9 +49,9 @@ function xmldb_local_mcp_upgrade(int $oldversion): bool {
     if ($oldversion < 2026100811) {
         // Raise only the former defaults, leaving other configured values intact.
         $defaults = [
-            'rateread' => [120, \local_mcp\security\rate_limiter::DEFAULT_READ_PER_MINUTE],
-            'ratewrite' => [30, \local_mcp\security\rate_limiter::DEFAULT_WRITE_PER_MINUTE],
-            'rateoauth' => [30, \local_mcp\security\rate_limiter::DEFAULT_OAUTH_PER_MINUTE],
+            'rateread' => [120, rate_limiter::DEFAULT_READ_PER_MINUTE],
+            'ratewrite' => [30, rate_limiter::DEFAULT_WRITE_PER_MINUTE],
+            'rateoauth' => [30, rate_limiter::DEFAULT_OAUTH_PER_MINUTE],
         ];
         foreach ($defaults as $name => [$olddefault, $newdefault]) {
             $configured = get_config('local_mcp', $name);

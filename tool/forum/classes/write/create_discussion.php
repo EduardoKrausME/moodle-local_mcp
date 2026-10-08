@@ -24,10 +24,17 @@
 
 namespace mcptool_forum\write;
 
+use context;
+use context_module;
+use local_mcp\exception\api_exception;
+use local_mcp\security\authenticated_identity;
+use local_mcp\write\tool\base_tool;
+use moodle_url;
+
 /**
  * Create a new topic in a standard forum after an explicit confirmation.
  */
-final class create_discussion extends \local_mcp\write\tool\base_tool {
+final class create_discussion extends base_tool {
     /** @return string */
     public function get_name(): string {
         return 'forum_create_discussion';
@@ -55,28 +62,28 @@ final class create_discussion extends \local_mcp\write\tool\base_tool {
 
     /**
      * @param array $arguments Tool input.
-     * @return \context
+     * @return context
      */
-    public function resolve_context(array $arguments): \context {
-        return \context_module::instance((int)$arguments['cmid'], MUST_EXIST);
+    public function resolve_context(array $arguments): context {
+        return context_module::instance((int)$arguments['cmid'], MUST_EXIST);
     }
 
     /**
      * @param array $arguments Tool input.
-     * @param \local_mcp\security\authenticated_identity $identity OAuth identity.
+     * @param authenticated_identity $identity OAuth identity.
      * @return array
      */
     public function execute(array $arguments,
-            \local_mcp\security\authenticated_identity $identity): array {
+            authenticated_identity $identity): array {
         global $DB, $CFG;
         require_once($CFG->dirroot . '/mod/forum/lib.php');
         $cm = get_coursemodule_from_id('forum', (int)$arguments['cmid'], 0, false, MUST_EXIST);
         $forum = $DB->get_record('forum', ['id' => $cm->instance], '*', MUST_EXIST);
-        $context = \context_module::instance($cm->id);
+        $context = context_module::instance($cm->id);
         $groupid = array_key_exists('groupid', $arguments) ? (int)$arguments['groupid']
             : (int)groups_get_activity_group($cm, true);
         if (!forum_user_can_post_discussion($forum, $groupid, -1, $cm, $context)) {
-            throw new \local_mcp\exception\api_exception('permission_denied', 403);
+            throw new api_exception('permission_denied', 403);
         }
         $discussion = (object)[
             'forum' => $forum->id, 'course' => $forum->course,
@@ -87,7 +94,7 @@ final class create_discussion extends \local_mcp\write\tool\base_tool {
         ];
         $id = forum_add_discussion($discussion, null, null, $identity->userid);
         return ['discussionid' => (int)$id,
-            'url' => (new \moodle_url('/mod/forum/discuss.php', ['d' => $id]))->out(false)];
+            'url' => (new moodle_url('/mod/forum/discuss.php', ['d' => $id]))->out(false)];
 
     }
 }

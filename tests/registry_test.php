@@ -41,7 +41,7 @@ final class registry_test extends advanced_testcase {
      * @return void Return value.
      */
     public function test_read_and_write_registries_are_structurally_separate(): void {
-        $read = \local_mcp\read\registry::get_tools();
+        $read = read\registry::get_tools();
         $write = registry::get_tools();
 
         $this->assertNotEmpty($read);
@@ -58,10 +58,10 @@ final class registry_test extends advanced_testcase {
 
         foreach ($read as $tool) {
             $this->assertInstanceOf(tool_interface::class, $tool);
-            $this->assertNotInstanceOf(\local_mcp\write\tool_interface::class, $tool);
+            $this->assertNotInstanceOf(write\tool_interface::class, $tool);
         }
         foreach ($write as $tool) {
-            $this->assertInstanceOf(\local_mcp\write\tool_interface::class, $tool);
+            $this->assertInstanceOf(write\tool_interface::class, $tool);
             $this->assertNotInstanceOf(tool_interface::class, $tool);
         }
     }

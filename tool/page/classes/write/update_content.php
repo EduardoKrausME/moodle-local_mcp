@@ -24,10 +24,16 @@
 
 namespace mcptool_page\write;
 
+use context;
+use context_module;
+use local_mcp\exception\api_exception;
+use local_mcp\security\authenticated_identity;
+use local_mcp\write\tool\base_tool;
+
 /**
  * Replace the HTML content of a Moodle Page using its activity API after user confirmation.
  */
-final class update_content extends \local_mcp\write\tool\base_tool {
+final class update_content extends base_tool {
     /** @return string */
     public function get_name(): string {
         return 'page_update_content';
@@ -55,25 +61,25 @@ final class update_content extends \local_mcp\write\tool\base_tool {
 
     /**
      * @param array $arguments Tool input.
-     * @return \context
+     * @return context
      */
-    public function resolve_context(array $arguments): \context {
-        return \context_module::instance((int)$arguments['cmid'], MUST_EXIST);
+    public function resolve_context(array $arguments): context {
+        return context_module::instance((int)$arguments['cmid'], MUST_EXIST);
     }
 
     /**
      * @param array $arguments Tool input.
-     * @param \local_mcp\security\authenticated_identity $identity OAuth identity.
+     * @param authenticated_identity $identity OAuth identity.
      * @return array
      */
     public function execute(array $arguments,
-            \local_mcp\security\authenticated_identity $identity): array {
+            authenticated_identity $identity): array {
         global $DB, $CFG;
         require_once($CFG->dirroot . '/mod/page/lib.php');
         $cm = get_coursemodule_from_id('page', (int)$arguments['cmid'], 0, false, MUST_EXIST);
         $page = $DB->get_record('page', ['id' => $cm->instance], '*', MUST_EXIST);
         if ((int)$page->revision !== (int)$arguments['expected_revision']) {
-            throw new \local_mcp\exception\api_exception('revision_conflict', 409);
+            throw new api_exception('revision_conflict', 409);
         }
         $page->coursemodule = (int)$cm->id;
         $page->instance = (int)$page->id;

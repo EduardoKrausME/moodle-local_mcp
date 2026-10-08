@@ -22,6 +22,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_mcp\security\rate_limiter;
+
 defined('MOODLE_INTERNAL') || die;
 
 if ($hassiteconfig) {
@@ -51,9 +53,9 @@ if ($hassiteconfig) {
         'One-time WRITE confirmation token lifetime.', 300, 30));
     $settings->add(new admin_setting_configcheckbox('local_mcp/dynamicregistration', 'Dynamic client registration',
         'Allow standards-based public clients to register redirect URIs. Admin consent is still required.', 1));
-    $settings->add(new admin_setting_configtext('local_mcp/rateread', 'READ requests/minute', '', \local_mcp\security\rate_limiter::DEFAULT_READ_PER_MINUTE, PARAM_INT));
-    $settings->add(new admin_setting_configtext('local_mcp/ratewrite', 'WRITE requests/minute', '', \local_mcp\security\rate_limiter::DEFAULT_WRITE_PER_MINUTE, PARAM_INT));
-    $settings->add(new admin_setting_configtext('local_mcp/rateoauth', 'OAuth requests/minute', '', \local_mcp\security\rate_limiter::DEFAULT_OAUTH_PER_MINUTE, PARAM_INT));
+    $settings->add(new admin_setting_configtext('local_mcp/rateread', 'READ requests/minute', '', rate_limiter::DEFAULT_READ_PER_MINUTE, PARAM_INT));
+    $settings->add(new admin_setting_configtext('local_mcp/ratewrite', 'WRITE requests/minute', '', rate_limiter::DEFAULT_WRITE_PER_MINUTE, PARAM_INT));
+    $settings->add(new admin_setting_configtext('local_mcp/rateoauth', 'OAuth requests/minute', '', rate_limiter::DEFAULT_OAUTH_PER_MINUTE, PARAM_INT));
     $settings->add(new admin_setting_configtext('local_mcp/auditretention', 'Audit retention days', '', 180, PARAM_INT));
     $ADMIN->add('local_mcp_category', $settings);
 }

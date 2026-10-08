@@ -24,10 +24,17 @@
 
 namespace mcptool_page\read;
 
+use context;
+use context_module;
+use local_mcp\exception\api_exception;
+use local_mcp\read\tool\base_tool;
+use local_mcp\security\authenticated_identity;
+use moodle_url;
+
 /**
  * Read the text and formatting of a Moodle Page resource.
  */
-final class get_content extends \local_mcp\read\tool\base_tool {
+final class get_content extends base_tool {
     /** @return string */
     public function get_name(): string {
         return 'page_get_content';
@@ -55,25 +62,25 @@ final class get_content extends \local_mcp\read\tool\base_tool {
 
     /**
      * @param array $arguments Tool input.
-     * @return \context
+     * @return context
      */
-    public function resolve_context(array $arguments): \context {
-        return \context_module::instance((int)$arguments['cmid'], MUST_EXIST);
+    public function resolve_context(array $arguments): context {
+        return context_module::instance((int)$arguments['cmid'], MUST_EXIST);
     }
 
     /**
      * @param array $arguments Tool input.
-     * @param \local_mcp\security\authenticated_identity $identity OAuth identity.
+     * @param authenticated_identity $identity OAuth identity.
      * @return array
      */
     public function execute(array $arguments,
-            \local_mcp\security\authenticated_identity $identity): array {
+            authenticated_identity $identity): array {
         global $DB;
         $cm = get_coursemodule_from_id('page', (int)$arguments['cmid'], 0, false, MUST_EXIST);
         $page = $DB->get_record('page', ['id' => $cm->instance], '*', MUST_EXIST);
-        $context = \context_module::instance($cm->id);
+        $context = context_module::instance($cm->id);
         if (!get_fast_modinfo($cm->course, $identity->userid)->get_cm($cm->id)->uservisible) {
-            throw new \local_mcp\exception\api_exception('permission_denied', 403);
+            throw new api_exception('permission_denied', 403);
         }
         return [
             'cmid' => (int)$cm->id,
@@ -81,7 +88,7 @@ final class get_content extends \local_mcp\read\tool\base_tool {
             'content' => format_text($page->content, $page->contentformat,
                 ['context' => $context, 'filter' => true]),
             'revision' => (int)$page->revision,
-            'url' => (new \moodle_url('/mod/page/view.php', ['id' => $cm->id]))->out(false),
+            'url' => (new moodle_url('/mod/page/view.php', ['id' => $cm->id]))->out(false),
         ];
 
     }

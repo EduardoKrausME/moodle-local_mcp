@@ -24,10 +24,17 @@
 
 namespace mcptool_book\read;
 
+use context;
+use context_module;
+use local_mcp\exception\api_exception;
+use local_mcp\read\tool\base_tool;
+use local_mcp\security\authenticated_identity;
+use moodle_url;
+
 /**
  * List visible chapters in a Moodle Book activity.
  */
-final class list_chapters extends \local_mcp\read\tool\base_tool {
+final class list_chapters extends base_tool {
     /** @return string */
     public function get_name(): string {
         return 'book_list_chapters';
@@ -55,26 +62,26 @@ final class list_chapters extends \local_mcp\read\tool\base_tool {
 
     /**
      * @param array $arguments Tool input.
-     * @return \context
+     * @return context
      */
-    public function resolve_context(array $arguments): \context {
-        return \context_module::instance((int)$arguments['cmid'], MUST_EXIST);
+    public function resolve_context(array $arguments): context {
+        return context_module::instance((int)$arguments['cmid'], MUST_EXIST);
     }
 
     /**
      * @param array $arguments Tool input.
-     * @param \local_mcp\security\authenticated_identity $identity OAuth identity.
+     * @param authenticated_identity $identity OAuth identity.
      * @return array
      */
     public function execute(array $arguments,
-            \local_mcp\security\authenticated_identity $identity): array {
+            authenticated_identity $identity): array {
         global $DB, $CFG;
         require_once($CFG->dirroot . '/mod/book/locallib.php');
         $cm = get_coursemodule_from_id('book', (int)$arguments['cmid'], 0, false, MUST_EXIST);
         $book = $DB->get_record('book', ['id' => $cm->instance], '*', MUST_EXIST);
-        $context = \context_module::instance($cm->id);
+        $context = context_module::instance($cm->id);
         if (!get_fast_modinfo($cm->course, $identity->userid)->get_cm($cm->id)->uservisible) {
-            throw new \local_mcp\exception\api_exception('permission_denied', 403);
+            throw new api_exception('permission_denied', 403);
         }
         $canedit = has_capability('mod/book:viewhiddenchapters', $context, $identity->userid);
         $rows = [];
@@ -85,7 +92,7 @@ final class list_chapters extends \local_mcp\read\tool\base_tool {
             $rows[] = [
                 'id' => (int)$chapter->id, 'title' => $chapter->title,
                 'pagenum' => (int)$chapter->pagenum, 'subchapter' => (bool)$chapter->subchapter,
-                'url' => (new \moodle_url('/mod/book/view.php',
+                'url' => (new moodle_url('/mod/book/view.php',
                     ['id' => $cm->id, 'chapterid' => $chapter->id]))->out(false),
             ];
         }

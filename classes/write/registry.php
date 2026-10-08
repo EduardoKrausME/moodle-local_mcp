@@ -26,13 +26,20 @@ namespace local_mcp\write;
 
 use coding_exception;
 use local_mcp\extension\manager;
+use local_mcp\write\tool\bulk_create_courses;
+use local_mcp\write\tool\create_category;
 use local_mcp\write\tool\create_course;
+use local_mcp\write\tool\create_section;
 use local_mcp\write\tool\create_user;
 use local_mcp\write\tool\enrol_user;
+use local_mcp\write\tool\grade_submission;
 use local_mcp\write\tool\send_message;
+use local_mcp\write\tool\set_course_image;
 use local_mcp\write\tool\suspend_user;
 use local_mcp\write\tool\unenrol_user;
+use local_mcp\write\tool\update_category;
 use local_mcp\write\tool\update_course;
+use local_mcp\write\tool\update_section;
 use local_mcp\write\tool\update_user;
 
 /**
@@ -42,21 +49,21 @@ final class registry {
     /** @return tool_interface[] */
     public static function get_tools(): array {
         $tools = [
-            new \local_mcp\write\tool\create_category(),
-            new \local_mcp\write\tool\bulk_create_courses(),
-            new \local_mcp\write\tool\create_course(),
-            new \local_mcp\write\tool\create_section(),
-            new \local_mcp\write\tool\create_user(),
-            new \local_mcp\write\tool\enrol_user(),
-            new \local_mcp\write\tool\grade_submission(),
-            new \local_mcp\write\tool\send_message(),
-            new \local_mcp\write\tool\suspend_user(),
-            new \local_mcp\write\tool\unenrol_user(),
-            new \local_mcp\write\tool\update_category(),
-            new \local_mcp\write\tool\update_course(),
-            new \local_mcp\write\tool\set_course_image(),
-            new \local_mcp\write\tool\update_section(),
-            new \local_mcp\write\tool\update_user(),
+            new create_category(),
+            new bulk_create_courses(),
+            new create_course(),
+            new create_section(),
+            new create_user(),
+            new enrol_user(),
+            new grade_submission(),
+            new send_message(),
+            new suspend_user(),
+            new unenrol_user(),
+            new update_category(),
+            new update_course(),
+            new set_course_image(),
+            new update_section(),
+            new update_user(),
         ];
         foreach (manager::write_providers() as $provider) {
             foreach ($provider->get_write_tools() as $tool) {

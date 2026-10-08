@@ -25,6 +25,7 @@
 namespace local_mcp\security;
 
 use cache;
+use core\lock\lock_config;
 use local_mcp\exception\api_exception;
 
 /**
@@ -52,7 +53,7 @@ final class rate_limiter {
         $window = (int)floor(time() / 60);
         $key = sha1($bucket . ':' . $subject . ':' . $window);
         // MUC get/set is not atomic across simultaneous PHP workers.
-        $factory = \core\lock\lock_config::get_lock_factory('local_mcp');
+        $factory = lock_config::get_lock_factory('local_mcp');
         $lock = $factory->get_lock('ratelimit_' . $key, 10);
         if (!$lock) {
             throw new api_exception('rate_limit_busy', 503,

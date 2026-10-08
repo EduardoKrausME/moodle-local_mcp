@@ -29,6 +29,7 @@ use context_course;
 use local_mcp\course\image_service;
 use local_mcp\exception\api_exception;
 use local_mcp\read\tool\get_course_image;
+use local_mcp\write\registry;
 use local_mcp\write\tool\set_course_image;
 
 defined('MOODLE_INTERNAL') || die;
@@ -43,7 +44,7 @@ final class course_image_test extends advanced_testcase {
     /** @return void */
     public function test_tools_are_registered_on_the_correct_sides(): void {
         $read = \local_mcp\read\registry::get_tools();
-        $write = \local_mcp\write\registry::get_tools();
+        $write = registry::get_tools();
         $this->assertInstanceOf(get_course_image::class, $read['get_course_image']);
         $this->assertInstanceOf(set_course_image::class, $write['set_course_image']);
         $this->assertArrayNotHasKey('set_course_image', $read);

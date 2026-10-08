@@ -24,10 +24,17 @@
 
 namespace mcptool_book\write;
 
+use context;
+use context_module;
+use local_mcp\exception\api_exception;
+use local_mcp\security\authenticated_identity;
+use local_mcp\write\tool\base_tool;
+use mod_book\event\chapter_updated;
+
 /**
  * Update a Book chapter with revision conflict checking and confirmation.
  */
-final class update_chapter extends \local_mcp\write\tool\base_tool {
+final class update_chapter extends base_tool {
     /** @return string */
     public function get_name(): string {
         return 'book_update_chapter';
@@ -55,28 +62,28 @@ final class update_chapter extends \local_mcp\write\tool\base_tool {
 
     /**
      * @param array $arguments Tool input.
-     * @return \context
+     * @return context
      */
-    public function resolve_context(array $arguments): \context {
+    public function resolve_context(array $arguments): context {
         global $DB;
         $chapter = $DB->get_record('book_chapters', ['id' => (int)$arguments['chapterid']], '*', MUST_EXIST);
         $book = $DB->get_record('book', ['id' => $chapter->bookid], '*', MUST_EXIST);
         $cm = get_coursemodule_from_instance('book', $book->id, $book->course, false, MUST_EXIST);
-        return \context_module::instance($cm->id);
+        return context_module::instance($cm->id);
     }
 
     /**
      * @param array $arguments Tool input.
-     * @param \local_mcp\security\authenticated_identity $identity OAuth identity.
+     * @param authenticated_identity $identity OAuth identity.
      * @return array
      */
     public function execute(array $arguments,
-            \local_mcp\security\authenticated_identity $identity): array {
+            authenticated_identity $identity): array {
         global $DB;
         $chapter = $DB->get_record('book_chapters', ['id' => (int)$arguments['chapterid']], '*', MUST_EXIST);
         $book = $DB->get_record('book', ['id' => $chapter->bookid], '*', MUST_EXIST);
         if ((int)$book->revision !== (int)$arguments['expected_revision']) {
-            throw new \local_mcp\exception\api_exception('revision_conflict', 409);
+            throw new api_exception('revision_conflict', 409);
         }
         $context = $this->resolve_context($arguments);
         if (array_key_exists('title', $arguments)) {
@@ -88,7 +95,7 @@ final class update_chapter extends \local_mcp\write\tool\base_tool {
         $transaction = $DB->start_delegated_transaction();
         $DB->update_record('book_chapters', $chapter);
         $DB->set_field('book', 'revision', $book->revision + 1, ['id' => $book->id]);
-        \mod_book\event\chapter_updated::create_from_chapter($book, $context, $chapter)->trigger();
+        chapter_updated::create_from_chapter($book, $context, $chapter)->trigger();
         $transaction->allow_commit();
         return ['updated' => true, 'chapterid' => (int)$chapter->id, 'revision' => (int)$book->revision + 1];
 

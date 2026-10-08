@@ -24,7 +24,10 @@
 
 namespace local_mcp\course;
 
+use cache_helper;
 use context_course;
+use core\event\course_updated;
+use curl;
 use local_mcp\exception\api_exception;
 use moodle_url;
 use stored_file;
@@ -164,7 +167,7 @@ final class image_service {
                 throw new api_exception('invalid_image_url', 400, 'Use a public HTTPS hostname.');
             }
             // Redirects are disabled so a public URL cannot redirect into an internal resource.
-            $curl = new \curl();
+            $curl = new curl();
             $binary = $curl->get($url, [
                 'CURLOPT_FOLLOWLOCATION' => false,
                 'CURLOPT_MAXREDIRS' => 0,
@@ -231,9 +234,9 @@ final class image_service {
         }
         $file = get_file_storage()->create_file_from_string($record, $bytes);
         $transaction->allow_commit();
-        \cache_helper::purge_by_event('changesincourse');
+        cache_helper::purge_by_event('changesincourse');
         $course = get_course($courseid);
-        \core\event\course_updated::create([
+        course_updated::create([
             'objectid' => $courseid,
             'context' => $context,
             'other' => ['shortname' => $course->shortname, 'fullname' => $course->fullname],

@@ -25,6 +25,7 @@
 namespace local_mcp\protocol;
 
 use coding_exception;
+use core\session\manager;
 use local_mcp\audit\logger;
 use local_mcp\event\destructive_operation_executed;
 use local_mcp\event\write_operation_executed;
@@ -37,6 +38,8 @@ use local_mcp\security\rate_limiter;
 use local_mcp\security\scope;
 use local_mcp\security\token_resolver;
 use local_mcp\write\registry;
+use local_mcp\write\tool_interface;
+use stdClass;
 use Throwable;
 
 /**
@@ -60,7 +63,7 @@ final class mcp_server {
      * @return string
      */
     private static function plugin_release(): string {
-        $plugin = new \stdClass();
+        $plugin = new stdClass();
         require dirname(__DIR__, 2) . '/version.php';
         return (string)$plugin->release;
     }
@@ -88,7 +91,7 @@ final class mcp_server {
             if (!$user || empty($user->confirmed) || isguestuser($user)) {
                 throw new api_exception('invalid_user', 401);
             }
-            \core\session\manager::set_user($user);
+            manager::set_user($user);
             if ($this->side !== 'server') {
                 $requiredscope = $this->side === 'read' ? scope::READ : scope::WRITE;
                 if (!$identity->has_scope($requiredscope)) {
@@ -98,14 +101,17 @@ final class mcp_server {
                 rate_limiter::check('mcp_' . $this->side,
                     $identity->type . ':' . ($identity->tokenid ?? $identity->userid),
                     $limit ?: ($this->side === 'read'
-                        ? \local_mcp\security\rate_limiter::DEFAULT_READ_PER_MINUTE
-                        : \local_mcp\security\rate_limiter::DEFAULT_WRITE_PER_MINUTE));
+                        ? rate_limiter::DEFAULT_READ_PER_MINUTE
+                        : rate_limiter::DEFAULT_WRITE_PER_MINUTE));
             }
 
             $request = http::request_json();
             $id = $request['id'] ?? null;
             $method = $request['method'] ?? '';
             $params = $request['params'] ?? [];
+
+            error_log("method: {$method}");
+            error_log("params: " . print_r($params, 1));
 
             if ($method === 'initialize') {
                 http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => [
@@ -207,7 +213,7 @@ final class mcp_server {
         $tools = $this->get_tools();
         $out = [];
         foreach ($tools as $tool) {
-            $iswrite = $tool instanceof \local_mcp\write\tool_interface;
+            $iswrite = $tool instanceof tool_interface;
             $requiredscope = $iswrite ? scope::WRITE : scope::READ;
             if (!$identity->has_scope($requiredscope)) {
                 continue;
@@ -280,7 +286,7 @@ final class mcp_server {
             throw new api_exception('tool_not_found', 404);
         }
         $tool = $tools[$name];
-        $iswrite = $tool instanceof \local_mcp\write\tool_interface;
+        $iswrite = $tool instanceof tool_interface;
         $requiredscope = $iswrite ? scope::WRITE : scope::READ;
         if (!$identity->has_scope($requiredscope)) {
             throw new api_exception('insufficient_scope', 403);
@@ -292,8 +298,8 @@ final class mcp_server {
             rate_limiter::check('mcp_' . ($iswrite ? 'write' : 'read'),
                 $identity->type . ':' . ($identity->tokenid ?? $identity->userid),
                 $limit ?: ($iswrite
-                    ? \local_mcp\security\rate_limiter::DEFAULT_WRITE_PER_MINUTE
-                    : \local_mcp\security\rate_limiter::DEFAULT_READ_PER_MINUTE));
+                    ? rate_limiter::DEFAULT_WRITE_PER_MINUTE
+                    : rate_limiter::DEFAULT_READ_PER_MINUTE));
         }
         $confirmation = (string)($arguments['confirmation_token'] ?? ($params['confirmation_token'] ?? ''));
         $dryrun = !empty($arguments['dry_run']) || !empty($params['dry_run']);

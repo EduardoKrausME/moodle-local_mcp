@@ -29,6 +29,8 @@ define('NO_DEBUG_DISPLAY', true);
 define('NO_MOODLE_COOKIES', true);
 require_once(__DIR__ . '/../../config.php');
 
+error_log("MCP Server");
+
 transport::require_secure();
 
 (new mcp_server('server'))->handle();

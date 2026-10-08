@@ -26,6 +26,7 @@ namespace local_mcp\write\tool;
 
 use context;
 use context_coursecat;
+use core_text;
 use local_mcp\course\image_service;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
@@ -149,8 +150,8 @@ final class bulk_create_courses extends base_tool {
                 throw new api_exception('invalid_course', 400,
                     'Each course requires a valid name, HTML summary, category and summaryformat=1.');
             }
-            if (\core_text::strlen($fullname) > 254 || \core_text::strlen($shortname) > 255
-                    || \core_text::strlen($idnumber) > 100) {
+            if (core_text::strlen($fullname) > 254 || core_text::strlen($shortname) > 255
+                    || core_text::strlen($idnumber) > 100) {
                 throw new api_exception('invalid_course', 400, 'Course name or code is too long.');
             }
 
@@ -165,14 +166,14 @@ final class bulk_create_courses extends base_tool {
             capability_guard::check('moodle/course:create',
                 context_coursecat::instance($categoryid, MUST_EXIST), $identity->userid);
 
-            $shortkey = \core_text::strtolower($shortname);
+            $shortkey = core_text::strtolower($shortname);
             if (isset($shortnames[$shortkey])) {
                 throw new api_exception('duplicate_batch_shortname', 409,
                     'The same shortname appears more than once in this batch.');
             }
             $shortnames[$shortkey] = true;
             if ($idnumber !== '') {
-                $idkey = \core_text::strtolower($idnumber);
+                $idkey = core_text::strtolower($idnumber);
                 if (isset($idnumbers[$idkey])) {
                     throw new api_exception('duplicate_batch_idnumber', 409,
                         'The same idnumber appears more than once in this batch.');

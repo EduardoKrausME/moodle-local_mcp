@@ -24,10 +24,16 @@
 
 namespace mcptool_forum\read;
 
+use context;
+use context_module;
+use local_mcp\exception\api_exception;
+use local_mcp\read\tool\base_tool;
+use local_mcp\security\authenticated_identity;
+
 /**
  * Read visible posts from one forum discussion, respecting groups and per-post visibility.
  */
-final class get_posts extends \local_mcp\read\tool\base_tool {
+final class get_posts extends base_tool {
     /** @return string */
     public function get_name(): string {
         return 'forum_get_posts';
@@ -55,33 +61,33 @@ final class get_posts extends \local_mcp\read\tool\base_tool {
 
     /**
      * @param array $arguments Tool input.
-     * @return \context
+     * @return context
      */
-    public function resolve_context(array $arguments): \context {
+    public function resolve_context(array $arguments): context {
         global $DB;
         $discussion = $DB->get_record('forum_discussions', ['id' => (int)$arguments['discussionid']], '*', MUST_EXIST);
         $cm = get_coursemodule_from_instance('forum', $discussion->forum, $discussion->course, false, MUST_EXIST);
-        return \context_module::instance($cm->id);
+        return context_module::instance($cm->id);
     }
 
     /**
      * @param array $arguments Tool input.
-     * @param \local_mcp\security\authenticated_identity $identity OAuth identity.
+     * @param authenticated_identity $identity OAuth identity.
      * @return array
      */
     public function execute(array $arguments,
-            \local_mcp\security\authenticated_identity $identity): array {
+            authenticated_identity $identity): array {
         global $DB, $CFG, $USER;
         require_once($CFG->dirroot . '/mod/forum/lib.php');
         $discussion = $DB->get_record('forum_discussions', ['id' => (int)$arguments['discussionid']], '*', MUST_EXIST);
         $forum = $DB->get_record('forum', ['id' => $discussion->forum], '*', MUST_EXIST);
         $cm = get_coursemodule_from_instance('forum', $forum->id, $forum->course, false, MUST_EXIST);
-        $context = \context_module::instance($cm->id);
+        $context = context_module::instance($cm->id);
         if (!get_fast_modinfo($cm->course, $identity->userid)->get_cm($cm->id)->uservisible) {
-            throw new \local_mcp\exception\api_exception('permission_denied', 403);
+            throw new api_exception('permission_denied', 403);
         }
         if (!forum_user_can_see_discussion($forum, $discussion, $context, $USER)) {
-            throw new \local_mcp\exception\api_exception('permission_denied', 403);
+            throw new api_exception('permission_denied', 403);
         }
         $posts = [];
         $limit = min(100, max(1, (int)($arguments['limit'] ?? 50)));
