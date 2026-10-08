@@ -92,7 +92,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // OAuth connections remain listed and revocable, but the test setup requires no OAuth.
-$sql = "SELECT c.*, o.name AS clientname, u.firstname, u.lastname
+$sql = "SELECT c.*, o.name AS clientname, u.firstname, u.lastname, u.firstnamephonetic, u.lastnamephonetic,
+               u.middlename, u.alternatename
           FROM {local_mcp_connection} c
           JOIN {local_mcp_oauth_client} o ON o.id = c.clientid
           JOIN {user} u ON u.id = c.userid
@@ -112,7 +113,8 @@ foreach ($DB->get_records_sql($sql) as $record) {
 
 $testtokens = [];
 $like = $DB->sql_like('t.name', ':nameprefix', false);
-$sql = "SELECT t.*, u.firstname, u.lastname
+$sql = "SELECT t.*, u.firstname, u.lastname, u.firstnamephonetic, u.lastnamephonetic,
+               u.middlename, u.alternatename
           FROM {local_mcp_manual_token} t
           JOIN {user} u ON u.id = t.userid
          WHERE {$like}

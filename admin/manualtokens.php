@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 $rows = [];
 foreach ($DB->get_records('local_mcp_manual_token', null, 'timecreated DESC') as $r) {
-    $u = $DB->get_record('user', ['id' => $r->userid], 'id,firstname,lastname');
+    $u = $DB->get_record('user', ['id' => $r->userid], 'id,firstname,lastname,firstnamephonetic,lastnamephonetic,middlename,alternatename');
     $rows[] = ['id' => $r->id, 'name' => s($r->name), 'user' => $u ? fullname($u) : '#' . $r->userid, 'prefix' => s($r->prefix),
         'read' => $r->readenabled ? 'Yes' : 'No', 'write' => $r->writeenabled ? 'Yes' : 'No', 'expires' => $r->expires ? userdate($r->expires) : '-',
         'enabled' => (bool)$r->enabled];
