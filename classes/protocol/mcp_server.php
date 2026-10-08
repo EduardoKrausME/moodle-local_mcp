@@ -55,6 +55,17 @@ final class mcp_server {
     }
 
     /**
+     * Obtain the server version directly from the plugin release.
+     *
+     * @return string
+     */
+    private static function plugin_release(): string {
+        $plugin = new \stdClass();
+        require dirname(__DIR__, 2) . '/version.php';
+        return (string)$plugin->release;
+    }
+
+    /**
      * Method handle.
      *
      * @return never Return value.
@@ -86,7 +97,9 @@ final class mcp_server {
                 $limit = (int)get_config('local_mcp', $this->side === 'read' ? 'rateread' : 'ratewrite');
                 rate_limiter::check('mcp_' . $this->side,
                     $identity->type . ':' . ($identity->tokenid ?? $identity->userid),
-                    $limit ?: ($this->side === 'read' ? 120 : 30));
+                    $limit ?: ($this->side === 'read'
+                        ? \local_mcp\security\rate_limiter::DEFAULT_READ_PER_MINUTE
+                        : \local_mcp\security\rate_limiter::DEFAULT_WRITE_PER_MINUTE));
             }
 
             $request = http::request_json();
@@ -98,7 +111,7 @@ final class mcp_server {
                 http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => [
                     'protocolVersion' => '2025-06-18',
                     'capabilities' => ['tools' => (object)[]],
-                    'serverInfo' => ['name' => 'Moodle MCP ' . strtoupper($this->side), 'version' => '1.1.0'],
+                    'serverInfo' => ['name' => 'Moodle MCP ' . strtoupper($this->side), 'version' => self::plugin_release()],
                 ]]);
             }
             if ($method === 'notifications/initialized') {
@@ -278,7 +291,9 @@ final class mcp_server {
             $limit = (int)get_config('local_mcp', $configkey);
             rate_limiter::check('mcp_' . ($iswrite ? 'write' : 'read'),
                 $identity->type . ':' . ($identity->tokenid ?? $identity->userid),
-                $limit ?: ($iswrite ? 30 : 120));
+                $limit ?: ($iswrite
+                    ? \local_mcp\security\rate_limiter::DEFAULT_WRITE_PER_MINUTE
+                    : \local_mcp\security\rate_limiter::DEFAULT_READ_PER_MINUTE));
         }
         $confirmation = (string)($arguments['confirmation_token'] ?? ($params['confirmation_token'] ?? ''));
         $dryrun = !empty($arguments['dry_run']) || !empty($params['dry_run']);

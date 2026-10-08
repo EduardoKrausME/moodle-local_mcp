@@ -463,3 +463,19 @@ is necessary. The ChatGPT MCP connector learns these tools via `tools/list`.
 `set_course_image(courseid, image_base64|image_url, expected_contenthash?)` replaces existing cover images through Moodle File API, preserving non-image files. It accepts Base64 or an HTTPS image URL, allows up to 5 MiB and 40 megapixels, requires `mcp:write`, `moodle/course:update`, and `moodle/course:changesummary`, and uses the normal two-call confirmation handshake. The optional expected hash prevents overwriting another update. The server rejects local hosts and direct IPs; Moodle's configured cURL security rules also apply.
 
 To upload a generated image, the client must provide its bytes or a genuinely accessible HTTPS download URL. ChatGPT-private image URLs or conversation references cannot be fetched by Moodle.
+
+## Concurrent requests and rate limiting
+
+Default per-minute limits: **1200 READ**, **600 WRITE**, **120 OAuth**.
+READ/WRITE limits are per access token, so independent connections have
+independent quotas; OAuth requests share a per-IP quota. Moodle's lock
+factory protects the cache counter increment for concurrent PHP workers.
+If the locking backend cannot be reached within 10 seconds, the call returns
+`rate_limit_busy` (503), rather than bypassing throttling.
+
+The Moodle upgrade raises previous 120/30/30 settings when they match the old
+defaults, preserving customized limits. After deployment, run the Moodle
+upgrade and purge its caches before refreshing the ChatGPT connection.
+
+The MCP initialize serverInfo version now comes from `version.php`; the
+ChatGPT connector may display its own, independent version number.

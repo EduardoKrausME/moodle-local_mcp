@@ -38,7 +38,7 @@ try {
         throw new api_exception('registration_disabled', 403);
     }
     rate_limiter::check('oauth_register', getremoteaddr(),
-        (int)get_config('local_mcp', 'rateoauth') ?: 30);
+        (int)get_config('local_mcp', 'rateoauth') ?: rate_limiter::DEFAULT_OAUTH_PER_MINUTE);
     $data = http::request_json();
 
     $granttypes = $data['grant_types'] ?? ['authorization_code', 'refresh_token'];

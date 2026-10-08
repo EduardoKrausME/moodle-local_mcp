@@ -38,7 +38,7 @@ try {
         throw new api_exception('invalid_request', 405);
     }
     rate_limiter::check('oauth_token', getremoteaddr(),
-        (int)get_config('local_mcp', 'rateoauth') ?: 30);
+        (int)get_config('local_mcp', 'rateoauth') ?: rate_limiter::DEFAULT_OAUTH_PER_MINUTE);
 
     $grant = required_param('grant_type', PARAM_ALPHANUMEXT);
     $clientid = required_param('client_id', PARAM_RAW_TRIMMED);

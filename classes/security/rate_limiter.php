@@ -31,6 +31,11 @@ use local_mcp\exception\api_exception;
  * Class rate_limiter.
  */
 final class rate_limiter {
+    /** Per-minute defaults; callers and scopes have independent quotas. */
+    public const DEFAULT_READ_PER_MINUTE = 1200;
+    public const DEFAULT_WRITE_PER_MINUTE = 600;
+    public const DEFAULT_OAUTH_PER_MINUTE = 120;
+
     /**
      * Method check.
      *
@@ -46,10 +51,21 @@ final class rate_limiter {
         $cache = cache::make('local_mcp', 'ratelimit');
         $window = (int)floor(time() / 60);
         $key = sha1($bucket . ':' . $subject . ':' . $window);
-        $count = (int)($cache->get($key) ?: 0);
-        if ($count >= $limit) {
-            throw new api_exception('rate_limit_exceeded', 429);
+        // MUC get/set is not atomic across simultaneous PHP workers.
+        $factory = \core\lock\lock_config::get_lock_factory('local_mcp');
+        $lock = $factory->get_lock('ratelimit_' . $key, 10);
+        if (!$lock) {
+            throw new api_exception('rate_limit_busy', 503,
+                'The rate limiter could not obtain its lock. Please retry.');
         }
-        $cache->set($key, $count + 1);
+        try {
+            $count = (int)($cache->get($key) ?: 0);
+            if ($count >= $limit) {
+                throw new api_exception('rate_limit_exceeded', 429);
+            }
+            $cache->set($key, $count + 1);
+        } finally {
+            $lock->release();
+        }
     }
 }
