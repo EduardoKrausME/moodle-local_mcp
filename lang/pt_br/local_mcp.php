@@ -41,5 +41,7 @@ $string['pluginname'] = 'Moodle MCP';
 $string['readapis'] = 'APIs READ';
 $string['readpermissions'] = 'Permissões de leitura';
 $string['settings'] = 'Configurações';
+$string['subplugintype_mcptool'] = 'Ferramenta MCP de atividade';
+$string['subplugintype_mcptool_plural'] = 'Ferramentas MCP de atividades';
 $string['writeapis'] = 'APIs WRITE';
 $string['writepermissions'] = 'Permissões de gravação';

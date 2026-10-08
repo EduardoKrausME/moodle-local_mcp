@@ -28,6 +28,7 @@ use advanced_testcase;
 use local_mcp\exception\api_exception;
 use local_mcp\oauth\authorization_service;
 use local_mcp\oauth\client_service;
+use local_mcp\oauth\resource;
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -65,6 +66,23 @@ final class oauth_test extends advanced_testcase {
         authorization_service::validate_request([
             'client_id' => $clientid, 'redirect_uri' => 'https://client.example/callback', 'response_type' => 'code',
             'scope' => 'mcp:read', 'state' => 'state', 'code_challenge' => str_repeat('a', 43), 'code_challenge_method' => 'plain',
+            'resource' => resource::endpoint('server'),
         ]);
     }
+    /**
+     * Confirm that OAuth audiences cannot be exchanged for other MCP servers.
+     *
+     * @return void
+     */
+    public function test_resource_identifiers_are_exact_and_endpoint_specific(): void {
+        $read = resource::endpoint('read');
+        $write = resource::endpoint('write');
+        $combined = resource::endpoint('server');
+        $this->assertNotEquals($read, $write);
+        $this->assertSame($read, resource::validate($read));
+        $this->assertSame($combined, resource::validate($combined));
+        $this->expectException(api_exception::class);
+        resource::validate($read . '/other');
+    }
+
 }

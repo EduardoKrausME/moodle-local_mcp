@@ -28,6 +28,7 @@ use coding_exception;
 use local_mcp\audit\logger;
 use local_mcp\event\destructive_operation_executed;
 use local_mcp\event\write_operation_executed;
+use local_mcp\oauth\resource;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\security\capability_guard;
@@ -48,7 +49,7 @@ final class mcp_server {
      * @param string $side Parameter side.
      */
     public function __construct(private readonly string $side) {
-        if (!in_array($side, ['read', 'write'], true)) {
+        if (!in_array($side, ['read', 'write', 'server'], true)) {
             throw new coding_exception('Invalid MCP side.');
         }
     }
@@ -60,17 +61,33 @@ final class mcp_server {
      */
     public function handle(): never {
         try {
-            [$authheader, $rawtoken] = http::bearer();
-            $identity = token_resolver::from_bearer($authheader);
-            $requiredscope = $this->side === 'read'
-                ? scope::READ
-                : scope::WRITE;
-            if (!$identity->has_scope($requiredscope)) {
-                throw new api_exception('insufficient_scope', 403);
+            // Stateless Streamable HTTP: clients can use POST without an SSE session.
+            if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+                header('Allow: POST');
+                throw new api_exception('method_not_allowed', 405);
             }
-            $limit = (int)get_config('local_mcp', $this->side === 'read' ? 'rateread' : 'ratewrite');
-            rate_limiter::check('mcp_' . $this->side,
-                $identity->type . ':' . ($identity->tokenid ?? $identity->userid), $limit ?: ($this->side === 'read' ? 120 : 30));
+            [$authheader, $rawtoken] = http::bearer();
+            $identity = token_resolver::from_bearer($authheader, resource::endpoint($this->side));
+            // Moodle APIs frequently rely on the current user rather than a userid parameter.
+            // Authentication is performed by the bearer token in this cookie-free request.
+            global $DB;
+            $user = $DB->get_record('user', [
+                'id' => $identity->userid, 'deleted' => 0, 'suspended' => 0,
+            ]);
+            if (!$user || empty($user->confirmed) || isguestuser($user)) {
+                throw new api_exception('invalid_user', 401);
+            }
+            \core\session\manager::set_user($user);
+            if ($this->side !== 'server') {
+                $requiredscope = $this->side === 'read' ? scope::READ : scope::WRITE;
+                if (!$identity->has_scope($requiredscope)) {
+                    throw new api_exception('insufficient_scope', 403);
+                }
+                $limit = (int)get_config('local_mcp', $this->side === 'read' ? 'rateread' : 'ratewrite');
+                rate_limiter::check('mcp_' . $this->side,
+                    $identity->type . ':' . ($identity->tokenid ?? $identity->userid),
+                    $limit ?: ($this->side === 'read' ? 120 : 30));
+            }
 
             $request = http::request_json();
             $id = $request['id'] ?? null;
@@ -81,14 +98,14 @@ final class mcp_server {
                 http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => [
                     'protocolVersion' => '2025-06-18',
                     'capabilities' => ['tools' => (object)[]],
-                    'serverInfo' => ['name' => 'Moodle MCP ' . strtoupper($this->side), 'version' => '0.1.0'],
+                    'serverInfo' => ['name' => 'Moodle MCP ' . strtoupper($this->side), 'version' => '1.1.0'],
                 ]]);
             }
             if ($method === 'notifications/initialized') {
                 http::accepted();
             }
             if ($method === 'tools/list') {
-                http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => ['tools' => $this->tool_definitions()]]);
+                http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => ['tools' => $this->tool_definitions($identity)]]);
             }
             if ($method === 'tools/call') {
                 try {
@@ -129,7 +146,7 @@ final class mcp_server {
                 'error' => ['code' => -32601, 'message' => 'Method not found'],
             ]);
         } catch (Throwable $e) {
-            http::error($e);
+            http::error($e, $this->side);
         }
     }
 
@@ -138,27 +155,61 @@ final class mcp_server {
      *
      * @return array Return value.
      */
-    private function tool_definitions(): array {
-        $tools = $this->side === 'read'
-            ? \local_mcp\read\registry::get_tools()
-            : registry::get_tools();
+    private function tool_definitions(authenticated_identity $identity): array {
+        $tools = $this->get_tools();
         $out = [];
         foreach ($tools as $tool) {
+            $iswrite = $tool instanceof \local_mcp\write\tool_interface;
+            $requiredscope = $iswrite ? scope::WRITE : scope::READ;
+            if (!$identity->has_scope($requiredscope)) {
+                continue;
+            }
+            $schema = $tool->get_input_schema();
+            if ($iswrite && ($tool->requires_confirmation() || $tool->is_destructive())) {
+                $schema['properties']['confirmation_token'] = [
+                    'type' => 'string',
+                    'description' => 'One-time token returned by the preceding preview. '
+                        . 'Only send after the user explicitly approves the operation.',
+                ];
+            }
+            if ($iswrite && $tool->supports_dry_run()) {
+                $schema['properties']['dry_run'] = [
+                    'type' => 'boolean',
+                    'description' => 'Preview without changing Moodle data.',
+                ];
+            }
             $item = [
                 'name' => $tool->get_name(),
                 'title' => $tool->get_title(),
                 'description' => $tool->get_description(),
-                'inputSchema' => $tool->get_input_schema(),
+                'inputSchema' => $schema,
+                'securitySchemes' => [['type' => 'oauth2', 'scopes' => [$requiredscope]]],
+                'annotations' => [
+                    'readOnlyHint' => !$iswrite,
+                    'destructiveHint' => $iswrite && $tool->is_destructive(),
+                    'idempotentHint' => !$iswrite,
+                    'openWorldHint' => false,
+                ],
             ];
-            if ($this->side === 'write') {
-                $item['annotations'] = [
-                    'destructiveHint' => $tool->is_destructive(),
-                    'idempotentHint' => false,
-                ];
-            }
             $out[] = $item;
         }
         return $out;
+    }
+
+    /**
+     * Look up tools only from the registry sides enabled by this endpoint.
+     *
+     * @return array
+     */
+    private function get_tools(): array {
+        $read = $this->side !== 'write' ? \local_mcp\read\registry::get_tools() : [];
+        $write = $this->side !== 'read' ? registry::get_tools() : [];
+        foreach ($write as $name => $tool) {
+            if (isset($read[$name])) {
+                throw new coding_exception('Duplicate MCP tool: ' . $name);
+            }
+        }
+        return array_merge($read, $write);
     }
 
     /**
@@ -173,17 +224,31 @@ final class mcp_server {
      */
     private function call_tool(string                                     $name, array $arguments, array $params,
                                authenticated_identity $identity, string $rawtoken): array {
-        $tools = $this->side === 'read'
-            ? \local_mcp\read\registry::get_tools()
-            : registry::get_tools();
+        $tools = $this->get_tools();
         if (!isset($tools[$name])) {
             throw new api_exception('tool_not_found', 404);
         }
         $tool = $tools[$name];
+        $iswrite = $tool instanceof \local_mcp\write\tool_interface;
+        $requiredscope = $iswrite ? scope::WRITE : scope::READ;
+        if (!$identity->has_scope($requiredscope)) {
+            throw new api_exception('insufficient_scope', 403);
+        }
+        // The unified server still enforces the independent WRITE rate limit.
+        if ($this->side === 'server') {
+            $configkey = $iswrite ? 'ratewrite' : 'rateread';
+            $limit = (int)get_config('local_mcp', $configkey);
+            rate_limiter::check('mcp_' . ($iswrite ? 'write' : 'read'),
+                $identity->type . ':' . ($identity->tokenid ?? $identity->userid),
+                $limit ?: ($iswrite ? 30 : 120));
+        }
+        $confirmation = (string)($arguments['confirmation_token'] ?? ($params['confirmation_token'] ?? ''));
+        $dryrun = !empty($arguments['dry_run']) || !empty($params['dry_run']);
+        unset($arguments['confirmation_token'], $arguments['dry_run']);
         $context = $tool->resolve_context($arguments);
         capability_guard::check($tool->get_required_capability(), $context, $identity->userid);
 
-        if ($this->side === 'read') {
+        if (!$iswrite) {
             $started = microtime(true);
             $result = $tool->execute($arguments, $identity);
             logger::record('tool_called', $identity, $name, 'read', $context, [],
@@ -191,7 +256,6 @@ final class mcp_server {
             return $result;
         }
 
-        $dryrun = !empty($params['dry_run']);
         if ($dryrun) {
             if (!$tool->supports_dry_run()) {
                 throw new api_exception('dry_run_not_supported', 400);
@@ -203,7 +267,6 @@ final class mcp_server {
         }
 
         if ($tool->requires_confirmation() || $tool->is_destructive()) {
-            $confirmation = (string)($params['confirmation_token'] ?? '');
             if ($confirmation === '') {
                 $preview = $tool->preview($arguments, $identity);
                 $token = confirmation_service::issue(

@@ -42,14 +42,17 @@ final class registry {
     /** @return tool_interface[] */
     public static function get_tools(): array {
         $tools = [
-            new create_course(),
-            new update_course(),
-            new enrol_user(),
-            new unenrol_user(),
-            new create_user(),
-            new update_user(),
-            new suspend_user(),
-            new send_message(),
+            new \local_mcp\write\tool\create_course(),
+            new \local_mcp\write\tool\create_section(),
+            new \local_mcp\write\tool\create_user(),
+            new \local_mcp\write\tool\enrol_user(),
+            new \local_mcp\write\tool\grade_submission(),
+            new \local_mcp\write\tool\send_message(),
+            new \local_mcp\write\tool\suspend_user(),
+            new \local_mcp\write\tool\unenrol_user(),
+            new \local_mcp\write\tool\update_course(),
+            new \local_mcp\write\tool\update_section(),
+            new \local_mcp\write\tool\update_user(),
         ];
         foreach (manager::write_providers() as $provider) {
             foreach ($provider->get_write_tools() as $tool) {

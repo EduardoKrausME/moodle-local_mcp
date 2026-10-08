@@ -45,5 +45,7 @@ $string['privacy:metadata:local_mcp_connections'] = 'Stores authorized MCP conne
 $string['readapis'] = 'READ APIs';
 $string['readpermissions'] = 'Read permissions';
 $string['settings'] = 'Settings';
+$string['subplugintype_mcptool'] = 'MCP activity tool';
+$string['subplugintype_mcptool_plural'] = 'MCP activity tools';
 $string['writeapis'] = 'WRITE APIs';
 $string['writepermissions'] = 'Write permissions';

@@ -26,6 +26,7 @@ use local_mcp\protocol\mcp_server;
 use local_mcp\security\transport;
 
 define('NO_DEBUG_DISPLAY', true);
+define('NO_MOODLE_COOKIES', true);
 require_once(__DIR__ . '/../../config.php');
 
 transport::require_secure();

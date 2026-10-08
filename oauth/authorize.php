@@ -36,6 +36,7 @@ $scopeparam = required_param('scope', PARAM_RAW_TRIMMED);
 $state = required_param('state', PARAM_RAW_TRIMMED);
 $challenge = required_param('code_challenge', PARAM_RAW_TRIMMED);
 $method = required_param('code_challenge_method', PARAM_ALPHANUMEXT);
+$resource = required_param('resource', PARAM_URL);
 
 $returnurl = new moodle_url('/local/mcp/oauth/authorize.php', [
     'client_id' => $clientid,
@@ -45,6 +46,7 @@ $returnurl = new moodle_url('/local/mcp/oauth/authorize.php', [
     'state' => $state,
     'code_challenge' => $challenge,
     'code_challenge_method' => $method,
+    'resource' => $resource,
 ]);
 
 require_login(null, false, $returnurl);
@@ -75,6 +77,7 @@ try {
         'state' => $state,
         'code_challenge' => $challenge,
         'code_challenge_method' => $method,
+        'resource' => $resource,
     ]);
 } catch (Throwable $e) {
     throw new moodle_exception('invalidrequest', 'error');
@@ -90,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         throw new moodle_exception('invalidrequest', 'error');
     }
     $code = authorization_service::issue_code(
-        $client, $USER->id, $redirecturi, $scopes, $challenge);
+        $client, $USER->id, $redirecturi, $scopes, $challenge, $resource);
     redirect(new moodle_url($redirecturi, ['code' => $code, 'state' => $state]));
 }
 

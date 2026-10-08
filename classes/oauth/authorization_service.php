@@ -40,7 +40,7 @@ final class authorization_service {
      * @return array Return value.
      */
     public static function validate_request(array $params): array {
-        foreach (['client_id', 'redirect_uri', 'response_type', 'scope', 'state', 'code_challenge', 'code_challenge_method'] as $required) {
+        foreach (['client_id', 'redirect_uri', 'response_type', 'scope', 'state', 'code_challenge', 'code_challenge_method', 'resource'] as $required) {
             if (!isset($params[$required]) || $params[$required] === '') {
                 throw new api_exception('invalid_request', 400);
             }
@@ -51,6 +51,7 @@ final class authorization_service {
         if (!preg_match('/^[A-Za-z0-9\-._~]{43,128}$/', $params['code_challenge'])) {
             throw new api_exception('invalid_code_challenge', 400);
         }
+        resource::validate($params['resource']);
         $client = client_service::by_clientid($params['client_id']);
         client_service::validate_redirect_uri($client, $params['redirect_uri']);
         $scopes = scope::parse($params['scope']);
@@ -68,10 +69,11 @@ final class authorization_service {
      * @param string $redirecturi Parameter redirecturi.
      * @param array $scopes Parameter scopes.
      * @param string $challenge Parameter challenge.
+     * @param string $resource MCP resource identifier.
      * @return string Return value.
      */
     public static function issue_code(stdClass $client, int $userid, string $redirecturi, array $scopes,
-                                      string   $challenge): string {
+                                      string $challenge, string $resource): string {
         global $DB;
         $code = secret::generate('mcp_code_', 32);
         $ttl = (int)get_config('local_mcp', 'codettl') ?: 300;
@@ -82,6 +84,7 @@ final class authorization_service {
             'userid' => $userid,
             'redirecturi' => $redirecturi,
             'scopes' => scope::to_string($scopes),
+            'resource' => resource::validate($resource),
             'codechallenge' => $challenge,
             'challengemethod' => 'S256',
             'timecreated' => time(),

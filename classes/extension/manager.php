@@ -32,12 +32,14 @@ use coding_exception;
 final class manager {
     /** @return read_provider_interface[] */
     public static function read_providers(): array {
-        return self::providers('mcp_read_provider', read_provider_interface::class);
+        return array_merge(self::providers('mcp_read_provider', read_provider_interface::class),
+            self::subplugin_providers(read_provider_interface::class));
     }
 
     /** @return write_provider_interface[] */
     public static function write_providers(): array {
-        return self::providers('mcp_write_provider', write_provider_interface::class);
+        return array_merge(self::providers('mcp_write_provider', write_provider_interface::class),
+            self::subplugin_providers(write_provider_interface::class));
     }
 
     /**
@@ -56,6 +58,35 @@ final class manager {
                 if (!$provider instanceof $interface) {
                     throw new coding_exception($component . ' returned an invalid MCP provider.');
                 }
+                $providers[] = $provider;
+            }
+        }
+        return $providers;
+    }
+
+    /**
+     * Discover registered activity subplugins through Moodle's plugin component registry.
+     *
+     * @param string $interface Provider contract.
+     * @return array Provider objects implementing the requested interface.
+     */
+    private static function subplugin_providers(string $interface): array {
+        $providers = [];
+        foreach (\core_component::get_plugin_list('mcptool') as $name => $directory) {
+            $component = 'mcptool_' . $name;
+            $info = \core_plugin_manager::instance()->get_plugin_info($component);
+            if ($info && $info->is_enabled() === false) {
+                continue;
+            }
+            $class = '\\' . $component . '\\provider';
+            if (!class_exists($class)) {
+                throw new coding_exception($component . ' does not define a provider class.');
+            }
+            $provider = new $class();
+            if (!$provider instanceof read_provider_interface || !$provider instanceof write_provider_interface) {
+                throw new coding_exception($component . ' must implement both MCP provider contracts.');
+            }
+            if ($provider instanceof $interface) {
                 $providers[] = $provider;
             }
         }

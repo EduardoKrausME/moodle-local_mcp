@@ -46,6 +46,10 @@ final class registry_test extends advanced_testcase {
 
         $this->assertNotEmpty($read);
         $this->assertNotEmpty($write);
+        $this->assertCount(18, $read);
+        $this->assertCount(11, $write);
+        $this->assertArrayHasKey('get_calendar_events', $read);
+        $this->assertArrayHasKey('grade_submission', $write);
         $this->assertEmpty(array_intersect(array_keys($read), array_keys($write)));
 
         foreach ($read as $tool) {

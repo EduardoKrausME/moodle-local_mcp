@@ -40,15 +40,18 @@ final class token_service {
      * @param string $code Parameter code.
      * @param string $redirecturi Parameter redirecturi.
      * @param string $verifier Parameter verifier.
+     * @param string $resource MCP resource identifier.
      * @return array Return value.
      */
-    public static function exchange_code(string $clientid, string $code, string $redirecturi, string $verifier): array {
+    public static function exchange_code(string $clientid, string $code, string $redirecturi, string $verifier, string $resource): array {
         global $DB;
         $client = client_service::by_clientid($clientid);
         client_service::validate_redirect_uri($client, $redirecturi);
+        $resource = resource::validate($resource);
         $hash = secret::hash($code);
         $rec = $DB->get_record('local_mcp_auth_code', ['codehash' => $hash, 'clientid' => $client->id], '*', MUST_EXIST);
-        if ($rec->used || $rec->expires < time() || !hash_equals($rec->redirecturi, $redirecturi)) {
+        if ($rec->used || $rec->expires < time() || !hash_equals($rec->redirecturi, $redirecturi)
+            || !hash_equals((string)$rec->resource, $resource)) {
             throw new api_exception('invalid_grant', 400);
         }
         $challenge = secret::base64url(hash('sha256', $verifier, true));
@@ -57,7 +60,7 @@ final class token_service {
         }
         $DB->set_field('local_mcp_auth_code', 'used', 1, ['id' => $rec->id]);
         $connectionid = self::connection($rec->userid, $client->id, $rec->scopes);
-        return self::issue_pair($rec->userid, $client->id, $connectionid, $rec->scopes);
+        return self::issue_pair($rec->userid, $client->id, $connectionid, $rec->scopes, $resource);
     }
 
     /**
@@ -77,7 +80,8 @@ final class token_service {
             throw new api_exception('invalid_grant', 400);
         }
         $DB->set_field('local_mcp_refresh_token', 'usedat', time(), ['id' => $rec->id]);
-        return self::issue_pair($rec->userid, $client->id, $rec->connectionid, $rec->scopes, $rec->family, $rec->generation + 1);
+        return self::issue_pair($rec->userid, $client->id, $rec->connectionid, $rec->scopes,
+            resource::validate((string)$rec->resource), $rec->family, $rec->generation + 1);
     }
 
     /**
@@ -87,13 +91,15 @@ final class token_service {
      * @param int $clientid Parameter clientid.
      * @param int $connectionid Parameter connectionid.
      * @param string $scopes Parameter scopes.
+     * @param string $resource MCP resource identifier.
      * @param ?string $family Parameter family.
      * @param int $generation Parameter generation.
      * @return array Return value.
      */
-    private static function issue_pair(int     $userid, int $clientid, int $connectionid, string $scopes,
+    private static function issue_pair(int     $userid, int $clientid, int $connectionid, string $scopes, string $resource,
                                        ?string $family = null, int $generation = 0): array {
         global $DB;
+        $resource = resource::validate($resource);
         $family = $family ?: bin2hex(random_bytes(24));
         $access = secret::generate('mcp_at_', 32);
         $refresh = secret::generate('mcp_rt_', 48);
@@ -103,17 +109,19 @@ final class token_service {
         $DB->insert_record('local_mcp_access_token', (object)[
             'prefix' => secret::prefix($access), 'tokenhash' => secret::hash($access),
             'userid' => $userid, 'clientid' => $clientid, 'connectionid' => $connectionid, 'scopes' => $scopes,
+            'resource' => $resource,
             'family' => $family, 'issuedat' => $now, 'expiresat' => $now + $accessttl, 'revokedat' => null,
             'lastused' => null, 'lastip' => null,
         ]);
         $DB->insert_record('local_mcp_refresh_token', (object)[
             'prefix' => secret::prefix($refresh), 'tokenhash' => secret::hash($refresh),
             'userid' => $userid, 'clientid' => $clientid, 'connectionid' => $connectionid, 'scopes' => $scopes,
+            'resource' => $resource,
             'family' => $family, 'generation' => $generation, 'issuedat' => $now, 'expiresat' => $now + $refreshttl,
             'usedat' => null, 'revokedat' => null,
         ]);
         return ['access_token' => $access, 'refresh_token' => $refresh, 'token_type' => 'Bearer',
-            'expires_in' => $accessttl, 'scope' => $scopes];
+            'expires_in' => $accessttl, 'scope' => $scopes, 'resource' => $resource];
     }
 
     /**

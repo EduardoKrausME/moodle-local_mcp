@@ -40,9 +40,12 @@ MCP Client
 
 ## MCP endpoints
 
+- Combined READ + WRITE: `/local/mcp/server.php` (recommended for ChatGPT)
 - READ: `/local/mcp/read.php`
 - WRITE: `/local/mcp/write.php`
 - Plugin discovery: `/local/mcp/discovery.php`
+
+The combined endpoint merges tool listings but retains separate READ/WRITE registries, scopes, rate limits and permission checks.
 
 The READ endpoint publishes only `local_mcp\read\registry`. The WRITE endpoint publishes
 only `local_mcp\write\registry`. There is no combined registry followed by a risk filter.
@@ -55,7 +58,9 @@ The authorization server uses Authorization Code + PKCE S256.
 - Token: `/local/mcp/oauth/token.php`
 - Dynamic registration: `/local/mcp/oauth/register.php`
 - Authorization Server Metadata: `/local/mcp/.well-known/oauth-authorization-server.php`
-- Protected Resource Metadata: `/local/mcp/.well-known/oauth-protected-resource.php`
+- Protected Resource Metadata: `/local/mcp/.well-known/oauth-protected-resource.php?side=server` (or `side=read`/`side=write`)
+
+OAuth clients must send the RFC 8707 `resource` parameter in both authorization-code authorization and token requests. The value must exactly match the MCP endpoint URL (`server.php`, `read.php`, or `write.php`). OAuth tokens are audience-bound to the selected endpoint, including when refresh tokens rotate. Tokens issued before audience binding was introduced must be reauthorized.
 
 OAuth access tokens are short-lived opaque secrets. Refresh tokens rotate. Authorization codes are short-lived and
 single-use. Database records store SHA-256 hashes, never the complete secret.
@@ -189,7 +194,7 @@ Sensitive secrets are explicitly excluded from audit metadata.
 The plugin contains no ChatGPT-specific authentication code. ChatGPT is expected to behave like any other
 standards-based MCP/OAuth client.
 
-The future flow is:
+The integration flow is:
 
 ```
 Moodle URL
@@ -200,10 +205,113 @@ Moodle URL
 -> consent
 -> authorization code
 -> access + refresh token
--> READ/WRITE MCP endpoints
+-> `/local/mcp/server.php` (or the separate READ/WRITE endpoints)
 ```
 
 ## Development
 
 Run Moodle PHPUnit tests for `local_mcp` and the repository CI. GitHub Actions validates PHP syntax and the Moodle
 plugin package.
+
+## Connect ChatGPT as a custom MCP plugin
+
+1. Enable **Dynamic client registration** in the Moodle MCP administration settings.
+2. Make the Moodle site reachable over HTTPS and check the OAuth well-known configuration below.
+3. In ChatGPT on the web, use **Plugins → Add custom MCP server** and set the server URL to
+   `https://YOUR-MOODLE/local/mcp/server.php`, with OAuth and DCR registration.
+4. Complete the normal Moodle sign-in and administrator consent.
+5. Use the connection with `mcp:read` and optionally `mcp:write`. The combined server
+   lists only the tools allowed by the access token.
+
+ChatGPT can also connect to `read.php` and `write.php` independently.
+The Moodle consent screen currently restricts OAuth authorizations to site administrators
+(`moodle/site:config`), even when an individual tool has more granular capabilities.
+This is a deliberate access policy and is **not** an end-user permission system.
+
+### Configure OAuth authorization-server discovery
+
+OAuth authorization servers with a path-based issuer need an RFC 8414 well-known URL.
+The issuer is `https://YOUR-MOODLE/local/mcp`, so the ChatGPT discovery URL for a Moodle
+installation at the domain root is:
+
+```text
+https://YOUR-MOODLE/.well-known/oauth-authorization-server/local/mcp
+```
+
+The Moodle plugin cannot register a URL outside its own directory. Add **one**
+web-server rewrite before using OAuth clients. Examples for a root-installed Moodle:
+
+Apache (in the Moodle site's existing root rewrite configuration):
+
+```apache
+RewriteRule ^\.well-known/oauth-authorization-server/local/mcp$ local/mcp/.well-known/oauth-authorization-server.php [L]
+```
+
+Nginx (inside the existing Moodle virtual host):
+
+```nginx
+location = /.well-known/oauth-authorization-server/local/mcp {
+    rewrite ^ /local/mcp/.well-known/oauth-authorization-server.php last;
+}
+```
+
+For a Moodle installed in a subdirectory, include the Moodle path in the left and right
+sides of the rewrite. Do not redirect to another issuer or expose this file with a different
+issuer URL. The JSON `issuer` value must remain identical to the discovery issuer.
+
+Unauthenticated `POST` requests to the MCP endpoint return HTTP 401 with a
+`WWW-Authenticate` header that points to the appropriate protected-resource metadata.
+The `resource` value in those metadata is the exact endpoint URL.
+
+### WRITE confirmation with MCP clients
+
+The server publishes `confirmation_token` as an optional property for operations that
+need a second call. The first call returns a preview and a single-use token; after the
+user has approved the preview, the client repeats the **same** tool with identical
+arguments and the returned `confirmation_token`. The token is checked against the
+user, client, resource-bound access token, tool, context and argument hash.
+A client should never autonomously treat receiving a preview as user approval.
+
+## Activity subplugins
+
+The MCP activity integrations are **real Moodle subplugins**, installed under
+`local/mcp/tool/<name>`, with component names `mcptool_<name>`. The parent plugin
+defines a single `mcptool` plugintype in `db/subplugins.json`, using both
+the Moodle 5.0+ `subplugintypes` and pre-5.0 `plugintypes` formats.
+
+The parent `local_mcp\\extension\\manager` discovers providers using
+`core_component::get_plugin_list('mcptool')`. Each provider class implements
+`read_provider_interface` and `write_provider_interface`; the READ and WRITE
+registries are still separate. No activity names, `switch` statements, or
+activity-specific logic are present in the server controller or registries.
+
+### Included activity integrations
+
+- `mcptool_forum`: `forum_create_activity`, `forum_list_discussions`, `forum_get_posts`,
+  `forum_create_discussion`, `forum_reply_to_post`.
+- `mcptool_page`: `page_create_activity`, `page_get_content`, `page_update_content`.
+- `mcptool_book`: `book_create_activity`, `book_list_chapters`, `book_get_chapter`,
+  `book_create_chapter`, `book_update_chapter`.
+
+The create-activity operations use Moodle's standard `prepare_new_moduleinfo_data()` / `add_moduleinfo()` APIs and check both course-management and activity-creation capabilities. The remaining tools work with **existing** Moodle activities. The forum integration
+checks discussion, group and per-post visibility and delegates new postings to
+the standard forum APIs. The page integration delegates updates to
+`page_update_instance`; the book integration uses the book chapter schema,
+revision tracking and core chapter lifecycle events. For safety, chapter
+creation only appends, and none of the WRITE tools deletes existing content.
+The page and book WRITE tools use revision preconditions where applicable.
+
+The MCP server authenticates the bearer token without Moodle cookies, then
+establishes that identity as the current Moodle `$USER` before calling tools,
+so Moodle's built-in APIs can apply their normal access and audit behaviour.
+
+All activity-specific logic lives under the corresponding
+`tool/<name>/classes/` directory. New integrations only need a subplugin
+`version.php`, a provider class, and their own READ/WRITE tool implementations;
+no edits to the parent server controller are required.
+
+All WRITE calls use the normal MCP two-step preview and confirmation mechanism,
+and clients must obtain user approval for the second call. The MCP server
+only sends schema, descriptions and results to ChatGPT: no separate OpenAPI
+definition, prompt injection into the conversation, or ChatGPT-specific endpoint
+is necessary. The ChatGPT MCP connector learns these tools via `tools/list`.

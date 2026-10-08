@@ -47,7 +47,8 @@ try {
             $clientid,
             required_param('code', PARAM_RAW_TRIMMED),
             required_param('redirect_uri', PARAM_URL),
-            required_param('code_verifier', PARAM_RAW_TRIMMED)
+            required_param('code_verifier', PARAM_RAW_TRIMMED),
+            required_param('resource', PARAM_URL)
         );
     } else if ($grant === 'refresh_token') {
         $result = token_service::refresh(

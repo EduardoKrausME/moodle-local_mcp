@@ -30,6 +30,7 @@ $base = $CFG->wwwroot . '/local/mcp';
 http::json([
     'name' => 'Moodle MCP',
     'mcp' => [
+        'server' => $base . '/server.php',
         'read' => $base . '/read.php',
         'write' => $base . '/write.php',
     ],

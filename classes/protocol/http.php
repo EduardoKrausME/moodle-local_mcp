@@ -93,13 +93,15 @@ final class http {
      * Method error.
      *
      * @param Throwable $e Parameter e.
+     * @param string $side Requested MCP endpoint.
      * @return never Return value.
      */
-    public static function error(Throwable $e): never {
+    public static function error(Throwable $e, string $side = 'server'): never {
         if ($e instanceof api_exception) {
             $headers = [];
             if ($e->httpstatus === 401) {
-                $metadata = (new moodle_url('/local/mcp/.well-known/oauth-protected-resource.php'))->out(false);
+                $metadata = (new moodle_url('/local/mcp/.well-known/oauth-protected-resource.php',
+                    ['side' => $side]))->out(false);
                 $headers[] = 'WWW-Authenticate: Bearer resource_metadata="' . $metadata . '"';
             }
             self::json(['error' => $e->machinecode, 'message' => $e->getMessage(), 'details' => $e->details],

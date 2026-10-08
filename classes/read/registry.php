@@ -41,13 +41,24 @@ final class registry {
     /** @return tool_interface[] */
     public static function get_tools(): array {
         $tools = [
-            new search_courses(),
-            new get_course(),
-            new get_course_contents(),
-            new get_course_participants(),
-            new search_users(),
-            new get_user(),
-            new get_user_courses(),
+            new \local_mcp\read\tool\get_assignment(),
+            new \local_mcp\read\tool\get_assignments(),
+            new \local_mcp\read\tool\get_attempts(),
+            new \local_mcp\read\tool\get_calendar_events(),
+            new \local_mcp\read\tool\get_course(),
+            new \local_mcp\read\tool\get_course_activities(),
+            new \local_mcp\read\tool\get_course_contents(),
+            new \local_mcp\read\tool\get_course_participants(),
+            new \local_mcp\read\tool\get_course_sections(),
+            new \local_mcp\read\tool\get_grades(),
+            new \local_mcp\read\tool\get_progress(),
+            new \local_mcp\read\tool\get_quiz(),
+            new \local_mcp\read\tool\get_quizzes(),
+            new \local_mcp\read\tool\get_submissions(),
+            new \local_mcp\read\tool\get_user(),
+            new \local_mcp\read\tool\get_user_courses(),
+            new \local_mcp\read\tool\search_courses(),
+            new \local_mcp\read\tool\search_users(),
         ];
         foreach (manager::read_providers() as $provider) {
             foreach ($provider->get_read_tools() as $tool) {

@@ -34,9 +34,10 @@ final class token_resolver {
      * Method from_bearer.
      *
      * @param ?string $authorization Parameter authorization.
+     * @param ?string $resource Expected audience for OAuth tokens.
      * @return authenticated_identity Return value.
      */
-    public static function from_bearer(?string $authorization): authenticated_identity {
+    public static function from_bearer(?string $authorization, ?string $resource = null): authenticated_identity {
         global $DB;
         if (!$authorization || !preg_match('/^Bearer\s+(.+)$/i', trim($authorization), $m)) {
             throw new api_exception('invalid_token', 401);
@@ -50,6 +51,9 @@ final class token_resolver {
             foreach ($records as $rec) {
                 if (!hash_equals($rec->tokenhash, $hash)) {
                     continue;
+                }
+                if (!$resource || !hash_equals((string)$rec->resource, $resource)) {
+                    throw new api_exception('invalid_token_audience', 401);
                 }
                 if ($rec->revokedat || $rec->expiresat < time()) {
                     throw new api_exception('expired_token', 401);
