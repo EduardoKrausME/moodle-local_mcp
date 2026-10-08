@@ -146,7 +146,7 @@ final class bulk_create_courses extends base_tool {
             $categoryid = (int)$course['categoryid'];
             if ($fullname === '' || $shortname === '' || trim(strip_tags($summary)) === ''
                     || $categoryid < 1 || (isset($course['summaryformat']) &&
-                    (int)$course['summaryformat'] !== FORMAT_HTML)) {
+                    (int)$course['summaryformat'] !== (int)FORMAT_HTML)) {
                 throw new api_exception('invalid_course', 400,
                     'Each course requires a valid name, HTML summary, category and summaryformat=1.');
             }

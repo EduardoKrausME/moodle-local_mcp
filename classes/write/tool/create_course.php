@@ -141,7 +141,7 @@ final class create_course extends base_tool {
      * @return void
      */
     private function validate_summary_format(array $arguments): void {
-        if (isset($arguments['summaryformat']) && (int)$arguments['summaryformat'] !== FORMAT_HTML) {
+        if (isset($arguments['summaryformat']) && (int)$arguments['summaryformat'] !== (int)FORMAT_HTML) {
             throw new api_exception('invalid_summaryformat', 400, 'Only summaryformat=1 (HTML) is supported.');
         }
     }
