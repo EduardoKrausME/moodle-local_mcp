@@ -77,16 +77,37 @@ final class http {
     }
 
     /**
-     * Method bearer.
+     * Read a bearer token or a manual token in the URL for testing.
      *
-     * @return array Return value.
+     * Never accept OAuth tokens in query strings, which can leak in web logs.
+     *
+     * @param bool $allowquerytoken Whether to allow a test token in the server URL.
+     * @return array Bearer authorization header and raw token.
      */
-    public static function bearer(): array {
-        $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-        if (!preg_match('/^Bearer\s+(.+)$/i', trim($header), $m)) {
+    public static function bearer(bool $allowquerytoken = false): array {
+        $header = (string)($_SERVER['HTTP_AUTHORIZATION'] ?? '');
+        $hastoke = array_key_exists('toke', $_GET);
+        $hastoken = array_key_exists('token', $_GET);
+
+        if ($hastoke || $hastoken) {
+            if (!$allowquerytoken || $hastoke === $hastoken || trim($header) !== '') {
+                throw new api_exception('invalid_token', 401);
+            }
+            $token = $hastoke ? $_GET['toke'] : $_GET['token'];
+            if (!is_string($token) || strlen($token) > 128 ||
+                    !preg_match('/^mcp_[A-Za-z0-9_-]{40,}$/D', $token)
+                    || str_starts_with($token, 'mcp_at_')
+                    || str_starts_with($token, 'mcp_rt_')
+                    || str_starts_with($token, 'mcp_confirm_')) {
+                throw new api_exception('invalid_token', 401);
+            }
+            return ['Bearer ' . $token, $token];
+        }
+
+        if (!preg_match('/^Bearer\s+(.+)$/i', trim($header), $matches)) {
             throw new api_exception('invalid_token', 401);
         }
-        return [$header, trim($m[1])];
+        return [$header, trim($matches[1])];
     }
 
     /**
@@ -99,7 +120,9 @@ final class http {
     public static function error(Throwable $e, string $side = 'server'): never {
         if ($e instanceof api_exception) {
             $headers = [];
-            if ($e->httpstatus === 401) {
+            // Query-token clients intentionally do not use OAuth discovery.
+            if ($e->httpstatus === 401 &&
+                    !array_key_exists('toke', $_GET) && !array_key_exists('token', $_GET)) {
                 $metadata = (new moodle_url('/local/mcp/.well-known/oauth-protected-resource.php',
                     ['side' => $side]))->out(false);
                 $headers[] = 'WWW-Authenticate: Bearer resource_metadata="' . $metadata . '"';

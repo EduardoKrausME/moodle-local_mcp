@@ -66,7 +66,7 @@ final class mcp_server {
                 header('Allow: POST');
                 throw new api_exception('method_not_allowed', 405);
             }
-            [$authheader, $rawtoken] = http::bearer();
+            [$authheader, $rawtoken] = http::bearer($this->side === 'server');
             $identity = token_resolver::from_bearer($authheader, resource::endpoint($this->side));
             // Moodle APIs frequently rely on the current user rather than a userid parameter.
             // Authentication is performed by the bearer token in this cookie-free request.
@@ -195,7 +195,7 @@ final class mcp_server {
                 'title' => $tool->get_title(),
                 'description' => $tool->get_description(),
                 'inputSchema' => $schema,
-                'securitySchemes' => [['type' => 'oauth2', 'scopes' => [$requiredscope]]],
+
                 'annotations' => [
                     'readOnlyHint' => !$iswrite,
                     'destructiveHint' => $iswrite && $tool->is_destructive(),
@@ -203,6 +203,9 @@ final class mcp_server {
                     'openWorldHint' => false,
                 ],
             ];
+            if ($identity->type === 'oauth') {
+                $item['securitySchemes'] = [['type' => 'oauth2', 'scopes' => [$requiredscope]]];
+            }
             $out[] = $item;
         }
         return $out;

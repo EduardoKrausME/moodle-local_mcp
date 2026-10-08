@@ -8,41 +8,205 @@
 
     Moodle is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+    along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
     @template local_mcp/connections
 
     Example context (json):
     {
-        Aqui tem que criar o context em inglês
+        "rows": [],
+        "testtokens": [],
+        "shownew": true,
+        "newurl": "/local/mcp/admin/connections.php?new=1",
+        "cancelurl": "/local/mcp/admin/connections.php",
+        "serverurl": "",
+        "expiresat": "",
+        "chatgpturl": "https://chatgpt.com/",
+        "sesskey": "placeholder"
     }
 }}
-{{> local_mcp/chatgpt_setup}}
+<div class="mb-3">
+    <a href="{{newurl}}" class="btn btn-primary">{{#str}}newconnection, local_mcp{{/str}}</a>
+</div>
+
+{{#serverurl}}
+<section class="card mb-4" aria-labelledby="mcp-test-created-heading">
+    <div class="card-body">
+        <h3 class="h4" id="mcp-test-created-heading">{{#str}}testconnectioncreated, local_mcp{{/str}}</h3>
+        <p>{{#str}}testconnectiononeview, local_mcp{{/str}}</p>
+        <div class="form-group">
+            <label for="mcp-test-server-url">{{#str}}testconnectionserverurl, local_mcp{{/str}}</label>
+            <div class="input-group">
+                <input class="form-control" id="mcp-test-server-url" type="text"
+                       value="{{serverurl}}" readonly autocomplete="off" spellcheck="false">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-primary" type="button" data-action="copy-test-url">
+                        {{#str}}chatgptsetupcopy, local_mcp{{/str}}
+                    </button>
+                </div>
+            </div>
+            <span class="form-text" data-role="copy-test-status" aria-live="polite"></span>
+        </div>
+        <p class="small text-muted">{{#str}}testconnectionexpireslabel, local_mcp{{/str}}: {{expiresat}}</p>
+        <div class="alert alert-warning" role="alert">
+            {{#str}}testconnectionwarning, local_mcp{{/str}}
+        </div>
+        <h4 class="h5">{{#str}}testconnectionhowtotitle, local_mcp{{/str}}</h4>
+        <ol>
+            <li>{{#str}}testconnectionstep1, local_mcp{{/str}}
+                <a href="{{chatgpturl}}" target="_blank" rel="noopener noreferrer">ChatGPT</a>.
+            </li>
+            <li>{{#str}}testconnectionstep2, local_mcp{{/str}}</li>
+            <li>{{#str}}testconnectionstep3, local_mcp{{/str}}</li>
+            <li>{{#str}}testconnectionstep4, local_mcp{{/str}}</li>
+        </ol>
+    </div>
+</section>
+{{/serverurl}}
+
+{{#shownew}}
+{{^serverurl}}
+<section class="card mb-4" aria-labelledby="mcp-new-test-heading">
+    <div class="card-body">
+        <h3 class="h4" id="mcp-new-test-heading">{{#str}}newconnection, local_mcp{{/str}}</h3>
+        <p>{{#str}}testconnectionformintro, local_mcp{{/str}}</p>
+        <form method="post" action="{{cancelurl}}">
+            <input type="hidden" name="sesskey" value="{{sesskey}}">
+            <input type="hidden" name="action" value="createtest">
+            <div class="form-group">
+                <label for="mcp-test-name">{{#str}}testconnectionname, local_mcp{{/str}}</label>
+                <input class="form-control" id="mcp-test-name" type="text" name="name"
+                       required maxlength="200" value="ChatGPT">
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="read" value="1" checked>
+                    MCP READ
+                </label>
+                <label class="ml-3">
+                    <input type="checkbox" name="write" value="1">
+                    MCP WRITE
+                </label>
+            </div>
+            <p class="small text-muted">{{#str}}testconnectionpermissions, local_mcp{{/str}}</p>
+            <button class="btn btn-primary" type="submit">{{#str}}testconnectioncreate, local_mcp{{/str}}</button>
+            <a class="btn btn-link" href="{{cancelurl}}">{{#str}}cancel, local_mcp{{/str}}</a>
+        </form>
+    </div>
+</section>
+{{/serverurl}}
+{{/shownew}}
+
+<h3 class="h5">{{#str}}testconnectionsheading, local_mcp{{/str}}</h3>
+{{#hastesttokens}}
 <table class="generaltable">
     <thead>
-    <tr>
-        <th>Client</th>
-        <th>User</th>
-        <th>Scopes</th>
-        <th>Connected</th>
-        <th>Last used</th>
-        <th></th>
-    </tr>
+        <tr>
+            <th>{{#str}}testconnectionname, local_mcp{{/str}}</th>
+            <th>{{#str}}testconnectionuser, local_mcp{{/str}}</th>
+            <th>{{#str}}testconnectionpermissionslabel, local_mcp{{/str}}</th>
+            <th>{{#str}}testconnectionexpireslabel, local_mcp{{/str}}</th>
+            <th>{{#str}}testconnectionstatus, local_mcp{{/str}}</th>
+            <th></th>
+        </tr>
     </thead>
     <tbody>
-    {{#rows}}
+        {{#testtokens}}
+        <tr>
+            <td>{{name}} <small class="text-muted">({{prefix}}…)</small></td>
+            <td>{{user}}</td>
+            <td>{{#readenabled}}READ {{/readenabled}}{{#writeenabled}}WRITE{{/writeenabled}}</td>
+            <td>{{expires}}</td>
+            <td>{{#enabled}}{{#str}}testconnectionactive, local_mcp{{/str}}{{/enabled}}{{^enabled}}{{#str}}testconnectioninactive, local_mcp{{/str}}{{/enabled}}</td>
+            <td>
+                {{#enabled}}
+                <form method="post" action="{{cancelurl}}">
+                    <input type="hidden" name="sesskey" value="{{sesskey}}">
+                    <input type="hidden" name="action" value="revoketest">
+                    <input type="hidden" name="tokenid" value="{{id}}">
+                    <button class="btn btn-outline-danger btn-sm" type="submit">
+                        {{#str}}testconnectionrevoke, local_mcp{{/str}}
+                    </button>
+                </form>
+                {{/enabled}}
+            </td>
+        </tr>
+        {{/testtokens}}
+    </tbody>
+</table>
+{{/hastesttokens}}
+{{^hastesttokens}}
+<p class="text-muted">{{#str}}testconnectionempty, local_mcp{{/str}}</p>
+{{/hastesttokens}}
+
+<h3 class="h5 mt-4">{{#str}}testconnectionoauthheading, local_mcp{{/str}}</h3>
+{{#hasoauthrows}}
+<table class="generaltable">
+    <thead>
+        <tr>
+            <th>Client</th>
+            <th>{{#str}}testconnectionuser, local_mcp{{/str}}</th>
+            <th>Scopes</th>
+            <th>Connected</th>
+            <th>Last used</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#rows}}
         <tr>
             <td>{{clientname}}</td>
             <td>{{user}}</td>
             <td>{{scopes}}</td>
             <td>{{created}}</td>
             <td>{{lastused}}</td>
-            <td>{{#enabled}}<a class="btn btn-danger btn-sm" href="{{{revokeurl}}}">Revoke</a>{{/enabled}}</td>
-        </tr>{{/rows}}
+            <td>
+                {{#enabled}}
+                <form method="post" action="{{cancelurl}}">
+                    <input type="hidden" name="sesskey" value="{{sesskey}}">
+                    <input type="hidden" name="action" value="revokeoauth">
+                    <input type="hidden" name="connectionid" value="{{id}}">
+                    <button class="btn btn-outline-danger btn-sm" type="submit">
+                        {{#str}}testconnectionrevoke, local_mcp{{/str}}
+                    </button>
+                </form>
+                {{/enabled}}
+            </td>
+        </tr>
+        {{/rows}}
     </tbody>
 </table>
+{{/hasoauthrows}}
+{{^hasoauthrows}}
+<p class="text-muted">{{#str}}testconnectionoauthnone, local_mcp{{/str}}</p>
+{{/hasoauthrows}}
+
+{{#serverurl}}
+{{#js}}
+require(['jquery'], function($) {
+    var button = $('[data-action="copy-test-url"]');
+    button.on('click', function() {
+        var input = $('#mcp-test-server-url');
+        var status = $('[data-role="copy-test-status"]');
+        var onCopied = function() {
+            status.text('{{#str}}chatgptsetupcopied, local_mcp{{/str}}');
+        };
+        var onFallback = function() {
+            input.trigger('focus');
+            input[0].select();
+            status.text('{{#str}}chatgptsetupcopyfallback, local_mcp{{/str}}');
+        };
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(input.val()).then(onCopied, onFallback);
+        } else {
+            onFallback();
+        }
+    });
+});
+{{/js}}
+{{/serverurl}}

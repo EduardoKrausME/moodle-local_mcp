@@ -209,23 +209,37 @@ Moodle URL
 ```
 
 
-### First-time ChatGPT setup in Moodle
+### Temporary ChatGPT connection without OAuth
 
-An administrator opening **/local/mcp/index.php** (Moodle MCP → Dashboard) or **Connections** sees a step-by-step
-ChatGPT setup guide while there is no enabled OAuth connection whose registered redirect
-URI matches an official ChatGPT callback. Unrelated MCP clients do not suppress the guide.
+The first-run screen at `/local/mcp/index.php` now contains only a link to
+`/local/mcp/admin/connections.php?new=1`. On the Connections page, choose
+**New connection** and enter a name. READ is preselected; enable WRITE explicitly
+if you need to modify Moodle. The administrator's Moodle account owns the token.
 
-The main Moodle MCP page is **/local/mcp/index.php**. The previous
-**/local/mcp/admin/dashboard.php** URL redirects to it, and the administration
-menu opens the same main page.\n\nThe guide links to ChatGPT, supplies the current Moodle site's
-`/local/mcp/server.php` URL with a copy button, and walks through creating a custom
-MCP plugin, choosing OAuth with dynamic client registration (DCR), installing the plugin
-and authorizing it. It warns if DCR is disabled or the Moodle URL is not HTTPS, and
-shows the OAuth metadata discovery URL for troubleshooting.
+Creating the connection uses the existing manual-token service. The result is
+a complete URL such as:
 
-Once ChatGPT is authorized the guide disappears automatically on the next page load.
-Revoking that connection makes the guide appear again. A registered OAuth client
-without an active authorization does not count as connected.
+```text
+https://YOUR-MOODLE/local/mcp/server.php?toke=mcp_RANDOM_SECRET
+```
+
+Copy this value into ChatGPT's **MCP Server URL** field and select
+**No authentication**. Do not configure OAuth for this temporary test connection.
+`?token=...` is accepted as an alias, but the interface always generates `?toke=...`.
+
+The URL is displayed once, immediately after token creation, and is not saved
+in plaintext. The token is SHA-256 hashed in Moodle's database, has a 7-day
+expiration, can be revoked on the Connections page, and inherits the permissions
+of the Moodle administrator who created it. READ/WRITE capabilities and
+the confirmation requirement for WRITE tools are unchanged.
+
+**Important:** a query-string token is a bearer credential. Web servers,
+reverse proxies, browser history and monitoring tools may log the complete URL.
+Anyone with that URL can use the token until it expires or is revoked. Use HTTPS,
+avoid sharing the URL, limit log access, and switch to OAuth for production.
+The query-string mechanism is only enabled on the combined `server.php` endpoint;
+OAuth access tokens are rejected in query strings. The existing OAuth
+implementation remains available for integrations that require it.
 
 ## Development
 
