@@ -54,6 +54,8 @@ final class registry_test extends advanced_testcase {
         $this->assertArrayHasKey('update_category', $write);
         $this->assertArrayHasKey('get_calendar_events', $read);
         $this->assertArrayHasKey('grade_submission', $write);
+        $this->assertArrayHasKey('purge_css_cache', $write);
+        $this->assertArrayHasKey('purge_all_caches', $write);
         $this->assertEmpty(array_intersect(array_keys($read), array_keys($write)));
 
         foreach ($read as $tool) {

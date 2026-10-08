@@ -33,6 +33,8 @@ use local_mcp\write\tool\create_section;
 use local_mcp\write\tool\create_user;
 use local_mcp\write\tool\enrol_user;
 use local_mcp\write\tool\grade_submission;
+use local_mcp\write\tool\purge_all_caches;
+use local_mcp\write\tool\purge_css_cache;
 use local_mcp\write\tool\send_message;
 use local_mcp\write\tool\set_course_image;
 use local_mcp\write\tool\suspend_user;
@@ -56,6 +58,8 @@ final class registry {
             new create_user(),
             new enrol_user(),
             new grade_submission(),
+            new purge_css_cache(),
+            new purge_all_caches(),
             new send_message(),
             new suspend_user(),
             new unenrol_user(),

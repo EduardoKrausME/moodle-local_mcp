@@ -607,3 +607,12 @@ upgrade and purge its caches before refreshing the ChatGPT connection.
 
 The MCP initialize serverInfo version now comes from `version.php`; the
 ChatGPT connector may display its own, independent version number.
+
+## Cache purge WRITE tools
+
+Two administrator-only tools are available with `mcp:write` scope and `moodle/site:config` capability:
+
+- `purge_css_cache` uses `purge_caches(['theme' => true])` to invalidate generated CSS and theme assets without clearing other Moodle caches.
+- `purge_all_caches` invokes Moodle core `purge_all_caches()` for a complete purge. Cached data will be rebuilt, which can temporarily slow the site.
+
+Both support `dry_run` and require the existing two-call confirmation protocol before performing any cache changes. Their preview responses never purge caches. The MCP audit log records successful writes and their duration.
