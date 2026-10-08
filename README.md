@@ -245,6 +245,61 @@ Business operations use Moodle APIs where available instead of directly updating
 
 ## Extension API
 
+### Automatic MCP providers in any Moodle plugin
+
+No change to `local_mcp` is required when adding tools to an existing
+Moodle activity, local plugin, block or theme. For example, in
+`theme/learnlingo/classes/mcp/provider.php`:
+
+```php
+<?php
+namespace theme_learnlingo\mcp;
+
+use local_mcp\extension\read_provider_interface;
+use local_mcp\extension\write_provider_interface;
+
+final class provider implements read_provider_interface, write_provider_interface {
+    public function get_read_tools(): array {
+        return [new get_homepage()];
+    }
+
+    public function get_write_tools(): array {
+        return [new update_homepage()];
+    }
+}
+```
+
+Place the tool classes alongside it, e.g. `classes/mcp/get_homepage.php` and
+`classes/mcp/update_homepage.php`. READ tools implement
+`local_mcp\read\tool_interface`; WRITE tools implement
+`local_mcp\write\tool_interface`. WRITE implementations may extend the
+reusable `local_mcp\write\tool\base_tool` for default confirmation and
+preview behavior. Implement whichever provider interface is needed:
+READ-only and WRITE-only providers are valid; both are optional.
+
+On `tools/list`, `local_mcp` discovers each installed/enabled plugin's
+`classes/mcp/provider.php` via Moodle core component discovery, autoloads
+`\<plugin_component>\mcp\provider` and registers the tools separately on
+the READ and WRITE sides. Disabled plugins are ignored. Tool names must be
+globally unique; namespace them, e.g. `learnlingo_update_homepage`, to
+avoid collisions. Existing `lib.php` callback providers and `mcptool`
+subplugins continue to work for backwards compatibility.
+
+The protocol continues to enforce READ/WRITE scopes, the tool's
+`get_required_capability()` in the `resolve_context()` Moodle context,
+and the one-time confirmation flow for WRITE tools. The registered
+provider does not bypass Moodle permissions or automatically expose
+all plugin settings.
+
+A concrete LearnLingo implementation is available in the
+`moodle-theme_learnlingo` repository: `learnlingo_get_homepage` returns
+mode, HTML, layout, SCSS and a revision hash; `learnlingo_update_homepage`
+previews and updates those settings using the theme's existing validation,
+requires `moodle/site:config`, and clears theme caches.
+
+After installing/updating an external provider, refresh the ChatGPT MCP
+plugin's tool definitions so the new commands become visible.
+
 External Moodle plugins can explicitly provide one side only.
 
 READ provider:
