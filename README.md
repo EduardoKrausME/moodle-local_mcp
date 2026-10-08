@@ -525,11 +525,20 @@ The `resource` value in those metadata is the exact endpoint URL.
 ### WRITE confirmation with MCP clients
 
 The server publishes `confirmation_token` as an optional property for operations that
-need a second call. The first call returns a preview and a single-use token; after the
-user has approved the preview, the client repeats the **same** tool with identical
-arguments and the returned `confirmation_token`. The token is checked against the
-user, client, resource-bound access token, tool, context and argument hash.
-A client should never autonomously treat receiving a preview as user approval.
+need a second call. The first call returns a successful MCP tool result
+(`isError: false`) with `confirmation_required: true`, `status: confirmation_pending`,
+a preview and a single-use token. **Nothing is written at this stage.** The client
+must show the preview and obtain explicit user approval. Only after approval
+may it repeat the **same** tool with identical original arguments plus the returned
+`confirmation_token`. The token is checked against the user, client,
+resource-bound access token, tool, context and argument hash. Receiving a preview
+must never be treated as user approval.
+
+The PHP error log records `confirmation_issued` and `tool_response_ready` with
+`status: confirmation_pending`, then `confirmation_accepted` and
+`tool_write_completed` after a valid second call. Actual tool failures log
+`tool_call_failed` with safe error codes and durations. Raw arguments,
+access credentials and confirmation tokens are never logged.
 
 ## Activity subplugins
 

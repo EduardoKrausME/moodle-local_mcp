@@ -197,6 +197,8 @@ final class mcp_server {
                     diagnostics::event('tool_response_ready', [
                         'tool' => $toolname,
                         'userid' => $identity->userid,
+                        'status' => !empty($result['confirmation_required'])
+                            ? 'confirmation_pending' : 'completed',
                         'duration_ms' => (int)round((microtime(true) - $startedrequest) * 1000),
                     ]);
                     http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => [
@@ -205,9 +207,17 @@ final class mcp_server {
                         'isError' => false,
                     ] + ($modern ? ['resultType' => 'complete'] : [])]);
                 } catch (api_exception $e) {
+                    diagnostics::event('tool_call_failed', [
+                        'side' => $this->side,
+                        'tool' => $toolname,
+                        'userid' => $identity->userid,
+                        'status' => 'error',
+                        'error_code' => $e->machinecode,
+                        'httpstatus' => $e->httpstatus,
+                        'duration_ms' => (int)round((microtime(true) - $startedrequest) * 1000),
+                    ], 'WARNING');
                     diagnostics::exception($e, ['side' => $this->side, 'tool' => $toolname,
-                        'userid' => $identity->userid],
-                        $e->machinecode === 'confirmation_required' ? 'INFO' : 'WARNING');
+                        'userid' => $identity->userid], 'WARNING');
                     $error = [
                         'error' => $e->machinecode,
                         'message' => $e->getMessage(),
@@ -225,6 +235,15 @@ final class mcp_server {
                     // Keep internal details out of responses, but make 500-like
                     // failures diagnosable in the Moodle/PHP server log.
                     $reference = diagnostics::request_id();
+                    diagnostics::event('tool_call_failed', [
+                        'side' => $this->side,
+                        'tool' => $toolname,
+                        'userid' => $identity->userid,
+                        'status' => 'error',
+                        'error_code' => 'internal_error',
+                        'httpstatus' => 500,
+                        'duration_ms' => (int)round((microtime(true) - $startedrequest) * 1000),
+                    ], 'ERROR');
                     diagnostics::exception($e, ['side' => $this->side,
                         'tool' => $toolname, 'userid' => $identity->userid]);
                     $error = [
@@ -276,8 +295,9 @@ final class mcp_server {
             if ($iswrite && ($tool->requires_confirmation() || $tool->is_destructive())) {
                 $schema['properties']['confirmation_token'] = [
                     'type' => 'string',
-                    'description' => 'One-time token returned by the preceding preview. '
-                        . 'Only send after the user explicitly approves the operation.',
+                    'description' => 'One-time token returned when confirmation_required is true. '
+                        . 'Never retry with this token until the user explicitly approves the preview. '
+                        . 'Then repeat the same tool with identical original arguments plus this token.',
                 ];
             }
             if ($iswrite && $tool->supports_dry_run()) {
@@ -311,7 +331,11 @@ final class mcp_server {
             $item = [
                 'name' => $tool->get_name(),
                 'title' => $tool->get_title(),
-                'description' => $tool->get_description(),
+                'description' => $tool->get_description()
+                    . ($iswrite && ($tool->requires_confirmation() || $tool->is_destructive())
+                        ? ' The first call returns a preview and confirmation_required=true without changes. '
+                            . 'Show the preview and obtain explicit user approval before retrying with confirmation_token.'
+                        : ''),
                 'inputSchema' => $schema,
 
                 'annotations' => [
@@ -425,16 +449,27 @@ final class mcp_server {
                 diagnostics::event('confirmation_issued', [
                     'tool' => $name, 'userid' => $identity->userid,
                     'contextid' => (int)$context->id,
+                    'status' => 'confirmation_pending',
                 ]);
-                throw new api_exception('confirmation_required', 409, '', [
-                    'preview' => $preview, 'confirmation_token' => $token,
-                ]);
+                // A pending approval is a normal tool result, not an MCP failure.
+                // Never write until a second call supplies the valid one-time token.
+                return [
+                    'confirmation_required' => true,
+                    'status' => 'confirmation_pending',
+                    'tool' => $name,
+                    'preview' => $preview,
+                    'confirmation_token' => $token,
+                    'message' => 'No changes have been made. Show this preview to the user and '
+                        . 'request explicit approval. Only if approved, call the same tool again '
+                        . 'with identical original arguments plus confirmation_token.',
+                ];
             }
             confirmation_service::consume(
                 $confirmation, $identity, $rawtoken, $name, $arguments, $context);
             diagnostics::event('confirmation_accepted', [
                 'tool' => $name, 'userid' => $identity->userid,
                 'contextid' => (int)$context->id,
+                'status' => 'approved',
             ]);
         }
         $started = microtime(true);
@@ -453,6 +488,7 @@ final class mcp_server {
         diagnostics::event('tool_write_completed', [
             'tool' => $name, 'userid' => $identity->userid,
             'contextid' => (int)$context->id,
+            'status' => 'completed',
             'duration_ms' => (int)round((microtime(true) - $started) * 1000),
         ]);
         return $result;
