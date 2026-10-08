@@ -83,6 +83,8 @@ final class create_course extends base_tool {
             'categoryid' => ['type' => 'integer', 'minimum' => 1],
             'idnumber' => ['type' => 'string', 'description' => 'Optional course ID number/code.'],
             'summary' => ['type' => 'string', 'description' => 'Course description in HTML, stored with FORMAT_HTML.'],
+            'summaryformat' => ['type' => 'integer', 'enum' => [1],
+                'description' => 'Course summary format; 1 = HTML.'],
             'visible' => ['type' => 'boolean'],
             'image_base64' => ['type' => 'string',
                 'description' => 'Optional Base64 PNG/JPEG/WebP or data URI of a local image, max 5 MiB decoded.'],
@@ -118,16 +120,30 @@ final class create_course extends base_tool {
      */
     public function preview(array $arguments, authenticated_identity $identity): array {
         $this->validate_image_source($arguments);
+        $this->validate_summary_format($arguments);
         return [
             'fullname' => clean_param((string)$arguments['fullname'], PARAM_TEXT),
             'shortname' => clean_param((string)$arguments['shortname'], PARAM_TEXT),
             'categoryid' => (int)$arguments['categoryid'],
             'idnumber' => $arguments['idnumber'] ?? null,
             'summary_html_bytes' => isset($arguments['summary']) ? strlen((string)$arguments['summary']) : 0,
+            'summaryformat' => (int)($arguments['summaryformat'] ?? FORMAT_HTML),
             'visible' => (bool)($arguments['visible'] ?? true),
             'image_source' => !empty($arguments['image_base64']) ? 'base64'
                 : (!empty($arguments['image_url']) ? 'https_url' : null),
         ];
+    }
+
+    /**
+     * Reject non-HTML formats when handling an HTML summary.
+     *
+     * @param array $arguments Input values.
+     * @return void
+     */
+    private function validate_summary_format(array $arguments): void {
+        if (isset($arguments['summaryformat']) && (int)$arguments['summaryformat'] !== FORMAT_HTML) {
+            throw new api_exception('invalid_summaryformat', 400, 'Only summaryformat=1 (HTML) is supported.');
+        }
     }
 
     /**
@@ -159,6 +175,7 @@ final class create_course extends base_tool {
         require_once($CFG->dirroot . '/course/lib.php');
 
         $this->validate_image_source($arguments);
+        $this->validate_summary_format($arguments);
         $imagedata = [];
         if (!empty($arguments['image_base64'])) {
             $imagedata['image_base64'] = $arguments['image_base64'];
@@ -181,6 +198,8 @@ final class create_course extends base_tool {
         }
         if (array_key_exists('summary', $arguments)) {
             $record->summary = clean_param((string)$arguments['summary'], PARAM_CLEANHTML);
+        }
+        if (array_key_exists('summary', $arguments) || array_key_exists('summaryformat', $arguments)) {
             $record->summaryformat = FORMAT_HTML;
         }
 

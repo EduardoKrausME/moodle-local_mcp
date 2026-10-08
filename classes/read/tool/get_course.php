@@ -26,78 +26,72 @@ namespace local_mcp\read\tool;
 
 use context;
 use context_course;
+use context_system;
+use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 
 /**
- * Class get_course.
+ * Fetch complete course metadata, including the Moodle site course (ID 1).
  */
 final class get_course extends base_tool {
-    /**
-     * Method get_name.
-     *
-     * @return string Return value.
-     */
     public function get_name(): string {
         return 'get_course';
     }
 
-    /**
-     * Method get_title.
-     *
-     * @return string Return value.
-     */
     public function get_title(): string {
         return 'Get course';
     }
 
-    /**
-     * Method get_description.
-     *
-     * @return string Return value.
-     */
     public function get_description(): string {
-        return 'Return core metadata for one course.';
+        return 'Return complete metadata for a course, including its original HTML summary, '
+            . 'category and visibility. Works for the Moodle site course (ID 1).';
     }
 
-    /**
-     * Method get_required_capability.
-     *
-     * @return string Return value.
-     */
     public function get_required_capability(): string {
         return 'moodle/course:view';
     }
 
-    /**
-     * Method get_input_schema.
-     *
-     * @return array Return value.
-     */
     public function get_input_schema(): array {
-        return $this->object_schema(['courseid' => ['type' => 'integer', 'minimum' => 1]], ['courseid']);
+        return $this->object_schema([
+            'courseid' => ['type' => 'integer', 'minimum' => 1],
+        ], ['courseid']);
     }
 
-    /**
-     * Method resolve_context.
-     *
-     * @param array $arguments Parameter arguments.
-     * @return context Return value.
-     */
     public function resolve_context(array $arguments): context {
-        return $this->course_context((int)$arguments['courseid']);
+        $courseid = (int)$arguments['courseid'];
+        return $courseid === SITEID
+            ? context_system::instance()
+            : context_course::instance($courseid, MUST_EXIST);
     }
 
-    /**
-     * Method execute.
-     *
-     * @param array $arguments Parameter arguments.
-     * @param authenticated_identity $identity Parameter identity.
-     * @return array Return value.
-     */
     public function execute(array $arguments, authenticated_identity $identity): array {
-        $course = get_course((int)$arguments['courseid']);
-        return ['id' => (int)$course->id, 'fullname' => $course->fullname, 'shortname' => $course->shortname,
-            'summary' => format_text($course->summary, $course->summaryformat, ['context' => context_course::instance($course->id)]),
-            'visible' => (bool)$course->visible, 'startdate' => (int)$course->startdate, 'enddate' => (int)$course->enddate];
+        global $DB;
+
+        $courseid = (int)$arguments['courseid'];
+        // Read the complete DB record instead of reusing the possibly partial
+        // $SITE/$COURSE global returned by get_course(), particularly for SITEID.
+        $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
+        if ($courseid !== SITEID && !$course->visible) {
+            $context = context_course::instance($courseid, MUST_EXIST);
+            if (!has_any_capability([
+                    'moodle/course:viewhiddencourses',
+                    'moodle/course:update',
+                ], $context, $identity->userid)) {
+                throw new api_exception('permission_denied', 403);
+            }
+        }
+
+        return [
+            'id' => (int)$course->id,
+            'fullname' => $course->fullname,
+            'shortname' => $course->shortname,
+            'idnumber' => $course->idnumber,
+            'categoryid' => (int)$course->category,
+            'summary' => $course->summary,
+            'summaryformat' => (int)$course->summaryformat,
+            'visible' => (bool)$course->visible,
+            'startdate' => (int)$course->startdate,
+            'enddate' => (int)$course->enddate,
+        ];
     }
 }

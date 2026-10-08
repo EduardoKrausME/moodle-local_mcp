@@ -150,6 +150,29 @@ final class mcp_server {
                         'structuredContent' => $error,
                         'isError' => true,
                     ]]);
+                } catch (Throwable $e) {
+                    // Keep internal details out of responses, but make 500-like
+                    // failures diagnosable in the Moodle/PHP server log.
+                    $reference = bin2hex(random_bytes(6));
+                    $safeclassname = get_class($e);
+                    $safefile = basename($e->getFile());
+                    $safeline = (int)$e->getLine();
+                    error_log("local_mcp tools/call error {$reference}: {$safeclassname} "
+                        . "at {$safefile}:{$safeline}");
+                    $error = [
+                        'error' => 'internal_error',
+                        'message' => 'The Moodle tool failed internally. Check the server PHP log '
+                            . 'for reference ' . $reference . '.',
+                        'reference' => $reference,
+                    ];
+                    http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => [
+                        'content' => [[
+                            'type' => 'text',
+                            'text' => json_encode($error, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                        ]],
+                        'structuredContent' => $error,
+                        'isError' => true,
+                    ]]);
                 }
             }
             http::json([

@@ -72,11 +72,16 @@ final class course_categories_test extends advanced_testcase {
         $this->assertSame('Teste', $before['name']);
         $result = $create->execute(['name' => 'Teste', 'parentid' => 0], $identity);
         $this->assertSame(0, $result['parentid']);
-        $listed = (new list_categories())->execute([], $identity);
+        $listed = (new list_categories())->execute([
+            'includehidden' => true, 'includecoursecount' => true,
+        ], $identity);
         $matching = array_values(array_filter($listed['categories'],
             static fn(array $item): bool => $item['id'] === $result['id']));
         $this->assertCount(1, $matching);
         $this->assertSame('Teste', $matching[0]['name']);
+        $this->assertSame(0, $matching[0]['parent']);
+        $this->assertSame(0, $matching[0]['coursecount']);
+        $this->assertArrayHasKey('visible', $matching[0]);
     }
 
     /**
@@ -133,6 +138,7 @@ final class course_categories_test extends advanced_testcase {
             'idnumber' => 'CITTA-101',
             'categoryid' => $category->id,
             'summary' => '<p><strong>Course description</strong> in HTML.</p>',
+            'summaryformat' => 1,
             'visible' => false,
             'image_base64' => $png,
         ];

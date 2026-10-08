@@ -38,6 +38,30 @@ MCP Client
                             Write
 ```
 
+## Course inspection and administrative permissions
+
+list_categories supports includehidden and includecoursecount (both boolean). The response
+includes id, name, parent, visible and direct coursecount, with existing tree metadata.
+The connected user must have the relevant Moodle category-management capability.
+
+search_courses reads course records without letting the regular course browsing
+function hide invisible courses first. It accepts shortname for an exact lookup,
+query for substring lookup, and includehidden, limit and offset. It returns
+id, fullname, shortname, idnumber, categoryid, original summary HTML,
+summaryformat and visible for courses the user can administer.
+The site course (SITEID, usually ID 1) is excluded from searches.
+
+get_course supports the site course and reads the complete course record from
+the database, avoiding partial SITE/COURSE globals. Both create_course and
+update_course accept summaryformat=1 (HTML), and update_course accepts categoryid.
+Course changes check Moodle capabilities on the course and destination category.
+
+For unexpected tools/call exceptions, the server returns a generic error with
+a diagnostic reference and logs the PHP exception class and source location
+with that reference. No bearer tokens or tool arguments are logged.
+
+After updating Moodle, refresh the custom MCP connector in ChatGPT so its
+advertised input schemas and list of tools reflect the new plugin version.
 ## Creating complete courses and organizing categories
 
 The combined MCP server exposes the following operations:
