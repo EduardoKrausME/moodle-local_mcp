@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die;
 if ($hassiteconfig) {
     $ADMIN->add('localplugins', new admin_category('local_mcp_category', get_string('pluginname', 'local_mcp')));
     $pages = [
-        'dashboard' => '/local/mcp/admin/dashboard.php',
+        'dashboard' => '/local/mcp/index.php',
         'connections' => '/local/mcp/admin/connections.php',
         'oauthclients' => '/local/mcp/admin/clients.php',
         'manualtokens' => '/local/mcp/admin/manualtokens.php',

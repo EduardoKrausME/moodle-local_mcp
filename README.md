@@ -211,11 +211,13 @@ Moodle URL
 
 ### First-time ChatGPT setup in Moodle
 
-An administrator opening **Moodle MCP → Dashboard** or **Connections** sees a step-by-step
+An administrator opening **/local/mcp/index.php** (Moodle MCP → Dashboard) or **Connections** sees a step-by-step
 ChatGPT setup guide while there is no enabled OAuth connection whose registered redirect
 URI matches an official ChatGPT callback. Unrelated MCP clients do not suppress the guide.
 
-The guide links to ChatGPT, supplies the current Moodle site's
+The main Moodle MCP page is **/local/mcp/index.php**. The previous
+**/local/mcp/admin/dashboard.php** URL redirects to it, and the administration
+menu opens the same main page.\n\nThe guide links to ChatGPT, supplies the current Moodle site's
 `/local/mcp/server.php` URL with a copy button, and walks through creating a custom
 MCP plugin, choosing OAuth with dynamic client registration (DCR), installing the plugin
 and authorizing it. It warns if DCR is disabled or the Moodle URL is not HTTPS, and
