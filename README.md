@@ -38,6 +38,32 @@ MCP Client
                             Write
 ```
 
+## Creating complete courses and organizing categories
+
+The combined MCP server exposes the following operations:
+
+- `list_categories` (READ) returns category IDs, parent IDs, hierarchy and visibility.
+- `create_category` (WRITE) creates a root category with `parentid: 0` or a nested category.
+- `update_category` (WRITE) changes the name, parent or visibility. Moving a category preserves
+  its child categories and the courses belonging to them; self/descendant moves are rejected.
+- `create_course` (WRITE) accepts `fullname`, `shortname`, `categoryid`, `visible`,
+  optional `idnumber`, and `summary` in HTML (stored as `FORMAT_HTML`).
+  A course cover image can be included using `image_base64` or `image_url`. When an image
+  is supplied, it is validated and stored in Moodle's course overviewfiles area.
+- `update_course` (WRITE) accepts `summary` in HTML, `idnumber` and the usual course
+  fields, allowing corrections without recreating the course.
+
+All category and course WRITE calls require the connected token to have WRITE permission.
+Moodle capabilities are checked in addition to MCP scopes; a preview/confirmation step
+still applies. A read-only connection will not see these operations.
+
+**Local images:** the remote Moodle server cannot open an image path from the ChatGPT
+environment or from the user's computer. Read the file's bytes, encode the PNG/JPEG/WebP
+as Base64, and send them as `image_base64` (or as a `data:image/png;base64,...` URI).
+This does **not** require publishing the image URL. The limit is 5 MiB decoded per image.
+Sending only a local filename or sandbox path does not upload an image. Base64 content is
+not included in tool previews or application audit metadata.
+
 ## MCP endpoints
 
 - Combined READ + WRITE: `/local/mcp/server.php` (recommended for ChatGPT)

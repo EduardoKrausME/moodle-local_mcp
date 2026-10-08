@@ -27,6 +27,8 @@ namespace local_mcp\write\tool;
 use context;
 use context_coursecat;
 use local_mcp\security\authenticated_identity;
+use local_mcp\course\image_service;
+use local_mcp\exception\api_exception;
 
 /**
  * Class create_course.
@@ -56,7 +58,8 @@ final class create_course extends base_tool {
      * @return string Return value.
      */
     public function get_description(): string {
-        return 'Create a Moodle course using the core course API.';
+        return 'Create a Moodle course with full name, short name, optional idnumber, HTML summary, visibility, '
+            . 'and optional course image supplied as Base64 or an HTTPS URL.';
     }
 
     /**
@@ -75,10 +78,19 @@ final class create_course extends base_tool {
      */
     public function get_input_schema(): array {
         return $this->object_schema([
-            'fullname' => ['type' => 'string'], 'shortname' => ['type' => 'string'], 'categoryid' => ['type' => 'integer', 'minimum' => 1],
-            'visible' => ['type' => 'boolean']
+            'fullname' => ['type' => 'string', 'minLength' => 1],
+            'shortname' => ['type' => 'string', 'minLength' => 1],
+            'categoryid' => ['type' => 'integer', 'minimum' => 1],
+            'idnumber' => ['type' => 'string', 'description' => 'Optional course ID number/code.'],
+            'summary' => ['type' => 'string', 'description' => 'Course description in HTML, stored with FORMAT_HTML.'],
+            'visible' => ['type' => 'boolean'],
+            'image_base64' => ['type' => 'string',
+                'description' => 'Optional Base64 PNG/JPEG/WebP or data URI of a local image, max 5 MiB decoded.'],
+            'image_url' => ['type' => 'string',
+                'description' => 'Optional publicly downloadable HTTPS image URL. Use exactly one image source.'],
         ], ['fullname', 'shortname', 'categoryid']);
     }
+
 
     /**
      * Method resolve_context.
@@ -97,15 +109,98 @@ final class create_course extends base_tool {
      * @param authenticated_identity $identity Parameter identity.
      * @return array Return value.
      */
+    /**
+     * Safe preview that never returns the Base64 image to ChatGPT.
+     *
+     * @param array $arguments Arguments for the new course.
+     * @param authenticated_identity $identity Authenticated administrator.
+     * @return array Preview data.
+     */
+    public function preview(array $arguments, authenticated_identity $identity): array {
+        $this->validate_image_source($arguments);
+        return [
+            'fullname' => clean_param((string)$arguments['fullname'], PARAM_TEXT),
+            'shortname' => clean_param((string)$arguments['shortname'], PARAM_TEXT),
+            'categoryid' => (int)$arguments['categoryid'],
+            'idnumber' => $arguments['idnumber'] ?? null,
+            'summary_html_bytes' => isset($arguments['summary']) ? strlen((string)$arguments['summary']) : 0,
+            'visible' => (bool)($arguments['visible'] ?? true),
+            'image_source' => !empty($arguments['image_base64']) ? 'base64'
+                : (!empty($arguments['image_url']) ? 'https_url' : null),
+        ];
+    }
+
+    /**
+     * Ensure the course image input can be stored.
+     *
+     * @param array $arguments Input values.
+     * @return void
+     */
+    private function validate_image_source(array $arguments): void {
+        if (array_key_exists('image_base64', $arguments) || array_key_exists('image_url', $arguments)) {
+            if (empty($arguments['image_base64']) && empty($arguments['image_url'])) {
+                return;
+            }
+            if (!empty($arguments['image_base64']) && !empty($arguments['image_url'])) {
+                throw new api_exception('image_source_required', 400);
+            }
+        }
+    }
+
+    /**
+     * Create a fully populated course, including its optional overview image.
+     *
+     * @param array $arguments New course fields.
+     * @param authenticated_identity $identity Authenticated administrator.
+     * @return array Created course metadata.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
-        global $CFG;
+        global $CFG, $DB;
         require_once($CFG->dirroot . '/course/lib.php');
-        $course = create_course((object)[
-            'fullname' => clean_param($arguments['fullname'], PARAM_TEXT),
-            'shortname' => clean_param($arguments['shortname'], PARAM_TEXT),
+
+        $this->validate_image_source($arguments);
+        $imagedata = [];
+        if (!empty($arguments['image_base64'])) {
+            $imagedata['image_base64'] = $arguments['image_base64'];
+        } else if (!empty($arguments['image_url'])) {
+            $imagedata['image_url'] = $arguments['image_url'];
+        }
+        // Verify the supplied bytes or URL before creating a new course.
+        if ($imagedata) {
+            image_service::decode($imagedata);
+        }
+
+        $record = (object)[
+            'fullname' => clean_param((string)$arguments['fullname'], PARAM_TEXT),
+            'shortname' => clean_param((string)$arguments['shortname'], PARAM_TEXT),
             'category' => (int)$arguments['categoryid'],
             'visible' => array_key_exists('visible', $arguments) ? (int)(bool)$arguments['visible'] : 1,
-        ]);
-        return ['id' => (int)$course->id, 'fullname' => $course->fullname, 'shortname' => $course->shortname];
+        ];
+        if (array_key_exists('idnumber', $arguments)) {
+            $record->idnumber = clean_param((string)$arguments['idnumber'], PARAM_TEXT);
+        }
+        if (array_key_exists('summary', $arguments)) {
+            $record->summary = clean_param((string)$arguments['summary'], PARAM_CLEANHTML);
+            $record->summaryformat = FORMAT_HTML;
+        }
+
+        $transaction = $DB->start_delegated_transaction();
+        $course = create_course($record);
+        $image = null;
+        if ($imagedata) {
+            $image = image_service::replace((int)$course->id, $imagedata, $identity->userid)['image'];
+        }
+        $transaction->allow_commit();
+        return [
+            'id' => (int)$course->id,
+            'fullname' => $course->fullname,
+            'shortname' => $course->shortname,
+            'categoryid' => (int)$course->category,
+            'idnumber' => $course->idnumber,
+            'summary' => $course->summary,
+            'summaryformat' => (int)$course->summaryformat,
+            'visible' => (bool)$course->visible,
+            'image' => $image,
+        ];
     }
 }

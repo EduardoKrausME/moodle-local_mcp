@@ -46,8 +46,12 @@ final class registry_test extends advanced_testcase {
 
         $this->assertNotEmpty($read);
         $this->assertNotEmpty($write);
-        $this->assertCount(18, $read);
-        $this->assertCount(11, $write);
+        // Additional activity subplugins extend the registries dynamically.
+        $this->assertGreaterThanOrEqual(20, count($read));
+        $this->assertGreaterThanOrEqual(14, count($write));
+        $this->assertArrayHasKey('list_categories', $read);
+        $this->assertArrayHasKey('create_category', $write);
+        $this->assertArrayHasKey('update_category', $write);
         $this->assertArrayHasKey('get_calendar_events', $read);
         $this->assertArrayHasKey('grade_submission', $write);
         $this->assertEmpty(array_intersect(array_keys($read), array_keys($write)));

@@ -52,6 +52,7 @@ final class registry {
             new \local_mcp\read\tool\get_course_participants(),
             new \local_mcp\read\tool\get_course_sections(),
             new \local_mcp\read\tool\get_grades(),
+            new \local_mcp\read\tool\list_categories(),
             new \local_mcp\read\tool\get_progress(),
             new \local_mcp\read\tool\get_quiz(),
             new \local_mcp\read\tool\get_quizzes(),

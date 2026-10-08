@@ -27,6 +27,7 @@ namespace local_mcp\write\tool;
 use context;
 use context_course;
 use local_mcp\security\authenticated_identity;
+use local_mcp\security\capability_guard;
 
 /**
  * Class update_course.
@@ -56,7 +57,7 @@ final class update_course extends base_tool {
      * @return string Return value.
      */
     public function get_description(): string {
-        return 'Update course metadata using the core course API.';
+        return 'Update course name, code, HTML summary or visibility using Moodle core APIs.';
     }
 
     /**
@@ -75,7 +76,12 @@ final class update_course extends base_tool {
      */
     public function get_input_schema(): array {
         return $this->object_schema([
-            'courseid' => ['type' => 'integer', 'minimum' => 1], 'fullname' => ['type' => 'string'], 'shortname' => ['type' => 'string'], 'visible' => ['type' => 'boolean']
+            'courseid' => ['type' => 'integer', 'minimum' => 1],
+            'fullname' => ['type' => 'string'],
+            'shortname' => ['type' => 'string'],
+            'idnumber' => ['type' => 'string'],
+            'summary' => ['type' => 'string', 'description' => 'HTML description (FORMAT_HTML).'],
+            'visible' => ['type' => 'boolean']
         ], ['courseid']);
     }
 
@@ -100,16 +106,25 @@ final class update_course extends base_tool {
         global $CFG;
         require_once($CFG->dirroot . '/course/lib.php');
         $data = (object)['id' => (int)$arguments['courseid']];
-        foreach (['fullname', 'shortname'] as $f) {
+        foreach (['fullname', 'shortname', 'idnumber'] as $f) {
             if (isset($arguments[$f])) {
                 $data->$f = clean_param($arguments[$f], PARAM_TEXT);
             }
+        }
+        if (array_key_exists('summary', $arguments)) {
+            capability_guard::check('moodle/course:changesummary',
+                $this->resolve_context($arguments), $identity->userid);
+            $data->summary = clean_param((string)$arguments['summary'], PARAM_CLEANHTML);
+            $data->summaryformat = FORMAT_HTML;
         }
         if (array_key_exists('visible', $arguments)) {
             $data->visible = (int)(bool)$arguments['visible'];
         }
         update_course($data);
         $course = get_course($data->id);
-        return ['id' => (int)$course->id, 'fullname' => $course->fullname, 'shortname' => $course->shortname, 'visible' => (bool)$course->visible];
+        return ['id' => (int)$course->id, 'fullname' => $course->fullname,
+            'shortname' => $course->shortname, 'idnumber' => $course->idnumber,
+            'summary' => $course->summary, 'summaryformat' => (int)$course->summaryformat,
+            'visible' => (bool)$course->visible];
     }
 }

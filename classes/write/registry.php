@@ -42,6 +42,7 @@ final class registry {
     /** @return tool_interface[] */
     public static function get_tools(): array {
         $tools = [
+            new \local_mcp\write\tool\create_category(),
             new \local_mcp\write\tool\create_course(),
             new \local_mcp\write\tool\create_section(),
             new \local_mcp\write\tool\create_user(),
@@ -50,6 +51,7 @@ final class registry {
             new \local_mcp\write\tool\send_message(),
             new \local_mcp\write\tool\suspend_user(),
             new \local_mcp\write\tool\unenrol_user(),
+            new \local_mcp\write\tool\update_category(),
             new \local_mcp\write\tool\update_course(),
             new \local_mcp\write\tool\set_course_image(),
             new \local_mcp\write\tool\update_section(),
