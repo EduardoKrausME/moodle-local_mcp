@@ -46,6 +46,7 @@ final class registry {
             new \local_mcp\read\tool\get_attempts(),
             new \local_mcp\read\tool\get_calendar_events(),
             new \local_mcp\read\tool\get_course(),
+            new \local_mcp\read\tool\get_course_image(),
             new \local_mcp\read\tool\get_course_activities(),
             new \local_mcp\read\tool\get_course_contents(),
             new \local_mcp\read\tool\get_course_participants(),

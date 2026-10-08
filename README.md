@@ -129,7 +129,7 @@ Destructive tools always require this flow.
 
 ## Included READ tools
 
-`search_courses`, `get_course`, `get_course_contents`, `get_course_sections`,
+`search_courses`, `get_course`, `get_course_image`, `get_course_contents`, `get_course_sections`,
 `get_course_activities`, `get_course_participants`, `search_users`, `get_user`,
 `get_user_courses`, `get_progress`, `get_grades`, `get_assignments`,
 `get_assignment`, `get_submissions`, `get_quizzes`, `get_quiz`,
@@ -137,7 +137,7 @@ Destructive tools always require this flow.
 
 ## Included WRITE tools
 
-`create_course`, `update_course`, `create_section`, `update_section`,
+`create_course`, `update_course`, `set_course_image`, `create_section`, `update_section`,
 `enrol_user`, `unenrol_user`, `create_user`, `update_user`, `suspend_user`,
 `send_message`, and `grade_submission`.
 
@@ -315,3 +315,11 @@ and clients must obtain user approval for the second call. The MCP server
 only sends schema, descriptions and results to ChatGPT: no separate OpenAPI
 definition, prompt injection into the conversation, or ChatGPT-specific endpoint
 is necessary. The ChatGPT MCP connector learns these tools via `tools/list`.
+
+## Course cover images
+
+`get_course_image(courseid, include_image=true)` returns the current course cover image and metadata from the native `course/overviewfiles` area. When its size is up to 2 MiB and it is PNG, JPEG or WebP, it also returns MCP image content for visual inspection. Access requires `mcp:read` and `moodle/course:view`.
+
+`set_course_image(courseid, image_base64|image_url, expected_contenthash?)` replaces existing cover images through Moodle File API, preserving non-image files. It accepts Base64 or an HTTPS image URL, allows up to 5 MiB and 40 megapixels, requires `mcp:write`, `moodle/course:update`, and `moodle/course:changesummary`, and uses the normal two-call confirmation handshake. The optional expected hash prevents overwriting another update. The server rejects local hosts and direct IPs; Moodle's configured cURL security rules also apply.
+
+To upload a generated image, the client must provide its bytes or a genuinely accessible HTTPS download URL. ChatGPT-private image URLs or conversation references cannot be fetched by Moodle.

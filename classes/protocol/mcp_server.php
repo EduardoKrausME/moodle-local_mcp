@@ -116,11 +116,23 @@ final class mcp_server {
                         $identity,
                         $rawtoken
                     );
+                    // Images are sent as visual MCP content, not embedded into textual JSON.
+                    $additionalcontent = $result['_mcp_content'] ?? [];
+                    unset($result['_mcp_content']);
+                    $content = [[
+                        'type' => 'text',
+                        'text' => json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                    ]];
+                    if (is_array($additionalcontent)) {
+                        foreach ($additionalcontent as $block) {
+                            if (is_array($block) && ($block['type'] ?? '') === 'image'
+                                && !empty($block['data']) && !empty($block['mimeType'])) {
+                                $content[] = $block;
+                            }
+                        }
+                    }
                     http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => [
-                        'content' => [[
-                            'type' => 'text',
-                            'text' => json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-                        ]],
+                        'content' => $content,
                         'structuredContent' => $result,
                         'isError' => false,
                     ]]);

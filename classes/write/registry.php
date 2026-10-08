@@ -51,6 +51,7 @@ final class registry {
             new \local_mcp\write\tool\suspend_user(),
             new \local_mcp\write\tool\unenrol_user(),
             new \local_mcp\write\tool\update_course(),
+            new \local_mcp\write\tool\set_course_image(),
             new \local_mcp\write\tool\update_section(),
             new \local_mcp\write\tool\update_user(),
         ];
