@@ -42,6 +42,7 @@ final class diagnostics_test extends advanced_testcase {
             'method' => 'tools/list',
             'userid' => 2,
             'count' => 25,
+            'catalog_sha256' => str_repeat('a', 64),
             'args_keys' => ['shortname', 'summary', 'image_base64'],
             'secret_key' => 'do not log me',
         ]);
@@ -49,6 +50,10 @@ final class diagnostics_test extends advanced_testcase {
         $decoded = json_decode(substr($log, strlen('[local_mcp] ')), true);
         $this->assertIsArray($decoded);
         $this->assertSame('tools_listed', $decoded['event']);
+        $plugin = new \stdClass();
+        require(__DIR__ . '/../version.php');
+        $this->assertSame($plugin->release, $decoded['version']);
+        $this->assertSame(str_repeat('a', 64), $decoded['catalog_sha256']);
         $this->assertSame('INFO', $decoded['level']);
         $this->assertSame('tools/list', $decoded['method']);
         $this->assertSame(2, $decoded['userid']);

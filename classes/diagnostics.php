@@ -40,7 +40,7 @@ final class diagnostics {
         'clientid', 'connectionid', 'scopes', 'contextid', 'capability', 'phase',
         'count', 'duration_ms', 'status', 'error_code', 'error_class', 'file',
         'line', 'message', 'httpstatus', 'limit', 'used', 'dry_run',
-        'confirmation', 'args_keys', 'protocol', 'read', 'write',
+        'confirmation', 'args_keys', 'protocol', 'read', 'write', 'catalog_sha256',
     ];
 
     /**
@@ -56,6 +56,21 @@ final class diagnostics {
     }
 
     /**
+     * Return the release declared by the installed plugin, not the MCP client version.
+     *
+     * @return string
+     */
+    private static function plugin_version(): string {
+        static $release = null;
+        if ($release === null) {
+            $plugin = new \stdClass();
+            require(dirname(__DIR__) . '/version.php');
+            $release = (string)$plugin->release;
+        }
+        return $release;
+    }
+
+    /**
      * Serialize an event using a strict allowlist.
      *
      * @param string $level Severity, e.g. INFO, WARNING, ERROR.
@@ -68,6 +83,7 @@ final class diagnostics {
             'request' => self::request_id(),
             'level' => self::clean($level),
             'event' => self::clean($event),
+            'version' => self::plugin_version(),
         ];
         foreach ($fields as $key => $value) {
             if (!in_array($key, self::FIELDS, true) || $value === null) {
