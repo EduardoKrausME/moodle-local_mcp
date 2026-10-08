@@ -66,6 +66,30 @@ final class diagnostics_test extends advanced_testcase {
     /**
      * @return void
      */
+    public function test_cover_upload_logs_contain_only_safe_metadata(): void {
+        $log = diagnostics::format('WARNING', 'course_image_download_finished', [
+            'courseid' => 39,
+            'source' => 'https_url',
+            'phase' => 'download',
+            'download_status' => 403,
+            'download_bytes' => 0,
+            'image_url' => 'https://example.org/secret.png?token=sensitive',
+            'image_base64' => str_repeat('Z', 200),
+            'confirmation_token' => 'mcp_confirm_' . str_repeat('B', 32),
+        ]);
+        $record = json_decode(substr($log, strlen('[local_mcp] ')), true);
+        $this->assertSame(39, $record['courseid']);
+        $this->assertSame('download', $record['phase']);
+        $this->assertSame(403, $record['download_status']);
+        $this->assertSame(0, $record['download_bytes']);
+        $this->assertArrayNotHasKey('image_url', $record);
+        $this->assertArrayNotHasKey('image_base64', $record);
+        $this->assertArrayNotHasKey('confirmation_token', $record);
+    }
+
+    /**
+     * @return void
+     */
     public function test_scrubs_tokens_urls_html_base64_and_newlines(): void {
         $token = 'mcp_' . str_repeat('A', 42);
         $binary = str_repeat('Q', 160);
