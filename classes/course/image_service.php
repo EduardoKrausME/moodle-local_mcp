@@ -29,6 +29,7 @@ use context_course;
 use core\event\course_updated;
 use curl;
 use local_mcp\exception\api_exception;
+use local_mcp\diagnostics;
 use moodle_url;
 use stored_file;
 
@@ -139,6 +140,11 @@ final class image_service {
         if ($hasbase64 === $hasurl) {
             throw new api_exception('image_source_required', 400, 'Supply exactly one of image_base64 or image_url.');
         }
+        diagnostics::event('course_image_source_received', [
+            'courseid' => $arguments['courseid'] ?? null,
+            'source' => $hasbase64 ? 'base64' : 'https_url',
+            'source_bytes' => $hasbase64 ? strlen((string)$arguments['image_base64']) : null,
+        ]);
         if ($hasbase64) {
             $encoded = (string)$arguments['image_base64'];
             if (preg_match('~^data:image/(?:png|jpeg|webp);base64,~i', $encoded, $match)) {
@@ -167,6 +173,10 @@ final class image_service {
                 throw new api_exception('invalid_image_url', 400, 'Use a public HTTPS hostname.');
             }
             // Redirects are disabled so a public URL cannot redirect into an internal resource.
+            diagnostics::event('course_image_download_started', [
+                'courseid' => $arguments['courseid'] ?? null, 'phase' => 'download',
+                'source' => 'https_url',
+            ]);
             $curl = new curl();
             $binary = $curl->get($url, [
                 'CURLOPT_FOLLOWLOCATION' => false,
@@ -178,6 +188,11 @@ final class image_service {
                 'CURLOPT_SSL_VERIFYHOST' => 2,
             ]);
             $status = (int)($curl->get_info()['http_code'] ?? 0);
+            diagnostics::event('course_image_download_finished', [
+                'courseid' => $arguments['courseid'] ?? null,
+                'phase' => 'download', 'download_status' => $status,
+                'download_bytes' => is_string($binary) ? strlen($binary) : 0,
+            ], $status === 200 ? 'INFO' : 'WARNING');
             if (!is_string($binary) || $status !== 200) {
                 throw new api_exception('image_download_failed', 400, 'The image URL is not publicly downloadable.');
             }
@@ -194,6 +209,12 @@ final class image_service {
         if ($width < 1 || $height < 1 || $width > 8192 || $height > 8192 || $width * $height > 40000000) {
             throw new api_exception('invalid_image_dimensions', 400);
         }
+        diagnostics::event('course_image_decoded', [
+            'courseid' => $arguments['courseid'] ?? null, 'phase' => 'decode',
+            'source' => $hasbase64 ? 'base64' : 'https_url',
+            'bytes' => strlen($binary), 'mime' => $info['mime'],
+            'width' => $width, 'height' => $height,
+        ]);
         return [$binary, $info['mime'], self::MIMES[$info['mime']], $width, $height];
     }
 
@@ -207,6 +228,11 @@ final class image_service {
      */
     public static function replace(int $courseid, array $arguments, int $userid): array {
         global $DB;
+        diagnostics::event('course_image_replace_started', [
+            'tool' => 'set_course_image', 'courseid' => $courseid,
+            'userid' => $userid, 'phase' => 'start',
+            'source' => !empty($arguments['image_url']) ? 'https_url' : 'base64',
+        ]);
         $context = context_course::instance($courseid, MUST_EXIST);
         $oldfiles = self::images($courseid);
         if (isset($arguments['expected_contenthash'])) {
@@ -215,7 +241,14 @@ final class image_service {
                 throw new api_exception('course_image_changed', 409, 'The existing course image changed. Read it again.');
             }
         }
-        [$bytes, $mime, $extension] = self::decode($arguments);
+        try {
+            [$bytes, $mime, $extension] = self::decode($arguments + ['courseid' => $courseid]);
+        } catch (\Throwable $e) {
+            diagnostics::exception($e, [
+                'tool' => 'set_course_image', 'courseid' => $courseid, 'phase' => 'decode',
+            ]);
+            throw $e;
+        }
         $filename = 'course-image-' . bin2hex(random_bytes(6)) . '.' . $extension;
         $record = [
             'contextid' => $context->id,
@@ -228,19 +261,48 @@ final class image_service {
             'mimetype' => $mime,
             'license' => 'allrightsreserved',
         ];
-        $transaction = $DB->start_delegated_transaction();
-        foreach ($oldfiles as $file) {
-            $file->delete();
+        diagnostics::event('course_image_storage_started', [
+            'tool' => 'set_course_image', 'courseid' => $courseid, 'phase' => 'file_storage',
+            'bytes' => strlen($bytes), 'mime' => $mime, 'existing_images' => count($oldfiles),
+        ]);
+        try {
+            $transaction = $DB->start_delegated_transaction();
+            foreach ($oldfiles as $oldfile) {
+                $oldfile->delete();
+            }
+            $file = get_file_storage()->create_file_from_string($record, $bytes);
+            $transaction->allow_commit();
+        } catch (\Throwable $e) {
+            diagnostics::exception($e, [
+                'tool' => 'set_course_image', 'courseid' => $courseid, 'phase' => 'file_storage',
+            ]);
+            throw $e;
         }
-        $file = get_file_storage()->create_file_from_string($record, $bytes);
-        $transaction->allow_commit();
-        cache_helper::purge_by_event('changesincourse');
-        $course = get_course($courseid);
-        course_updated::create([
-            'objectid' => $courseid,
-            'context' => $context,
-            'other' => ['shortname' => $course->shortname, 'fullname' => $course->fullname],
-        ])->trigger();
-        return ['courseid' => $courseid, 'replaced' => count($oldfiles), 'image' => self::metadata($file)];
+        diagnostics::event('course_image_storage_committed', [
+            'tool' => 'set_course_image', 'courseid' => $courseid, 'phase' => 'file_storage',
+            'bytes' => $file->get_filesize(), 'mime' => $file->get_mimetype(),
+            'replaced' => count($oldfiles),
+        ]);
+        try {
+            cache_helper::purge_by_event('changesincourse');
+            $course = get_course($courseid);
+            course_updated::create([
+                'objectid' => $courseid,
+                'context' => $context,
+                'other' => ['shortname' => $course->shortname, 'fullname' => $course->fullname],
+            ])->trigger();
+            $result = ['courseid' => $courseid, 'replaced' => count($oldfiles), 'image' => self::metadata($file)];
+        } catch (\Throwable $e) {
+            // File storage already committed: do not blindly retry before reading the current cover.
+            diagnostics::exception($e, [
+                'tool' => 'set_course_image', 'courseid' => $courseid, 'phase' => 'post_commit',
+            ]);
+            throw $e;
+        }
+        diagnostics::event('course_image_replace_completed', [
+            'tool' => 'set_course_image', 'courseid' => $courseid,
+            'phase' => 'completed', 'mime' => $mime, 'bytes' => $file->get_filesize(),
+        ]);
+        return $result;
     }
 }
