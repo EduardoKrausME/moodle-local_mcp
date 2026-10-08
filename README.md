@@ -146,10 +146,11 @@ endpoints (`server.php`, `read.php`, `write.php`) accept `server/discover`
 and return `resultType: complete`, supported protocol versions, accurate tools
 capabilities and server identity using the installed plugin's release.
 
-The discovery response uses `cacheScope: private` and `ttlMs: 0`, because
-authorization and available tools can change between requests. Modern
-`tools/list` responses also use those cache hints; modern `tools/call`
-responses include `resultType: complete`. Existing clients using the
+The discovery response uses `cacheScope: private` and `ttlMs: 60000` (one minute).
+This prevents `server/discover` and `tools/list` from being treated as stale
+immediately while isolating cached tool metadata to the same authorization
+context. Tokens, scopes and Moodle permissions are still checked on each
+request. Modern `tools/call` responses include `resultType: complete`. Existing clients using the
 `2025-06-18` `initialize` handshake continue to receive the legacy layout.
 
 For troubleshooting, this plugin does **not** write MCP request parameters,

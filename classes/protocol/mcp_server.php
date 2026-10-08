@@ -154,6 +154,8 @@ final class mcp_server {
                     'side' => $this->side,
                     'userid' => $identity->userid,
                     'count' => count($definitions),
+                    'catalog_sha256' => hash('sha256', json_encode($definitions,
+                        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)),
                     'protocol' => $modern ? '2026-07-28' : 'legacy',
                 ]);
                 http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => discovery::decorate_result(

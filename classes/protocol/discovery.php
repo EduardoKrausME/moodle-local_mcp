@@ -36,6 +36,9 @@ final class discovery {
     /** Original MCP protocol version used by existing integrations. */
     public const LEGACY_VERSION = '2025-06-18';
 
+    /** Cache per authorization context for a short period to avoid immediate rediscovery loops. */
+    public const CACHE_TTL_MS = 60000;
+
     /**
      * Metadata common to discovery and legacy initialize.
      *
@@ -74,12 +77,14 @@ final class discovery {
             '_meta' => [
                 'io.modelcontextprotocol/serverInfo' => self::server_info($side, $release),
             ],
-            'instructions' => 'Use tools/list to see tools authorized for the connected Moodle user. '
-                . 'READ and WRITE permissions are independent; Moodle capabilities are checked for '
-                . 'each operation. WRITE tools can require a confirmation token before execution.',
-            // Tool catalogues and permissions can change at any time.
-            // Never let a different token/user reuse cached discovery metadata.
-            'ttlMs' => 0,
+            'instructions' => 'Use tools/list to discover tools for this Moodle instance. '
+                . 'For requests about live Moodle courses, categories, users, enrolments or images, '
+                . 'invoke the appropriate tool with tools/call, rather than inventing Moodle data. '
+                . 'READ and WRITE permissions are independent; Moodle capabilities are checked '
+                . 'for each operation. WRITE tools can require confirmation before execution.',
+            // Keep metadata scoped to the authenticated client and refresh it regularly.
+            // Revoking a token is still enforced on every HTTP request.
+            'ttlMs' => self::CACHE_TTL_MS,
             'cacheScope' => 'private',
         ];
     }
@@ -129,7 +134,7 @@ final class discovery {
         }
         $result = ['resultType' => 'complete'] + $result;
         if ($cacheable) {
-            $result['ttlMs'] = 0;
+            $result['ttlMs'] = self::CACHE_TTL_MS;
             $result['cacheScope'] = 'private';
         }
         return $result;

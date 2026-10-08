@@ -49,7 +49,7 @@ final class discovery_test extends advanced_testcase {
         $this->assertSame('Moodle MCP SERVER', $result['_meta']['io.modelcontextprotocol/serverInfo']['name']);
         $this->assertSame('1.3.1', $result['_meta']['io.modelcontextprotocol/serverInfo']['version']);
         $this->assertSame('private', $result['cacheScope']);
-        $this->assertSame(0, $result['ttlMs']);
+        $this->assertSame(discovery::CACHE_TTL_MS, $result['ttlMs']);
     }
 
     /**
@@ -105,7 +105,7 @@ final class discovery_test extends advanced_testcase {
         $result = discovery::decorate_result(['tools' => $tools], true, true);
         $this->assertSame('complete', $result['resultType']);
         $this->assertSame('private', $result['cacheScope']);
-        $this->assertSame(0, $result['ttlMs']);
+        $this->assertSame(discovery::CACHE_TTL_MS, $result['ttlMs']);
         $this->assertSame($tools, $result['tools']);
         $legacy = discovery::decorate_result(['tools' => $tools], false, true);
         $this->assertSame(['tools' => $tools], $legacy);
