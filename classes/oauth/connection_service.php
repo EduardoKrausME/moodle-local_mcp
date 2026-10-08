@@ -60,4 +60,63 @@ final class connection_service {
             'relateduserid' => (int)$connection->userid,
         ])->trigger();
     }
+
+    /**
+     * Check whether an enabled Moodle OAuth connection belongs to ChatGPT.
+     *
+     * OAuth client names are user supplied, so identify ChatGPT through its
+     * registered redirect URI, not a display name that could be renamed.
+     *
+     * @return bool True if a ChatGPT connection has been authorized.
+     */
+    public static function has_active_chatgpt_connection(): bool {
+        global $DB;
+
+        $sql = "SELECT c.id, o.redirecturis
+                  FROM {local_mcp_connection} c
+                  JOIN {local_mcp_oauth_client} o ON o.id = c.clientid
+                 WHERE c.enabled = :connectionenabled
+                   AND o.enabled = :clientenabled
+                   AND c.revokedat IS NULL";
+        $connections = $DB->get_recordset_sql($sql, [
+            'connectionenabled' => 1,
+            'clientenabled' => 1,
+        ]);
+        try {
+            foreach ($connections as $connection) {
+                $redirects = json_decode($connection->redirecturis, true);
+                if (!is_array($redirects)) {
+                    continue;
+                }
+                foreach ($redirects as $redirect) {
+                    if (is_string($redirect) && self::is_chatgpt_redirect_uri($redirect)) {
+                        return true;
+                    }
+                }
+            }
+        } finally {
+            $connections->close();
+        }
+        return false;
+    }
+
+    /**
+     * Recognize official ChatGPT OAuth callback URLs, without trusting names
+     * or matching arbitrary domains that contain the word chatgpt.
+     *
+     * @param string $redirecturi OAuth redirect URI.
+     * @return bool True for ChatGPT callback URLs.
+     */
+    public static function is_chatgpt_redirect_uri(string $redirecturi): bool {
+        $parts = parse_url($redirecturi);
+        if (!is_array($parts) || strtolower($parts['scheme'] ?? '') !== 'https'
+                || strtolower($parts['host'] ?? '') !== 'chatgpt.com') {
+            return false;
+        }
+
+        $path = $parts['path'] ?? '';
+        return $path === '/connector_platform_oauth_redirect'
+            || (bool)preg_match('~^/connector/oauth/[^/]+$~', $path);
+    }
+
 }

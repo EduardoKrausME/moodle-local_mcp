@@ -1,0 +1,127 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_mcp/chatgpt_setup
+
+    Guidance for a Moodle administrator without an active ChatGPT OAuth connection.
+
+    Example context (json):
+    {
+        "showchatgptsetup": true,
+        "chatgpturl": "https://chatgpt.com/",
+        "mcpserverurl": "https://moodle.example.org/local/mcp/server.php",
+        "settingsurl": "https://moodle.example.org/admin/settings.php?section=local_mcp_settings",
+        "discoveryurl": "https://moodle.example.org/.well-known/oauth-authorization-server/local/mcp",
+        "registrationdisabled": false,
+        "httpsdisabled": false
+    }
+}}
+{{#showchatgptsetup}}
+<section class="local-mcp-chatgpt-setup card mb-4" aria-labelledby="local-mcp-chatgpt-title"
+         data-copy-success="{{#str}}chatgptsetupcopied, local_mcp{{/str}}"
+         data-copy-fallback="{{#str}}chatgptsetupcopyfallback, local_mcp{{/str}}">
+    <div class="card-body">
+        <h3 class="h4" id="local-mcp-chatgpt-title">{{#str}}chatgptsetuptitle, local_mcp{{/str}}</h3>
+        <p>{{#str}}chatgptsetupintro, local_mcp{{/str}}</p>
+
+        {{#registrationdisabled}}
+            <div class="alert alert-warning" role="alert">
+                {{#str}}chatgptsetupdcrdisabled, local_mcp{{/str}}
+                <a href="{{settingsurl}}">{{#str}}chatgptsetupopensettings, local_mcp{{/str}}</a>
+            </div>
+        {{/registrationdisabled}}
+        {{#httpsdisabled}}
+            <div class="alert alert-warning" role="alert">
+                {{#str}}chatgptsetuphttpsdisabled, local_mcp{{/str}}
+            </div>
+        {{/httpsdisabled}}
+
+        <ol class="pl-4">
+            <li class="mb-3">
+                <strong>{{#str}}chatgptsetupstep1title, local_mcp{{/str}}</strong>
+                <p class="mb-2">{{#str}}chatgptsetupstep1body, local_mcp{{/str}}</p>
+                <a href="{{chatgpturl}}" class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">
+                    {{#str}}chatgptsetupopenchatgpt, local_mcp{{/str}}
+                    <span class="sr-only">({{#str}}chatgptsetupnewtab, local_mcp{{/str}})</span>
+                </a>
+            </li>
+            <li class="mb-3">
+                <strong>{{#str}}chatgptsetupstep2title, local_mcp{{/str}}</strong>
+                <p class="mb-0">{{#str}}chatgptsetupstep2body, local_mcp{{/str}}</p>
+            </li>
+            <li class="mb-3">
+                <strong>{{#str}}chatgptsetupstep3title, local_mcp{{/str}}</strong>
+                <p class="mb-2">{{#str}}chatgptsetupstep3body, local_mcp{{/str}}</p>
+                <label class="font-weight-bold" for="local-mcp-chatgpt-url">
+                    {{#str}}chatgptsetupserverlabel, local_mcp{{/str}}
+                </label>
+                <div class="input-group">
+                    <input type="text" id="local-mcp-chatgpt-url"
+                           class="form-control" value="{{mcpserverurl}}" readonly>
+                    <div class="input-group-append">
+                        <button type="button" class="btn btn-outline-secondary"
+                                data-action="copy-mcp-url">
+                            {{#str}}chatgptsetupcopy, local_mcp{{/str}}
+                        </button>
+                    </div>
+                </div>
+                <span class="small text-muted" aria-live="polite" data-role="copy-status"></span>
+            </li>
+            <li class="mb-3">
+                <strong>{{#str}}chatgptsetupstep4title, local_mcp{{/str}}</strong>
+                <p class="mb-0">{{#str}}chatgptsetupstep4body, local_mcp{{/str}}</p>
+            </li>
+            <li class="mb-3">
+                <strong>{{#str}}chatgptsetupstep5title, local_mcp{{/str}}</strong>
+                <p class="mb-0">{{#str}}chatgptsetupstep5body, local_mcp{{/str}}</p>
+            </li>
+        </ol>
+
+        <p class="mb-3">{{#str}}chatgptsetupfinish, local_mcp{{/str}}</p>
+
+        <details>
+            <summary>{{#str}}chatgptsetuptroubleshooting, local_mcp{{/str}}</summary>
+            <p class="mt-2 mb-2">{{#str}}chatgptsetupdiscoveryhelp, local_mcp{{/str}}</p>
+            <code class="d-block p-2 text-break">{{discoveryurl}}</code>
+        </details>
+    </div>
+</section>
+{{#js}}
+require(['jquery'], function($) {
+    var root = $('.local-mcp-chatgpt-setup');
+    root.find('[data-action="copy-mcp-url"]').on('click', function() {
+        var guide = $(this).closest('.local-mcp-chatgpt-setup');
+        var input = guide.find('#local-mcp-chatgpt-url');
+        var status = guide.find('[data-role="copy-status"]');
+
+        function fallback() {
+            input.trigger('focus');
+            input[0].select();
+            status.text(guide.attr('data-copy-fallback'));
+        }
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(input.val()).then(function() {
+                status.text(guide.attr('data-copy-success'));
+            }, fallback);
+        } else {
+            fallback();
+        }
+    });
+});
+{{/js}}
+{{/showchatgptsetup}}

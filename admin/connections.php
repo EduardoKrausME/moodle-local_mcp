@@ -49,6 +49,7 @@ foreach ($DB->get_records_sql($sql) as $r) {
         'created' => userdate($r->timecreated), 'lastused' => $r->lastused ? userdate($r->lastused) : '-',
         'enabled' => (bool)$r->enabled, 'revokeurl' => (new moodle_url($PAGE->url, ['revoke' => $r->id, 'sesskey' => sesskey()]))->out(false)];
 }
+$data = array_merge(['rows' => $rows], \local_mcp\ui\chatgpt_setup::template_data());
 echo $OUTPUT->header();
-echo $OUTPUT->render_from_template('local_mcp/connections', ['rows' => $rows]);
+echo $OUTPUT->render_from_template('local_mcp/connections', $data);
 echo $OUTPUT->footer();

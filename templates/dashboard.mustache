@@ -22,13 +22,13 @@
         Aqui tem que criar o context em inglês
     }
 }}
+{{> local_mcp/chatgpt_setup}}
 <div class="row">
-    {{#connections}}
-        <div class="col-md-4">
-            <div class="card p-3 mb-3"><strong>Active connections</strong>
-                <div class="h2">{{connections}}</div>
-            </div>
-        </div>{{/connections}}
+    <div class="col-md-4">
+        <div class="card p-3 mb-3"><strong>Active connections</strong>
+            <div class="h2">{{connections}}</div>
+        </div>
+    </div>
     <div class="col-md-4">
         <div class="card p-3 mb-3"><strong>OAuth clients</strong>
             <div class="h2">{{clients}}</div>

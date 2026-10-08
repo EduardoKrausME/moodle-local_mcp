@@ -208,6 +208,23 @@ Moodle URL
 -> `/local/mcp/server.php` (or the separate READ/WRITE endpoints)
 ```
 
+
+### First-time ChatGPT setup in Moodle
+
+An administrator opening **Moodle MCP → Dashboard** or **Connections** sees a step-by-step
+ChatGPT setup guide while there is no enabled OAuth connection whose registered redirect
+URI matches an official ChatGPT callback. Unrelated MCP clients do not suppress the guide.
+
+The guide links to ChatGPT, supplies the current Moodle site's
+`/local/mcp/server.php` URL with a copy button, and walks through creating a custom
+MCP plugin, choosing OAuth with dynamic client registration (DCR), installing the plugin
+and authorizing it. It warns if DCR is disabled or the Moodle URL is not HTTPS, and
+shows the OAuth metadata discovery URL for troubleshooting.
+
+Once ChatGPT is authorized the guide disappears automatically on the next page load.
+Revoking that connection makes the guide appear again. A registered OAuth client
+without an active authorization does not count as connected.
+
 ## Development
 
 Run Moodle PHPUnit tests for `local_mcp` and the repository CI. GitHub Actions validates PHP syntax and the Moodle

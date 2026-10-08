@@ -39,6 +39,7 @@ $data = [
     'writetoday' => $DB->count_records_select('local_mcp_audit', 'side = ? AND timecreated >= ?', ['write', usergetmidnight(time())]),
     'destructive' => $DB->count_records_select('local_mcp_audit', 'destructive = 1 AND timecreated >= ?', [usergetmidnight(time())]),
 ];
+$data = array_merge($data, \local_mcp\ui\chatgpt_setup::template_data());
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('local_mcp/dashboard', $data);
 echo $OUTPUT->footer();
