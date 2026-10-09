@@ -31,6 +31,8 @@ use local_mcp\read\tool\get_assignments;
 use local_mcp\read\tool\get_attempts;
 use local_mcp\read\tool\get_calendar_events;
 use local_mcp\read\tool\get_course;
+use local_mcp\read\tool\get_site_config;
+use local_mcp\read\tool\get_site_status;
 use local_mcp\read\tool\get_course_activities;
 use local_mcp\read\tool\get_course_contents;
 use local_mcp\read\tool\get_course_image;
@@ -59,6 +61,8 @@ final class registry {
             new get_attempts(),
             new get_calendar_events(),
             new get_course(),
+            new get_site_config(),
+            new get_site_status(),
             new get_course_image(),
             new get_course_activities(),
             new get_course_contents(),

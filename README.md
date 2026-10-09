@@ -6,6 +6,43 @@ READ and WRITE architecture.
 This is a **local plugin**: `local_mcp`. It does not use Moodle's traditional `wstoken` mechanism as its primary
 authentication layer.
 
+## Site diagnostics and safe Moodle configuration
+
+The `get_site_status` READ tool uses Moodle's own `\core\check\manager::get_checks()` Check API,
+returning the same checks shown in *Site administration > Reports > Performance overview*.
+The optional `type` input accepts `performance` (default), `status` or `security`.
+Each result contains its reference, name, status (`ok`, `warning`, `error`, `critical`,
+`unknown` etc.), summary, overall status and counts. Set `include_details=true` for potentially
+expensive details, or select one previously returned `checkref`.
+
+The `get_site_config` READ tool reports approved core configuration values as both their database
+value (`stored`) and current runtime value (`effective`), helping identify settings
+overridden by `config.php`. Omit `names` to inspect all approved non-secret values.
+
+The `set_site_config` WRITE tool accepts an atomic batch of approved `mdl_config` changes:
+
+```json
+{
+  "settings": [
+    {"name": "enabledashboard", "value": "0"},
+    {"name": "enablemycourses", "value": "1"},
+    {"name": "defaulthomepage", "value": "3"}
+  ]
+}
+```
+
+Other supported keys include `debug` (use `32767` for DEVELOPER), `debugdisplay`,
+`debugpageinfo`, `themedesignermode`, `cachejs`, `enablemyhome` and
+`allowguestmymoodle`. The input `value` is always a string; booleans use `0` / `1`.
+Only existing, explicitly reviewed core keys in `classes/config/site_config.php` can be changed;
+secrets, authentication internals, arbitrary keys and plugin settings are intentionally excluded.
+
+Both tools require an actual Moodle site administrator and `moodle/site:config`.
+Writes are verified and previewed before changes, require a second call with a one-time
+confirmation token, and use Moodle's `set_config()` rather than SQL.
+An audit entry records the names of modified settings without logging values.
+When the Moodle server is updated, refresh the custom MCP connection to discover the new tools.
+
 ## Architecture
 
 ```

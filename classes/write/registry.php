@@ -37,6 +37,7 @@ use local_mcp\write\tool\purge_all_caches;
 use local_mcp\write\tool\purge_css_cache;
 use local_mcp\write\tool\send_message;
 use local_mcp\write\tool\set_course_image;
+use local_mcp\write\tool\set_site_config;
 use local_mcp\write\tool\suspend_user;
 use local_mcp\write\tool\unenrol_user;
 use local_mcp\write\tool\update_category;
@@ -66,6 +67,7 @@ final class registry {
             new update_category(),
             new update_course(),
             new set_course_image(),
+            new set_site_config(),
             new update_section(),
             new update_user(),
         ];
