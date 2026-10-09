@@ -147,6 +147,7 @@ final class bank_service {
             $params['namematch'] = '%' . $DB->sql_like_escape($query) . '%';
             $params['textmatch'] = '%' . $DB->sql_like_escape($query) . '%';
         }
+        $versioncondition = empty($a['includehidden']) ? " AND v2.status = 'ready'" : '';
         $sql = "SELECT q.id, q.name, q.qtype, q.defaultmark, v.version, v.status,
                        e.id AS bankentryid, e.idnumber
                   FROM {question_bank_entries} e
@@ -154,7 +155,7 @@ final class bank_service {
                   JOIN {question} q ON q.id = v.questionid
                  WHERE " . implode(' AND ', $where) . "
                    AND v.version = (SELECT MAX(v2.version) FROM {question_versions} v2
-                                     WHERE v2.questionbankentryid = e.id)
+                                     WHERE v2.questionbankentryid = e.id" . $versioncondition . ")
               ORDER BY e.id ASC";
         $limit = min(100, max(1, (int)($a['limit'] ?? 50)));
         $offset = max(0, (int)($a['offset'] ?? 0));
