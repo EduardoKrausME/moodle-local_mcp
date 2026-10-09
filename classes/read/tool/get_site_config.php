@@ -72,11 +72,13 @@ final class get_site_config extends base_tool {
             throw new api_exception('invalid_config_names', 400);
         }
         $items = [];
-        foreach (array_unique($names) as $name) {
+        foreach ($names as $name) {
             if (!is_string($name)) {
                 throw new api_exception('invalid_config_names', 400);
             }
-            $items[] = site_config::current($name);
+            if (!in_array($name, array_column($items, 'name'), true)) {
+                $items[] = site_config::current($name);
+            }
         }
         return ['settings' => $items, 'supported_names' => site_config::names()];
     }

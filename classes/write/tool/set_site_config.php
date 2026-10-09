@@ -157,7 +157,7 @@ final class set_site_config extends base_tool {
         $changed = [];
         foreach ($settings as $name => $value) {
             if ($before[$name] !== $value) {
-                if (!set_config($name, $value)) {
+                if (!set_config($name, $value, null, true)) {
                     throw new api_exception('config_write_failed', 500, 'Moodle could not save a configuration setting.');
                 }
                 $changed[] = $name;

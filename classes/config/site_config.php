@@ -101,6 +101,11 @@ final class site_config {
             if (array_key_exists($name, $normalized)) {
                 throw new api_exception('duplicate_config', 400, 'A setting can appear only once per batch.');
             }
+            $current = self::current($name);
+            if ($current['locked_in_config_php']) {
+                throw new api_exception('config_forced', 409,
+                    'This setting is forced in config.php and cannot be changed through Moodle.');
+            }
             $normalized[$name] = self::normalize($name, $item['value']);
         }
 
@@ -138,6 +143,8 @@ final class site_config {
             'stored' => $row ? (string)$row->value : null,
             'effective' => property_exists($CFG, $name) ? (string)$CFG->$name : null,
             'stored_in_database' => (bool)$row,
+            'locked_in_config_php' => isset($CFG->config_php_settings)
+                && array_key_exists($name, $CFG->config_php_settings),
         ];
     }
 }
