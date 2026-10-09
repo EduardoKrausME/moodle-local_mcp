@@ -26,6 +26,10 @@ namespace local_mcp\read;
 
 use coding_exception;
 use local_mcp\extension\manager;
+use local_mcp\read\tool\get_question;
+use local_mcp\read\tool\search_questions;
+use local_mcp\read\tool\list_question_categories;
+use local_mcp\read\tool\list_question_banks;
 use local_mcp\read\tool\get_assignment;
 use local_mcp\read\tool\get_assignments;
 use local_mcp\read\tool\get_attempts;
@@ -56,6 +60,10 @@ final class registry {
     /** @return tool_interface[] */
     public static function get_tools(): array {
         $tools = [
+            new list_question_banks(),
+            new list_question_categories(),
+            new search_questions(),
+            new get_question(),
             new get_assignment(),
             new get_assignments(),
             new get_attempts(),

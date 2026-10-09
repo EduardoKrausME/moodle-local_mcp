@@ -653,3 +653,46 @@ Two administrator-only tools are available with `mcp:write` scope and `moodle/si
 - `purge_all_caches` invokes Moodle core `purge_all_caches()` for a complete purge. Cached data will be rebuilt, which can temporarily slow the site.
 
 Both support `dry_run` and require the existing two-call confirmation protocol before performing any cache changes. Their preview responses never purge caches. The MCP audit log records successful writes and their duration.
+
+
+## Question bank support
+
+Question banks use Moodle's context model. In Moodle 5.0+, a course may have multiple
+banks (shared \`mod_qbank\` modules and quiz banks); Moodle 4.5 also uses course
+contexts. Always resolve the right \`contextid\` before adding categories:
+
+1. READ \`list_question_banks({"courseid": 42})\` returns bank contexts and module IDs.
+2. READ \`list_question_categories({"contextid": 123})\` lists category IDs.
+3. READ \`search_questions({"categoryid": 7, "query": "geometry"})\` searches
+   latest versions. READ \`get_question({"questionid": 99})\` returns the answer data.
+4. WRITE \`create_question_category\` adds a category; WRITE \`create_question\`
+   creates a versioned question; WRITE \`update_question\` creates a new version.
+
+For example, create a single-choice question (each fraction ranges from -1 to 1):
+
+\`\`\`json
+{
+  "categoryid": 7,
+  "qtype": "multichoice",
+  "name": "City planning",
+  "questiontext": "<p>Which solution reduces congestion?</p>",
+  "single": true,
+  "answers": [
+    {"text": "Reliable public transport", "fraction": 1},
+    {"text": "More isolated parking", "fraction": 0}
+  ]
+}
+\`\`\`
+
+Supported writes: \`multichoice\`, \`truefalse\`, \`shortanswer\` and \`essay\`.
+READ supports all installed question types; specialised options for other
+question types must be managed through their Moodle editors. For \`truefalse\`,
+pass \`correctanswer\` as a boolean, and for \`shortanswer\`, provide at least
+one answer with \`fraction: 1\`. When updating, supply the complete replacement
+question, its version-specific \`questionid\` and \`expectedversion\`. The core
+question APIs create a new version without editing the old version.
+
+READ and WRITE scopes are independent; Moodle's question capabilities are enforced
+for the selected context, and own-question access does not grant access to others'
+answers. All WRITE operations have preview and confirmation and do not log full
+question text or answer payloads.

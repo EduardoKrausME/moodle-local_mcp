@@ -26,6 +26,9 @@ namespace local_mcp\write;
 
 use coding_exception;
 use local_mcp\extension\manager;
+use local_mcp\write\tool\update_question;
+use local_mcp\write\tool\create_question;
+use local_mcp\write\tool\create_question_category;
 use local_mcp\write\tool\bulk_create_courses;
 use local_mcp\write\tool\create_category;
 use local_mcp\write\tool\create_course;
@@ -52,6 +55,9 @@ final class registry {
     /** @return tool_interface[] */
     public static function get_tools(): array {
         $tools = [
+            new create_question_category(),
+            new create_question(),
+            new update_question(),
             new create_category(),
             new bulk_create_courses(),
             new create_course(),
