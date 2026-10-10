@@ -696,3 +696,45 @@ READ and WRITE scopes are independent; Moodle's question capabilities are enforc
 for the selected context, and own-question access does not grant access to others'
 answers. All WRITE operations have preview and confirmation and do not log full
 question text or answer payloads.
+
+
+## Additional course activity integrations (mcptool subplugins)
+
+The \`tool/\` directory also contains independent WRITE providers for File, H5P, URL,
+Text and media area (Label), Quiz and Glossary. Every activity is created using
+Moodle's \`prepare_new_moduleinfo_data()\` / \`add_moduleinfo()\` lifecycle,
+with both \`moodle/course:manageactivities\` and the module's
+\`mod/<module>:addinstance\` capability checked for the connected user.
+All mutations use the existing MCP preview/confirmation flow.
+
+| MCP WRITE tool | Moodle module | Required input | Additional operations |
+| --- | --- | --- | --- |
+| \`resource_create_activity\` | \`mod_resource\` | \`courseid\`, \`sectionnum\`, \`name\`, \`filename\`, \`file_base64\` | Uploads one file |
+| \`h5p_create_activity\` | \`mod_h5pactivity\` | \`courseid\`, \`sectionnum\`, \`name\`, \`filename\`, \`file_base64\` | Uploads one .h5p package |
+| \`url_create_activity\` | \`mod_url\` | \`courseid\`, \`sectionnum\`, \`name\`, \`externalurl\` | HTTP/HTTPS links |
+| \`label_create_activity\` | \`mod_label\` | \`courseid\`, \`sectionnum\`, \`content\` | Inline HTML |
+| \`quiz_create_activity\` | \`mod_quiz\` | \`courseid\`, \`sectionnum\`, \`name\` | \`quiz_add_question\` (existing question IDs) |
+| \`glossary_create_activity\` | \`mod_glossary\` | \`courseid\`, \`sectionnum\`, \`name\` | \`glossary_create_entry\` (concept and HTML definition) |
+
+An example file creation payload:
+
+\`\`\`json
+{
+  "courseid": 12,
+  "sectionnum": 1,
+  "name": "Course handout",
+  "filename": "handout.pdf",
+  "file_base64": "<base64 of the PDF file>"
+}
+\`\`\`
+
+Uploads use the Moodle File API with a temporary draft owned by the authenticated
+user, then the activity module moves the draft to its proper storage area.
+\`file_base64\` can contain raw Base64 or a data URI, with a 40 MiB decoded limit;
+neither the data nor HTML bodies are included in the activity-create preview.
+H5P packages must be valid ZIP-based \`.h5p\` files and are created with the
+built-in Moodle \`mod_h5pactivity\` module (not the third-party \`mod_hvp\`).
+The MCP endpoint does not fetch arbitrary remote URLs for file uploads.
+
+After installing the new subplugins, run Moodle's upgrade process and refresh
+the MCP connector so these WRITE tools appear in the published tool schema.

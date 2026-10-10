@@ -8,24 +8,25 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * version.php
+ * MCP integration version.
  *
- * @package   local_mcp
- * @copyright 2026 Eduardo Kraus {@link https://eduardokraus.com}
+ * @package   mcptool_label
+ * @copyright 2026 Eduardo Kraus
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->release = '1.3.12';
-$plugin->version = 2026101001;
-$plugin->component = 'local_mcp';
+$plugin->release = '1.0.0';
+$plugin->version = 2026101000;
+$plugin->component = 'mcptool_label';
 $plugin->requires = 2024100700;
-$plugin->maturity = MATURITY_STABLE;
+$plugin->dependencies = ['local_mcp' => 2026100801];
+$plugin->maturity = MATURITY_BETA;
