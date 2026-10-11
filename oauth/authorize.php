@@ -50,7 +50,9 @@ $returnurl = new moodle_url('/local/mcp/oauth/authorize.php', [
     'resource' => $resource,
 ]);
 
-require_login(null, false, $returnurl);
+// Preserve the OAuth request URL through Moodle's standard login redirect.
+// The third argument of require_login() is a course module, not a return URL.
+require_login(null, false);
 
 $PAGE->set_context(context_system::instance());
 $PAGE->set_url($returnurl);
