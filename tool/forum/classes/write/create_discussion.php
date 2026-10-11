@@ -24,8 +24,11 @@
 
 namespace mcptool_forum\write;
 
+use coding_exception;
 use context;
 use context_module;
+use core\exception\moodle_exception;
+use dml_exception;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\write\tool\base_tool;
@@ -35,33 +38,55 @@ use moodle_url;
  * Create a new topic in a standard forum after an explicit confirmation.
  */
 final class create_discussion extends base_tool {
-    /** @return string */
+    /**
+     * get_name
+     *
+     * @return string
+     */
     public function get_name(): string {
         return 'forum_create_discussion';
     }
 
-    /** @return string */
+    /**
+     * get_title
+     *
+     * @return string
+     */
     public function get_title(): string {
         return 'Forum: create discussion';
     }
 
-    /** @return string */
+    /**
+     * get_description
+     *
+     * @return string
+     */
     public function get_description(): string {
         return 'Create a new topic in a standard forum after an explicit confirmation.';
     }
 
-    /** @return string */
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
     public function get_required_capability(): string {
         return 'mod/forum:startdiscussion';
     }
 
-    /** @return array */
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema(['cmid' => ['type' => 'integer', 'minimum' => 1], 'subject' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255], 'message' => ['type' => 'string', 'minLength' => 1], 'groupid' => ['type' => 'integer', 'minimum' => -1]], ['cmid', 'subject', 'message']);
     }
 
     /**
-     * @param array $arguments Tool input.
+     * resolve_context
+     *
+     * @param array $arguments
      * @return context
      */
     public function resolve_context(array $arguments): context {
@@ -69,12 +94,18 @@ final class create_discussion extends base_tool {
     }
 
     /**
-     * @param array $arguments Tool input.
-     * @param authenticated_identity $identity OAuth identity.
+     * execute
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
      * @return array
+     * @throws coding_exception
+     * @throws moodle_exception
+     * @throws dml_exception
+     * @throws api_exception
      */
-    public function execute(array $arguments,
-            authenticated_identity $identity): array {
+    public function execute(array                  $arguments,
+                            authenticated_identity $identity): array {
         global $DB, $CFG;
         require_once($CFG->dirroot . '/mod/forum/lib.php');
         $cm = get_coursemodule_from_id('forum', (int)$arguments['cmid'], 0, false, MUST_EXIST);

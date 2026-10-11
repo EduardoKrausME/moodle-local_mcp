@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Question bank MCP integration.
@@ -24,19 +24,79 @@
 
 namespace local_mcp\read\tool;
 
+use coding_exception;
 use context;
 use local_mcp\question\bank_service;
 use local_mcp\security\authenticated_identity;
 
-/** MCP READ: List question categories. */
+/**
+ * MCP READ: List question categories.
+ */
 final class list_question_categories extends base_tool {
-    public function get_name(): string { return 'list_question_categories'; }
-    public function get_title(): string { return 'List question categories'; }
-    public function get_description(): string { return 'List all categories in one Moodle question bank context.'; }
-    public function get_required_capability(): string { return 'moodle/question:viewmine'; }
+    /**
+     * get_name
+     *
+     * @return string
+     */
+    public function get_name(): string {
+        return 'list_question_categories';
+    }
+
+    /**
+     * get_title
+     *
+     * @return string
+     */
+    public function get_title(): string {
+        return 'List question categories';
+    }
+
+    /**
+     * get_description
+     *
+     * @return string
+     */
+    public function get_description(): string {
+        return 'List all categories in one Moodle question bank context.';
+    }
+
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
+    public function get_required_capability(): string {
+        return 'moodle/question:viewmine';
+    }
+
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema(['contextid' => ['type' => 'integer', 'minimum' => 1]], ['contextid']);
     }
-    public function resolve_context(array $a): context { return \context::instance_by_id((int)$a['contextid'], MUST_EXIST); }
-    public function execute(array $a, authenticated_identity $identity): array { return bank_service::categories((int)$a['contextid']); }
+
+    /**
+     * resolve_context
+     *
+     * @param array $a
+     * @return context
+     * @throws coding_exception
+     */
+    public function resolve_context(array $a): context {
+        return context::instance_by_id((int)$a['contextid'], MUST_EXIST);
+    }
+
+    /**
+     * execute
+     *
+     * @param array $a
+     * @param authenticated_identity $identity
+     * @return array
+     */
+    public function execute(array $a, authenticated_identity $identity): array {
+        return bank_service::categories((int)$a['contextid']);
+    }
 }

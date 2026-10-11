@@ -35,7 +35,12 @@ final class manager {
     /** @var array<string, object>|null Providers discovered by convention for this request. */
     private static ?array $classproviders = null;
 
-    /** @return read_provider_interface[] */
+    /**
+     * read_providers
+     *
+     * @return array
+     * @throws coding_exception
+     */
     public static function read_providers(): array {
         return array_merge(
             self::providers('mcp_read_provider', read_provider_interface::class),
@@ -44,7 +49,13 @@ final class manager {
         );
     }
 
-    /** @return write_provider_interface[] */
+
+    /**
+     * write_providers
+     *
+     * @return array
+     * @throws coding_exception
+     */
     public static function write_providers(): array {
         return array_merge(
             self::providers('mcp_write_provider', write_provider_interface::class),
@@ -85,7 +96,7 @@ final class manager {
                     }
                     $provider = new $class();
                     if (!$provider instanceof read_provider_interface &&
-                            !$provider instanceof write_provider_interface) {
+                        !$provider instanceof write_provider_interface) {
                         throw new coding_exception($component . ' MCP provider must implement '
                             . 'a READ or WRITE provider interface.');
                     }
@@ -113,7 +124,6 @@ final class manager {
         $info = core_plugin_manager::instance()->get_plugin_info($component);
         return $info && $info->is_enabled() !== false;
     }
-
 
     /**
      * Method providers.

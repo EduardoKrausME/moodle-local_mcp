@@ -29,6 +29,10 @@ use local_mcp\exception\api_exception;
 use local_mcp\oauth\authorization_service;
 use local_mcp\oauth\client_service;
 use local_mcp\oauth\resource;
+use local_mcp\oauth\token_service;
+use local_mcp\security\manual_token_service;
+use local_mcp\security\secret;
+use local_mcp\security\token_resolver;
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -69,6 +73,7 @@ final class oauth_test extends advanced_testcase {
             'resource' => resource::endpoint('server'),
         ]);
     }
+
     /**
      * Confirm that OAuth audiences cannot be exchanged for other MCP servers.
      *
@@ -105,41 +110,41 @@ final class oauth_test extends advanced_testcase {
         ]);
         $client = $DB->get_record('local_mcp_oauth_client', ['id' => $id], '*', MUST_EXIST);
         $verifier = str_repeat('v', 43);
-        $challenge = \local_mcp\security\secret::base64url(hash('sha256', $verifier, true));
+        $challenge = secret::base64url(hash('sha256', $verifier, true));
         $resource = resource::endpoint('server');
         $code = authorization_service::issue_code($client, (int)$USER->id, $redirect,
             ['mcp:read', 'mcp:write'], $challenge, $resource);
-        $pair = \local_mcp\oauth\token_service::exchange_code($clientid, $code, $redirect, $verifier, $resource);
+        $pair = token_service::exchange_code($clientid, $code, $redirect, $verifier, $resource);
 
-        $identity = \local_mcp\security\token_resolver::from_bearer('Bearer ' . $pair['access_token'], $resource);
+        $identity = token_resolver::from_bearer('Bearer ' . $pair['access_token'], $resource);
         $this->assertSame('oauth', $identity->type);
         $this->assertTrue($identity->has_scope('mcp:read'));
         $this->assertTrue($identity->has_scope('mcp:write'));
 
-        $manual = \local_mcp\security\manual_token_service::create(
+        $manual = manual_token_service::create(
             'Legacy token', (int)$USER->id, true, false, time() + DAYSECS);
-        $legacy = \local_mcp\security\token_resolver::from_bearer('Bearer ' . $manual['token'], $resource);
+        $legacy = token_resolver::from_bearer('Bearer ' . $manual['token'], $resource);
         $this->assertSame('manual', $legacy->type);
         $this->assertTrue($legacy->has_scope('mcp:read'));
         $this->assertFalse($legacy->has_scope('mcp:write'));
 
         // Tightening an OAuth connection must immediately affect issued credentials.
         $DB->set_field('local_mcp_connection', 'scopes', 'mcp:read', ['id' => $identity->connectionid]);
-        $reduced = \local_mcp\security\token_resolver::from_bearer('Bearer ' . $pair['access_token'], $resource);
+        $reduced = token_resolver::from_bearer('Bearer ' . $pair['access_token'], $resource);
         $this->assertFalse($reduced->has_scope('mcp:write'));
-        $rotated = \local_mcp\oauth\token_service::refresh($clientid, $pair['refresh_token'], $resource);
+        $rotated = token_service::refresh($clientid, $pair['refresh_token'], $resource);
         $this->assertSame('mcp:read', $rotated['scope']);
 
         // Disabling an OAuth client never disables manually issued tokens.
         $DB->set_field('local_mcp_oauth_client', 'enabled', 0, ['id' => $id]);
         try {
-            \local_mcp\security\token_resolver::from_bearer('Bearer ' . $rotated['access_token'], $resource);
+            token_resolver::from_bearer('Bearer ' . $rotated['access_token'], $resource);
             $this->fail('Disabled clients must not authenticate.');
         } catch (api_exception $e) {
             $this->assertSame(401, $e->httpstatus);
         }
         $this->assertSame('manual',
-            \local_mcp\security\token_resolver::from_bearer('Bearer ' . $manual['token'], $resource)->type);
+            token_resolver::from_bearer('Bearer ' . $manual['token'], $resource)->type);
     }
 
     /**

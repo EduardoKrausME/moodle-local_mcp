@@ -23,6 +23,7 @@
  */
 
 namespace local_mcp\read\tool;
+
 use completion_info;
 use context;
 use context_course;

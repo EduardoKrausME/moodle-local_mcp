@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Create a glossary course module.
@@ -28,9 +28,14 @@ use local_mcp\security\authenticated_identity;
 use local_mcp\write\tool\activity_create_base;
 use stdClass;
 
-/** Moodle activity creation via standard module hooks. */
+/**
+ * Moodle activity creation via standard module hooks.
+ */
 final class create_activity extends activity_create_base {
-    protected function module_name(): string { return 'glossary'; }
+    protected function module_name(): string {
+        return 'glossary';
+    }
+
     protected function extra_properties(): array {
         return [
             'allowduplicatedentries' => ['type' => 'boolean'],
@@ -38,6 +43,7 @@ final class create_activity extends activity_create_base {
             'allowcomments' => ['type' => 'boolean'],
         ];
     }
+
     protected function configure(stdClass $info, array $a, authenticated_identity $identity): void {
         $info->displayformat = 'dictionary';
         $info->mainglossary = 0;

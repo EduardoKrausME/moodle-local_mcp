@@ -36,7 +36,11 @@ use mcptool_forum\write\reply_to_post;
  * All Moodle forum tooling is self-contained in this subplugin.
  */
 final class provider implements read_provider_interface, write_provider_interface {
-    /** @return array */
+    /**
+     * get_read_tools
+     *
+     * @return array
+     */
     public function get_read_tools(): array {
         return [
             new list_discussions(),
@@ -44,7 +48,11 @@ final class provider implements read_provider_interface, write_provider_interfac
         ];
     }
 
-    /** @return array */
+    /**
+     * get_write_tools
+     *
+     * @return array
+     */
     public function get_write_tools(): array {
         return [
             new create_activity(),

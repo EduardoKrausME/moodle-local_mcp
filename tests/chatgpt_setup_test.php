@@ -25,6 +25,7 @@
 namespace local_mcp;
 
 use advanced_testcase;
+use dml_exception;
 use local_mcp\oauth\connection_service;
 use local_mcp\ui\chatgpt_setup;
 
@@ -34,7 +35,10 @@ defined('MOODLE_INTERNAL') || die;
  * Tests for the conditional ChatGPT getting-started guide.
  */
 final class chatgpt_setup_test extends advanced_testcase {
+
     /**
+     * test_official_chatgpt_redirects
+     *
      * @return void
      */
     public function test_official_chatgpt_redirects(): void {
@@ -51,7 +55,10 @@ final class chatgpt_setup_test extends advanced_testcase {
     }
 
     /**
+     * test_guide_hides_only_when_chatgpt_is_connected
+     *
      * @return void
+     * @throws dml_exception
      */
     public function test_guide_hides_only_when_chatgpt_is_connected(): void {
         global $DB;

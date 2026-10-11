@@ -41,9 +41,11 @@ final class tool_schema {
     private const ARRAYS = ['allOf', 'anyOf', 'oneOf', 'prefixItems'];
 
     /**
-     * @param array $schema Input schema.
-     * @param array $issues Schema issues returned by reference.
-     * @return array Validated and safely normalized schema.
+     * normalize
+     *
+     * @param array $schema
+     * @param array $issues
+     * @return array
      */
     public static function normalize(array $schema, array &$issues = []): array {
         if (($schema['type'] ?? null) !== 'object') {
@@ -55,9 +57,11 @@ final class tool_schema {
     }
 
     /**
-     * @param array $schema JSON Schema fields.
-     * @param string $path Location in the schema.
-     * @param array $issues Output issues.
+     * walk
+     *
+     * @param array $schema
+     * @param string $path
+     * @param array $issues
      * @return void
      */
     private static function walk(array &$schema, string $path, array &$issues): void {
@@ -82,30 +86,38 @@ final class tool_schema {
                 foreach ($value as $name => $child) {
                     $value->{$name} = self::child($child, $field . '.' . $name, $issues);
                 }
-            } else if (in_array($keyword, self::SINGLES, true)) {
-                $schema[$keyword] = self::child($value, $field, $issues);
-            } else if (in_array($keyword, self::ARRAYS, true)) {
-                if (!is_array($value) || !array_is_list($value)) {
-                    self::issue($issues, $field, 'array', self::kind($value), false);
-                    continue;
-                }
-                foreach ($value as $index => $child) {
-                    $value[$index] = self::child($child, $field . '.' . $index, $issues);
-                }
-                $schema[$keyword] = $value;
-            } else if ($keyword === 'required') {
-                if (!is_array($value) || !array_is_list($value)) {
-                    self::issue($issues, $field, 'array', self::kind($value), false);
+            } else {
+                if (in_array($keyword, self::SINGLES, true)) {
+                    $schema[$keyword] = self::child($value, $field, $issues);
                 } else {
-                    foreach ($value as $entry) {
-                        if (!is_string($entry)) {
-                            self::issue($issues, $field, 'array of strings', 'array', false);
-                            break;
+                    if (in_array($keyword, self::ARRAYS, true)) {
+                        if (!is_array($value) || !array_is_list($value)) {
+                            self::issue($issues, $field, 'array', self::kind($value), false);
+                            continue;
+                        }
+                        foreach ($value as $index => $child) {
+                            $value[$index] = self::child($child, $field . '.' . $index, $issues);
+                        }
+                        $schema[$keyword] = $value;
+                    } else {
+                        if ($keyword === 'required') {
+                            if (!is_array($value) || !array_is_list($value)) {
+                                self::issue($issues, $field, 'array', self::kind($value), false);
+                            } else {
+                                foreach ($value as $entry) {
+                                    if (!is_string($entry)) {
+                                        self::issue($issues, $field, 'array of strings', 'array', false);
+                                        break;
+                                    }
+                                }
+                            }
+                        } else {
+                            if ($keyword === 'enum' && !is_array($value)) {
+                                self::issue($issues, $field, 'array', self::kind($value), false);
+                            }
                         }
                     }
                 }
-            } else if ($keyword === 'enum' && !is_array($value)) {
-                self::issue($issues, $field, 'array', self::kind($value), false);
             }
         }
         if (($schema['type'] ?? null) === 'object' && !array_key_exists('properties', $schema)) {
@@ -114,10 +126,12 @@ final class tool_schema {
     }
 
     /**
-     * @param mixed $value Nested JSON Schema.
-     * @param string $path Schema location.
-     * @param array $issues Output issues.
-     * @return mixed Normalized schema.
+     * child
+     *
+     * @param $value
+     * @param string $path
+     * @param array $issues
+     * @return array|bool|mixed|object
      */
     private static function child($value, string $path, array &$issues) {
         if (is_bool($value)) {
@@ -140,22 +154,26 @@ final class tool_schema {
     }
 
     /**
-     * @param array $issues Output issues.
-     * @param string $path Schema location.
-     * @param string $expected Expected type.
-     * @param string $actual Actual type.
-     * @param bool $repaired Safe automatic fix applied.
+     * issue
+     *
+     * @param array $issues
+     * @param string $path
+     * @param string $expected
+     * @param string $actual
+     * @param bool $repaired
      * @return void
      */
-    private static function issue(array &$issues, string $path, string $expected,
-            string $actual, bool $repaired): void {
+    private static function issue(array  &$issues, string $path, string $expected,
+                                  string $actual, bool $repaired): void {
         $issues[] = ['path' => $path, 'expected' => $expected,
             'actual' => $actual, 'repaired' => $repaired];
     }
 
     /**
-     * @param mixed $value Value to inspect.
-     * @return string Data type, without any values.
+     * kind
+     *
+     * @param $value
+     * @return string
      */
     private static function kind($value): string {
         if ($value instanceof stdClass) {

@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Question bank MCP integration.
@@ -25,20 +25,60 @@
 namespace local_mcp\write\tool;
 
 use context;
+use local_mcp\exception\api_exception;
 use local_mcp\question\bank_service;
 use local_mcp\security\authenticated_identity;
 
-/** MCP WRITE: Create question. */
+/**
+ * MCP WRITE: Create question.
+ */
 final class create_question extends base_tool {
-    public function get_name(): string { return 'create_question'; }
-    public function get_title(): string { return 'Create question'; }
-    public function get_description(): string { return 'Create a versioned question. Supports multichoice, truefalse, shortanswer and essay.'; }
-    public function get_required_capability(): string { return 'moodle/question:add'; }
+    /**
+     * get_name
+     *
+     * @return string
+     */
+    public function get_name(): string {
+        return 'create_question';
+    }
+
+    /**
+     * get_title
+     *
+     * @return string
+     */
+    public function get_title(): string {
+        return 'Create question';
+    }
+
+    /**
+     * get_description
+     *
+     * @return string
+     */
+    public function get_description(): string {
+        return 'Create a versioned question. Supports multichoice, truefalse, shortanswer and essay.';
+    }
+
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
+    public function get_required_capability(): string {
+        return 'moodle/question:add';
+    }
+
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema([
- 'categoryid' => ['type' => 'integer', 'minimum' => 1],
- 'qtype' => ['type' => 'string', 'enum' => ['multichoice', 'truefalse', 'shortanswer', 'essay']],
- 'name' => ['type' => 'string', 'minLength' => 1],
+            'categoryid' => ['type' => 'integer', 'minimum' => 1],
+            'qtype' => ['type' => 'string', 'enum' => ['multichoice', 'truefalse', 'shortanswer', 'essay']],
+            'name' => ['type' => 'string', 'minLength' => 1],
             'questiontext' => ['type' => 'string', 'minLength' => 1, 'description' => 'HTML question text.'],
             'generalfeedback' => ['type' => 'string'],
             'defaultmark' => ['type' => 'number', 'exclusiveMinimum' => 0],
@@ -54,10 +94,50 @@ final class create_question extends base_tool {
                     'feedback' => ['type' => 'string']],
                     'required' => ['text', 'fraction'], 'additionalProperties' => false]],
 
- ], ['categoryid', 'qtype', 'name', 'questiontext']);
+        ], ['categoryid', 'qtype', 'name', 'questiontext']);
     }
-    public function resolve_context(array $a): context { return bank_service::category_context((int)$a['categoryid']); }
-    public function supports_dry_run(): bool { return true; }
-    public function preview(array $a, authenticated_identity $identity): array { bank_service::form($a, (string)$a['qtype']); return ['operation' => 'create_question', 'categoryid' => (int)$a['categoryid'], 'qtype' => $a['qtype'], 'name' => $a['name'], 'answers_count' => count($a['answers'] ?? [])]; }
-    public function execute(array $a, authenticated_identity $identity): array { return bank_service::save($a, $identity); }
+
+    /**
+     * resolve_context
+     *
+     * @param array $a
+     * @return context
+     */
+    public function resolve_context(array $a): context {
+        return bank_service::category_context((int)$a['categoryid']);
+    }
+
+    /**
+     * supports_dry_run
+     *
+     * @return bool
+     */
+    public function supports_dry_run(): bool {
+        return true;
+    }
+
+    /**
+     * preview
+     *
+     * @param array $a
+     * @param authenticated_identity $identity
+     * @return array
+     * @throws api_exception
+     */
+    public function preview(array $a, authenticated_identity $identity): array {
+        bank_service::form($a, (string)$a['qtype']);
+        return ['operation' => 'create_question', 'categoryid' => (int)$a['categoryid'], 'qtype' => $a['qtype'], 'name' => $a['name'], 'answers_count' => count($a['answers'] ?? [])];
+    }
+
+    /**
+     * execute
+     *
+     * @param array $a
+     * @param authenticated_identity $identity
+     * @return array
+     * @throws api_exception
+     */
+    public function execute(array $a, authenticated_identity $identity): array {
+        return bank_service::save($a, $identity);
+    }
 }

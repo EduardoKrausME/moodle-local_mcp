@@ -32,6 +32,7 @@ use local_mcp\exception\api_exception;
 use local_mcp\diagnostics;
 use moodle_url;
 use stored_file;
+use Throwable;
 
 /**
  * Manage the same course/overviewfiles area used by Moodle's course image.
@@ -243,7 +244,7 @@ final class image_service {
         }
         try {
             [$bytes, $mime, $extension] = self::decode($arguments + ['courseid' => $courseid]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             diagnostics::exception($e, [
                 'tool' => 'set_course_image', 'courseid' => $courseid, 'phase' => 'decode',
             ]);
@@ -272,7 +273,7 @@ final class image_service {
             }
             $file = get_file_storage()->create_file_from_string($record, $bytes);
             $transaction->allow_commit();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             diagnostics::exception($e, [
                 'tool' => 'set_course_image', 'courseid' => $courseid, 'phase' => 'file_storage',
             ]);
@@ -292,7 +293,7 @@ final class image_service {
                 'other' => ['shortname' => $course->shortname, 'fullname' => $course->fullname],
             ])->trigger();
             $result = ['courseid' => $courseid, 'replaced' => count($oldfiles), 'image' => self::metadata($file)];
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // File storage already committed: do not blindly retry before reading the current cover.
             diagnostics::exception($e, [
                 'tool' => 'set_course_image', 'courseid' => $courseid, 'phase' => 'post_commit',

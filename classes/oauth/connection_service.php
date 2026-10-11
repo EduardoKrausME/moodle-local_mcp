@@ -110,7 +110,7 @@ final class connection_service {
     public static function is_chatgpt_redirect_uri(string $redirecturi): bool {
         $parts = parse_url($redirecturi);
         if (!is_array($parts) || strtolower($parts['scheme'] ?? '') !== 'https'
-                || strtolower($parts['host'] ?? '') !== 'chatgpt.com') {
+            || strtolower($parts['host'] ?? '') !== 'chatgpt.com') {
             return false;
         }
 

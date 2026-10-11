@@ -34,12 +34,23 @@ defined('MOODLE_INTERNAL') || die;
  * Test independent counters and requests sharing one token.
  */
 final class rate_limiter_test extends advanced_testcase {
+    /**
+     * test_defaults_are_high
+     *
+     * @return void
+     */
     public function test_defaults_are_high(): void {
         $this->assertSame(1200, rate_limiter::DEFAULT_READ_PER_MINUTE);
         $this->assertSame(600, rate_limiter::DEFAULT_WRITE_PER_MINUTE);
         $this->assertSame(120, rate_limiter::DEFAULT_OAUTH_PER_MINUTE);
     }
 
+    /**
+     * test_two_calls_with_same_token
+     *
+     * @return void
+     * @throws api_exception
+     */
     public function test_two_calls_with_same_token(): void {
         $this->resetAfterTest();
         $subject = 'qa-' . random_string(16);
@@ -49,6 +60,12 @@ final class rate_limiter_test extends advanced_testcase {
         rate_limiter::check('mcp_read', $subject, 2);
     }
 
+    /**
+     * test_connection_and_scope_isolation
+     *
+     * @return void
+     * @throws api_exception
+     */
     public function test_connection_and_scope_isolation(): void {
         $this->resetAfterTest();
         $one = 'first-' . random_string(16);

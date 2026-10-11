@@ -30,6 +30,11 @@ use local_mcp\write\tool_interface;
  * Interface write_provider_interface.
  */
 interface write_provider_interface {
-    /** @return tool_interface[] */
+
+    /**
+     * get_write_tools
+     *
+     * @return array
+     */
     public function get_write_tools(): array;
 }

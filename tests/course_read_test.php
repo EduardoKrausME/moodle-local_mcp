@@ -26,7 +26,9 @@ namespace local_mcp;
 
 use advanced_testcase;
 use context_system;
+use core\exception\moodle_exception;
 use core_course_category;
+use dml_exception;
 use local_mcp\read\tool\get_course;
 use local_mcp\read\tool\search_courses;
 use local_mcp\security\authenticated_identity;
@@ -39,6 +41,8 @@ defined('MOODLE_INTERNAL') || die;
  */
 final class course_read_test extends advanced_testcase {
     /**
+     * admin_identity
+     *
      * @return authenticated_identity
      */
     private function admin_identity(): authenticated_identity {
@@ -67,7 +71,10 @@ final class course_read_test extends advanced_testcase {
     }
 
     /**
+     * test_search_hidden_courses_and_exact_shortname
+     *
      * @return void
+     * @throws moodle_exception
      */
     public function test_search_hidden_courses_and_exact_shortname(): void {
         $this->resetAfterTest();
@@ -106,7 +113,12 @@ final class course_read_test extends advanced_testcase {
     }
 
     /**
+     * test_update_html_summary_and_move_course_to_category
+     *
      * @return void
+     * @throws moodle_exception
+     * @throws dml_exception
+     * @throws exception\api_exception
      */
     public function test_update_html_summary_and_move_course_to_category(): void {
         global $DB;

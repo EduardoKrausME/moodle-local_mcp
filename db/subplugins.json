@@ -1,8 +1,8 @@
 {
-    "subplugintypes": {
-        "mcptool": "tool"
-    },
-    "plugintypes": {
-        "mcptool": "local/mcp/tool"
-    }
+  "subplugintypes": {
+    "mcptool": "tool"
+  },
+  "plugintypes": {
+    "mcptool": "local/mcp/tool"
+  }
 }

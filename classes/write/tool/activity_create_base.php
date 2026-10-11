@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Common Moodle course-module creation plumbing.
@@ -24,10 +24,13 @@
 
 namespace local_mcp\write\tool;
 
+use coding_exception;
 use context;
 use context_course;
+use dml_exception;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
+use moodle_exception;
 use moodle_url;
 use stdClass;
 
@@ -36,58 +39,106 @@ use stdClass;
  * Each subplugin supplies its own input schema and module-specific fields.
  */
 abstract class activity_create_base extends base_tool {
-    /** @return string Native Moodle module name, without mod_. */
+
+    /**
+     * module_name
+     *
+     * @return string
+     */
     abstract protected function module_name(): string;
 
-    /** @return array Additional module-specific properties. */
+    /**
+     * extra_properties
+     *
+     * @return array
+     */
     abstract protected function extra_properties(): array;
 
-    /** @return array Required module-specific fields. */
+    /**
+     * extra_required
+     *
+     * @return array
+     */
     protected function extra_required(): array {
         return [];
     }
 
-    /** @return bool Whether a name must be supplied. */
+    /**
+     * requires_name
+     *
+     * @return bool
+     */
     protected function requires_name(): bool {
         return true;
     }
 
-    /** @return void Fill activity settings before calling core. */
+    /**
+     * configure
+     *
+     * @param stdClass $info
+     * @param array $arguments
+     * @param authenticated_identity $identity
+     * @return void
+     */
     abstract protected function configure(stdClass $info, array $arguments, authenticated_identity $identity): void;
 
-    /** @return string Tool name, usually aligned with the native module. */
+    /**
+     * tool_prefix
+     *
+     * @return string
+     */
     protected function tool_prefix(): string {
         return $this->module_name();
     }
 
-    /** @return string */
+    /**
+     * get_name
+     *
+     * @return string
+     */
     public function get_name(): string {
         return $this->tool_prefix() . '_create_activity';
     }
 
-    /** @return string */
+    /**
+     * get_title
+     *
+     * @return string
+     */
     public function get_title(): string {
         return $this->tool_prefix() . ': create activity';
     }
 
-    /** @return string */
+    /**
+     * get_description
+     *
+     * @return string
+     */
     public function get_description(): string {
         return 'Create a ' . $this->module_name() . ' activity in a course section using the Moodle core module API.';
     }
 
-    /** @return string */
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
     public function get_required_capability(): string {
         return 'moodle/course:manageactivities';
     }
 
-    /** @return array */
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         $fields = [
-            'courseid' => ['type' => 'integer', 'minimum' => 1],
-            'sectionnum' => ['type' => 'integer', 'minimum' => 0],
-            'name' => ['type' => 'string', 'minLength' => 1],
-            'intro' => ['type' => 'string'],
-        ] + $this->extra_properties();
+                'courseid' => ['type' => 'integer', 'minimum' => 1],
+                'sectionnum' => ['type' => 'integer', 'minimum' => 0],
+                'name' => ['type' => 'string', 'minLength' => 1],
+                'intro' => ['type' => 'string'],
+            ] + $this->extra_properties();
         $required = ['courseid', 'sectionnum'];
         if ($this->requires_name()) {
             $required[] = 'name';
@@ -95,7 +146,12 @@ abstract class activity_create_base extends base_tool {
         return $this->object_schema($fields, array_merge($required, $this->extra_required()));
     }
 
-    /** @return context */
+    /**
+     * resolve_context
+     *
+     * @param array $arguments
+     * @return context
+     */
     public function resolve_context(array $arguments): context {
         return context_course::instance((int)$arguments['courseid'], MUST_EXIST);
     }
@@ -123,9 +179,13 @@ abstract class activity_create_base extends base_tool {
     }
 
     /**
-     * @param array $arguments Input data.
-     * @param authenticated_identity $identity Acting user.
+     * check_module_capability
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
      * @return void
+     * @throws coding_exception
+     * @throws api_exception
      */
     private function check_module_capability(array $arguments, authenticated_identity $identity): void {
         $module = $this->module_name();
@@ -135,7 +195,18 @@ abstract class activity_create_base extends base_tool {
         }
     }
 
-    /** @return array Newly created activity identifiers. */
+    /**
+     * execute
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
+     * @return array
+     * @throws coding_exception
+     * @throws \core\exception\moodle_exception
+     * @throws dml_exception
+     * @throws moodle_exception
+     * @throws api_exception
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         global $CFG;
         require_once($CFG->dirroot . '/course/modlib.php');

@@ -99,6 +99,7 @@ with that reference. No bearer tokens or tool arguments are logged.
 
 After updating Moodle, refresh the custom MCP connector in ChatGPT so its
 advertised input schemas and list of tools reflect the new plugin version.
+
 ## Create a batch of up to 30 courses
 
 `bulk_create_courses` is a WRITE tool designed for importing complete Moodle courses
@@ -149,6 +150,7 @@ transactions cannot undo.
 plugin in Moodle and refresh/reinstall the custom ChatGPT MCP connection to
 fetch the new tool definitions. Changing repository files alone does not
 update an already-installed Moodle server or a cached connector.**
+
 ## Creating complete courses and organizing categories
 
 The combined MCP server exposes the following operations:
@@ -209,7 +211,8 @@ headers to URL tokens for long-lived production connections.
 - WRITE: `/local/mcp/write.php`
 - Plugin discovery: `/local/mcp/discovery.php`
 
-The combined endpoint merges tool listings but retains separate READ/WRITE registries, scopes, rate limits and permission checks.
+The combined endpoint merges tool listings but retains separate READ/WRITE registries, scopes, rate limits and
+permission checks.
 
 The READ endpoint publishes only `local_mcp\read\registry`. The WRITE endpoint publishes
 only `local_mcp\write\registry`. There is no combined registry followed by a risk filter.
@@ -222,9 +225,13 @@ The authorization server uses Authorization Code + PKCE S256.
 - Token: `/local/mcp/oauth/token.php`
 - Dynamic registration: `/local/mcp/oauth/register.php`
 - Authorization Server Metadata: `/local/mcp/.well-known/oauth-authorization-server.php`
-- Protected Resource Metadata: `/local/mcp/.well-known/oauth-protected-resource.php?side=server` (or `side=read`/`side=write`)
+- Protected Resource Metadata: `/local/mcp/.well-known/oauth-protected-resource.php?side=server` (
+  or `side=read`/`side=write`)
 
-OAuth clients must send the RFC 8707 `resource` parameter in both authorization-code authorization and token requests. The value must exactly match the MCP endpoint URL (`server.php`, `read.php`, or `write.php`). OAuth tokens are audience-bound to the selected endpoint, including when refresh tokens rotate. Tokens issued before audience binding was introduced must be reauthorized.
+OAuth clients must send the RFC 8707 `resource` parameter in both authorization-code authorization and token requests.
+The value must exactly match the MCP endpoint URL (`server.php`, `read.php`, or `write.php`). OAuth tokens are
+audience-bound to the selected endpoint, including when refresh tokens rotate. Tokens issued before audience binding was
+introduced must be reauthorized.
 
 OAuth access tokens are short-lived opaque secrets. Refresh tokens rotate. Authorization codes are short-lived and
 single-use. Database records store SHA-256 hashes, never the complete secret.
@@ -464,7 +471,6 @@ Moodle URL
 -> `/local/mcp/server.php` (or the separate READ/WRITE endpoints)
 ```
 
-
 ### Temporary ChatGPT connection without OAuth
 
 The first-run screen at `/local/mcp/index.php` now contains only a link to
@@ -598,7 +604,9 @@ activity-specific logic are present in the server controller or registries.
 - `mcptool_book`: `book_create_activity`, `book_list_chapters`, `book_get_chapter`,
   `book_create_chapter`, `book_update_chapter`.
 
-The create-activity operations use Moodle's standard `prepare_new_moduleinfo_data()` / `add_moduleinfo()` APIs and check both course-management and activity-creation capabilities. The remaining tools work with **existing** Moodle activities. The forum integration
+The create-activity operations use Moodle's standard `prepare_new_moduleinfo_data()` / `add_moduleinfo()` APIs and check
+both course-management and activity-creation capabilities. The remaining tools work with **existing** Moodle activities.
+The forum integration
 checks discussion, group and per-post visibility and delegates new postings to
 the standard forum APIs. The page integration delegates updates to
 `page_update_instance`; the book integration uses the book chapter schema,
@@ -623,11 +631,18 @@ is necessary. The ChatGPT MCP connector learns these tools via `tools/list`.
 
 ## Course cover images
 
-`get_course_image(courseid, include_image=true)` returns the current course cover image and metadata from the native `course/overviewfiles` area. When its size is up to 2 MiB and it is PNG, JPEG or WebP, it also returns MCP image content for visual inspection. Access requires `mcp:read` and `moodle/course:view`.
+`get_course_image(courseid, include_image=true)` returns the current course cover image and metadata from the
+native `course/overviewfiles` area. When its size is up to 2 MiB and it is PNG, JPEG or WebP, it also returns MCP image
+content for visual inspection. Access requires `mcp:read` and `moodle/course:view`.
 
-`set_course_image(courseid, image_base64|image_url, expected_contenthash?)` replaces existing cover images through Moodle File API, preserving non-image files. It accepts Base64 or an HTTPS image URL, allows up to 5 MiB and 40 megapixels, requires `mcp:write`, `moodle/course:update`, and `moodle/course:changesummary`, and uses the normal two-call confirmation handshake. The optional expected hash prevents overwriting another update. The server rejects local hosts and direct IPs; Moodle's configured cURL security rules also apply.
+`set_course_image(courseid, image_base64|image_url, expected_contenthash?)` replaces existing cover images through
+Moodle File API, preserving non-image files. It accepts Base64 or an HTTPS image URL, allows up to 5 MiB and 40
+megapixels, requires `mcp:write`, `moodle/course:update`, and `moodle/course:changesummary`, and uses the normal
+two-call confirmation handshake. The optional expected hash prevents overwriting another update. The server rejects
+local hosts and direct IPs; Moodle's configured cURL security rules also apply.
 
-To upload a generated image, the client must provide its bytes or a genuinely accessible HTTPS download URL. ChatGPT-private image URLs or conversation references cannot be fetched by Moodle.
+To upload a generated image, the client must provide its bytes or a genuinely accessible HTTPS download URL.
+ChatGPT-private image URLs or conversation references cannot be fetched by Moodle.
 
 ## Concurrent requests and rate limiting
 
@@ -649,11 +664,13 @@ ChatGPT connector may display its own, independent version number.
 
 Two administrator-only tools are available with `mcp:write` scope and `moodle/site:config` capability:
 
-- `purge_css_cache` uses `purge_caches(['theme' => true])` to invalidate generated CSS and theme assets without clearing other Moodle caches.
-- `purge_all_caches` invokes Moodle core `purge_all_caches()` for a complete purge. Cached data will be rebuilt, which can temporarily slow the site.
+- `purge_css_cache` uses `purge_caches(['theme' => true])` to invalidate generated CSS and theme assets without clearing
+  other Moodle caches.
+- `purge_all_caches` invokes Moodle core `purge_all_caches()` for a complete purge. Cached data will be rebuilt, which
+  can temporarily slow the site.
 
-Both support `dry_run` and require the existing two-call confirmation protocol before performing any cache changes. Their preview responses never purge caches. The MCP audit log records successful writes and their duration.
-
+Both support `dry_run` and require the existing two-call confirmation protocol before performing any cache changes.
+Their preview responses never purge caches. The MCP audit log records successful writes and their duration.
 
 ## Question bank support
 
@@ -697,7 +714,6 @@ for the selected context, and own-question access does not grant access to other
 answers. All WRITE operations have preview and confirmation and do not log full
 question text or answer payloads.
 
-
 ## Additional course activity integrations (mcptool subplugins)
 
 The \`tool/\` directory also contains independent WRITE providers for File, H5P, URL,
@@ -707,24 +723,24 @@ with both \`moodle/course:manageactivities\` and the module's
 \`mod/<module>:addinstance\` capability checked for the connected user.
 All mutations use the existing MCP preview/confirmation flow.
 
-| MCP WRITE tool | Moodle module | Required input | Additional operations |
-| --- | --- | --- | --- |
-| \`resource_create_activity\` | \`mod_resource\` | \`courseid\`, \`sectionnum\`, \`name\`, \`filename\`, \`file_base64\` | Uploads one file |
-| \`h5p_create_activity\` | \`mod_h5pactivity\` | \`courseid\`, \`sectionnum\`, \`name\`, \`filename\`, \`file_base64\` | Uploads one .h5p package |
-| \`url_create_activity\` | \`mod_url\` | \`courseid\`, \`sectionnum\`, \`name\`, \`externalurl\` | HTTP/HTTPS links |
-| \`label_create_activity\` | \`mod_label\` | \`courseid\`, \`sectionnum\`, \`content\` | Inline HTML |
-| \`quiz_create_activity\` | \`mod_quiz\` | \`courseid\`, \`sectionnum\`, \`name\` | \`quiz_add_question\` (existing question IDs) |
-| \`glossary_create_activity\` | \`mod_glossary\` | \`courseid\`, \`sectionnum\`, \`name\` | \`glossary_create_entry\` (concept and HTML definition) |
+| MCP WRITE tool               | Moodle module       | Required input                                                        | Additional operations                                   |
+|------------------------------|---------------------|-----------------------------------------------------------------------|---------------------------------------------------------|
+| \`resource_create_activity\` | \`mod_resource\`    | \`courseid\`, \`sectionnum\`, \`name\`, \`filename\`, \`file_base64\` | Uploads one file                                        |
+| \`h5p_create_activity\`      | \`mod_h5pactivity\` | \`courseid\`, \`sectionnum\`, \`name\`, \`filename\`, \`file_base64\` | Uploads one .h5p package                                |
+| \`url_create_activity\`      | \`mod_url\`         | \`courseid\`, \`sectionnum\`, \`name\`, \`externalurl\`               | HTTP/HTTPS links                                        |
+| \`label_create_activity\`    | \`mod_label\`       | \`courseid\`, \`sectionnum\`, \`content\`                             | Inline HTML                                             |
+| \`quiz_create_activity\`     | \`mod_quiz\`        | \`courseid\`, \`sectionnum\`, \`name\`                                | \`quiz_add_question\` (existing question IDs)           |
+| \`glossary_create_activity\` | \`mod_glossary\`    | \`courseid\`, \`sectionnum\`, \`name\`                                | \`glossary_create_entry\` (concept and HTML definition) |
 
 An example file creation payload:
 
 \`\`\`json
 {
-  "courseid": 12,
-  "sectionnum": 1,
-  "name": "Course handout",
-  "filename": "handout.pdf",
-  "file_base64": "<base64 of the PDF file>"
+"courseid": 12,
+"sectionnum": 1,
+"name": "Course handout",
+"filename": "handout.pdf",
+"file_base64": "<base64 of the PDF file>"
 }
 \`\`\`
 

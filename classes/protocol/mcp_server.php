@@ -202,10 +202,10 @@ final class mcp_server {
                         'duration_ms' => (int)round((microtime(true) - $startedrequest) * 1000),
                     ]);
                     http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => [
-                        'content' => $content,
-                        'structuredContent' => $result,
-                        'isError' => false,
-                    ] + ($modern ? ['resultType' => 'complete'] : [])]);
+                            'content' => $content,
+                            'structuredContent' => $result,
+                            'isError' => false,
+                        ] + ($modern ? ['resultType' => 'complete'] : [])]);
                 } catch (api_exception $e) {
                     diagnostics::event('tool_call_failed', [
                         'side' => $this->side,
@@ -224,13 +224,13 @@ final class mcp_server {
                         'details' => $e->details,
                     ];
                     http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => [
-                        'content' => [[
-                            'type' => 'text',
-                            'text' => json_encode($error, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-                        ]],
-                        'structuredContent' => $error,
-                        'isError' => true,
-                    ] + ($modern ? ['resultType' => 'complete'] : [])]);
+                            'content' => [[
+                                'type' => 'text',
+                                'text' => json_encode($error, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                            ]],
+                            'structuredContent' => $error,
+                            'isError' => true,
+                        ] + ($modern ? ['resultType' => 'complete'] : [])]);
                 } catch (Throwable $e) {
                     // Keep internal details out of responses, but make 500-like
                     // failures diagnosable in the Moodle/PHP server log.
@@ -253,13 +253,13 @@ final class mcp_server {
                         'reference' => $reference,
                     ];
                     http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => [
-                        'content' => [[
-                            'type' => 'text',
-                            'text' => json_encode($error, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-                        ]],
-                        'structuredContent' => $error,
-                        'isError' => true,
-                    ] + ($modern ? ['resultType' => 'complete'] : [])]);
+                            'content' => [[
+                                'type' => 'text',
+                                'text' => json_encode($error, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                            ]],
+                            'structuredContent' => $error,
+                            'isError' => true,
+                        ] + ($modern ? ['resultType' => 'complete'] : [])]);
                 }
             }
             diagnostics::event('unknown_method', [
@@ -334,7 +334,7 @@ final class mcp_server {
                 'description' => $tool->get_description()
                     . ($iswrite && ($tool->requires_confirmation() || $tool->is_destructive())
                         ? ' The first call returns a preview and confirmation_required=true without changes. '
-                            . 'Show the preview and obtain explicit user approval before retrying with confirmation_token.'
+                        . 'Show the preview and obtain explicit user approval before retrying with confirmation_token.'
                         : ''),
                 'inputSchema' => $schema,
 
@@ -379,7 +379,7 @@ final class mcp_server {
      * @param string $rawtoken Parameter rawtoken.
      * @return array Return value.
      */
-    private function call_tool(string                                     $name, array $arguments, array $params,
+    private function call_tool(string                 $name, array $arguments, array $params,
                                authenticated_identity $identity, string $rawtoken): array {
         $tools = $this->get_tools();
         if (!isset($tools[$name])) {

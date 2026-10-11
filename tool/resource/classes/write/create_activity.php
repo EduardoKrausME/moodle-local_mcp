@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Create a resource course module.
@@ -29,9 +29,14 @@ use local_mcp\write\tool\activity_create_base;
 use stdClass;
 use local_mcp\course\activity_upload;
 
-/** Moodle activity creation via standard module hooks. */
+/**
+ * Moodle activity creation via standard module hooks.
+ */
 final class create_activity extends activity_create_base {
-    protected function module_name(): string { return 'resource'; }
+    protected function module_name(): string {
+        return 'resource';
+    }
+
     protected function extra_properties(): array {
         return [
             'filename' => ['type' => 'string', 'minLength' => 1],
@@ -39,7 +44,11 @@ final class create_activity extends activity_create_base {
                 'description' => 'Base64 file bytes or a Base64 data URI; up to 40 MiB decoded.'],
         ];
     }
-    protected function extra_required(): array { return ['filename', 'file_base64']; }
+
+    protected function extra_required(): array {
+        return ['filename', 'file_base64'];
+    }
+
     protected function configure(stdClass $info, array $a, authenticated_identity $identity): void {
         global $CFG;
         require_once($CFG->libdir . '/resourcelib.php');

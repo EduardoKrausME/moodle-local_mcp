@@ -31,97 +31,97 @@
     }
 }}
 {{#showchatgptsetup}}
-<section class="local-mcp-chatgpt-setup card mb-4" aria-labelledby="local-mcp-chatgpt-title"
-         data-copy-success="{{#str}}chatgptsetupcopied, local_mcp{{/str}}"
-         data-copy-fallback="{{#str}}chatgptsetupcopyfallback, local_mcp{{/str}}">
-    <div class="card-body">
-        <h3 class="h4" id="local-mcp-chatgpt-title">{{#str}}chatgptsetuptitle, local_mcp{{/str}}</h3>
-        <p>{{#str}}chatgptsetupintro, local_mcp{{/str}}</p>
+    <section class="local-mcp-chatgpt-setup card mb-4" aria-labelledby="local-mcp-chatgpt-title"
+             data-copy-success="{{#str}}chatgptsetupcopied, local_mcp{{/str}}"
+             data-copy-fallback="{{#str}}chatgptsetupcopyfallback, local_mcp{{/str}}">
+        <div class="card-body">
+            <h3 class="h4" id="local-mcp-chatgpt-title">{{#str}}chatgptsetuptitle, local_mcp{{/str}}</h3>
+            <p>{{#str}}chatgptsetupintro, local_mcp{{/str}}</p>
 
-        {{#registrationdisabled}}
-            <div class="alert alert-warning" role="alert">
-                {{#str}}chatgptsetupdcrdisabled, local_mcp{{/str}}
-                <a href="{{{settingsurl}}}">{{#str}}chatgptsetupopensettings, local_mcp{{/str}}</a>
-            </div>
-        {{/registrationdisabled}}
-        {{#httpsdisabled}}
-            <div class="alert alert-warning" role="alert">
-                {{#str}}chatgptsetuphttpsdisabled, local_mcp{{/str}}
-            </div>
-        {{/httpsdisabled}}
-
-        <ol class="pl-4">
-            <li class="mb-3">
-                <strong>{{#str}}chatgptsetupstep1title, local_mcp{{/str}}</strong>
-                <p class="mb-2">{{#str}}chatgptsetupstep1body, local_mcp{{/str}}</p>
-                <a href="{{{chatgpturl}}}" class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">
-                    {{#str}}chatgptsetupopenchatgpt, local_mcp{{/str}}
-                    <span class="sr-only">({{#str}}chatgptsetupnewtab, local_mcp{{/str}})</span>
-                </a>
-            </li>
-            <li class="mb-3">
-                <strong>{{#str}}chatgptsetupstep2title, local_mcp{{/str}}</strong>
-                <p class="mb-0">{{#str}}chatgptsetupstep2body, local_mcp{{/str}}</p>
-            </li>
-            <li class="mb-3">
-                <strong>{{#str}}chatgptsetupstep3title, local_mcp{{/str}}</strong>
-                <p class="mb-2">{{#str}}chatgptsetupstep3body, local_mcp{{/str}}</p>
-                <label class="font-weight-bold" for="local-mcp-chatgpt-url">
-                    {{#str}}chatgptsetupserverlabel, local_mcp{{/str}}
-                </label>
-                <div class="input-group">
-                    <input type="text" id="local-mcp-chatgpt-url"
-                           class="form-control" value="{{mcpserverurl}}" readonly>
-                    <div class="input-group-append">
-                        <button type="button" class="btn btn-outline-secondary"
-                                data-action="copy-mcp-url">
-                            {{#str}}chatgptsetupcopy, local_mcp{{/str}}
-                        </button>
-                    </div>
+            {{#registrationdisabled}}
+                <div class="alert alert-warning" role="alert">
+                    {{#str}}chatgptsetupdcrdisabled, local_mcp{{/str}}
+                    <a href="{{{settingsurl}}}">{{#str}}chatgptsetupopensettings, local_mcp{{/str}}</a>
                 </div>
-                <span class="small text-muted" aria-live="polite" data-role="copy-status"></span>
-            </li>
-            <li class="mb-3">
-                <strong>{{#str}}chatgptsetupstep4title, local_mcp{{/str}}</strong>
-                <p class="mb-0">{{#str}}chatgptsetupstep4body, local_mcp{{/str}}</p>
-            </li>
-            <li class="mb-3">
-                <strong>{{#str}}chatgptsetupstep5title, local_mcp{{/str}}</strong>
-                <p class="mb-0">{{#str}}chatgptsetupstep5body, local_mcp{{/str}}</p>
-            </li>
-        </ol>
+            {{/registrationdisabled}}
+            {{#httpsdisabled}}
+                <div class="alert alert-warning" role="alert">
+                    {{#str}}chatgptsetuphttpsdisabled, local_mcp{{/str}}
+                </div>
+            {{/httpsdisabled}}
 
-        <p class="mb-3">{{#str}}chatgptsetupfinish, local_mcp{{/str}}</p>
+            <ol class="pl-4">
+                <li class="mb-3">
+                    <strong>{{#str}}chatgptsetupstep1title, local_mcp{{/str}}</strong>
+                    <p class="mb-2">{{#str}}chatgptsetupstep1body, local_mcp{{/str}}</p>
+                    <a href="{{{chatgpturl}}}" class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">
+                        {{#str}}chatgptsetupopenchatgpt, local_mcp{{/str}}
+                        <span class="sr-only">({{#str}}chatgptsetupnewtab, local_mcp{{/str}})</span>
+                    </a>
+                </li>
+                <li class="mb-3">
+                    <strong>{{#str}}chatgptsetupstep2title, local_mcp{{/str}}</strong>
+                    <p class="mb-0">{{#str}}chatgptsetupstep2body, local_mcp{{/str}}</p>
+                </li>
+                <li class="mb-3">
+                    <strong>{{#str}}chatgptsetupstep3title, local_mcp{{/str}}</strong>
+                    <p class="mb-2">{{#str}}chatgptsetupstep3body, local_mcp{{/str}}</p>
+                    <label class="font-weight-bold" for="local-mcp-chatgpt-url">
+                        {{#str}}chatgptsetupserverlabel, local_mcp{{/str}}
+                    </label>
+                    <div class="input-group">
+                        <input type="text" id="local-mcp-chatgpt-url"
+                               class="form-control" value="{{mcpserverurl}}" readonly>
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-outline-secondary"
+                                    data-action="copy-mcp-url">
+                                {{#str}}chatgptsetupcopy, local_mcp{{/str}}
+                            </button>
+                        </div>
+                    </div>
+                    <span class="small text-muted" aria-live="polite" data-role="copy-status"></span>
+                </li>
+                <li class="mb-3">
+                    <strong>{{#str}}chatgptsetupstep4title, local_mcp{{/str}}</strong>
+                    <p class="mb-0">{{#str}}chatgptsetupstep4body, local_mcp{{/str}}</p>
+                </li>
+                <li class="mb-3">
+                    <strong>{{#str}}chatgptsetupstep5title, local_mcp{{/str}}</strong>
+                    <p class="mb-0">{{#str}}chatgptsetupstep5body, local_mcp{{/str}}</p>
+                </li>
+            </ol>
 
-        <details>
-            <summary>{{#str}}chatgptsetuptroubleshooting, local_mcp{{/str}}</summary>
-            <p class="mt-2 mb-2">{{#str}}chatgptsetupdiscoveryhelp, local_mcp{{/str}}</p>
-            <code class="d-block p-2 text-break">{{discoveryurl}}</code>
-        </details>
-    </div>
-</section>
-{{#js}}
-require(['jquery'], function($) {
-    var root = $('.local-mcp-chatgpt-setup');
-    root.find('[data-action="copy-mcp-url"]').on('click', function() {
+            <p class="mb-3">{{#str}}chatgptsetupfinish, local_mcp{{/str}}</p>
+
+            <details>
+                <summary>{{#str}}chatgptsetuptroubleshooting, local_mcp{{/str}}</summary>
+                <p class="mt-2 mb-2">{{#str}}chatgptsetupdiscoveryhelp, local_mcp{{/str}}</p>
+                <code class="d-block p-2 text-break">{{discoveryurl}}</code>
+            </details>
+        </div>
+    </section>
+    {{#js}}
+        require(['jquery'], function($) {
+        var root = $('.local-mcp-chatgpt-setup');
+        root.find('[data-action="copy-mcp-url"]').on('click', function() {
         var guide = $(this).closest('.local-mcp-chatgpt-setup');
         var input = guide.find('#local-mcp-chatgpt-url');
         var status = guide.find('[data-role="copy-status"]');
 
         function fallback() {
-            input.trigger('focus');
-            input[0].select();
-            status.text(guide.attr('data-copy-fallback'));
+        input.trigger('focus');
+        input[0].select();
+        status.text(guide.attr('data-copy-fallback'));
         }
 
         if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(input.val()).then(function() {
-                status.text(guide.attr('data-copy-success'));
-            }, fallback);
+        navigator.clipboard.writeText(input.val()).then(function() {
+        status.text(guide.attr('data-copy-success'));
+        }, fallback);
         } else {
-            fallback();
+        fallback();
         }
-    });
-});
-{{/js}}
+        });
+        });
+    {{/js}}
 {{/showchatgptsetup}}

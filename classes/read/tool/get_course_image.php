@@ -28,30 +28,52 @@ use context;
 use local_mcp\course\image_service;
 use local_mcp\security\authenticated_identity;
 
-/** Read and optionally visualize the course's current image. */
+/**
+ * Read and optionally visualize the course's current image.
+ */
 final class get_course_image extends base_tool {
-    /** @return string Tool identifier. */
+    /**
+     * get_name
+     *
+     * @return string
+     */
     public function get_name(): string {
         return 'get_course_image';
     }
 
-    /** @return string Tool title. */
+    /**
+     * get_title
+     *
+     * @return string
+     */
     public function get_title(): string {
         return 'Get course image';
     }
 
-    /** @return string Tool description. */
+    /**
+     * get_description
+     *
+     * @return string
+     */
     public function get_description(): string {
         return 'Inspect the current Moodle course cover image, its URL, size, dimensions and hash. '
             . 'Returns image content for visual analysis when the image is small enough.';
     }
 
-    /** @return string Capability. */
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
     public function get_required_capability(): string {
         return 'moodle/course:view';
     }
 
-    /** @return array JSON input schema. */
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema([
             'courseid' => ['type' => 'integer', 'minimum' => 1],
@@ -60,17 +82,21 @@ final class get_course_image extends base_tool {
     }
 
     /**
-     * @param array $arguments MCP input.
-     * @return context Course context.
+     * resolve_context
+     *
+     * @param array $arguments
+     * @return context
      */
     public function resolve_context(array $arguments): context {
         return $this->course_context((int)$arguments['courseid']);
     }
 
     /**
-     * @param array $arguments MCP input.
-     * @param authenticated_identity $identity Authenticated identity.
-     * @return array Course image metadata and optional content.
+     * execute
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
+     * @return array
      */
     public function execute(array $arguments, authenticated_identity $identity): array {
         return image_service::read((int)$arguments['courseid'], (bool)($arguments['include_image'] ?? true));

@@ -33,9 +33,14 @@ use local_mcp\diagnostics;
  * Class rate_limiter.
  */
 final class rate_limiter {
-    /** Per-minute defaults; callers and scopes have independent quotas. */
+    /**
+     * Per-minute defaults; callers and scopes have independent quotas.
+     */
     public const DEFAULT_READ_PER_MINUTE = 1200;
+
+    /** @var int */
     public const DEFAULT_WRITE_PER_MINUTE = 600;
+    /** @var int */
     public const DEFAULT_OAUTH_PER_MINUTE = 120;
 
     /**

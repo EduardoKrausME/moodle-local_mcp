@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 //
 // @package   local_mcp
 // @copyright 2026 Eduardo Kraus
@@ -21,12 +21,16 @@
 namespace local_mcp;
 
 use advanced_testcase;
+use coding_exception;
+use dml_exception;
+use dml_transaction_exception;
 use local_mcp\config\site_config;
 use local_mcp\exception\api_exception;
 use local_mcp\read\tool\get_site_config;
 use local_mcp\read\tool\get_site_status;
 use local_mcp\security\authenticated_identity;
 use local_mcp\write\tool\set_site_config;
+use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -34,6 +38,12 @@ defined('MOODLE_INTERNAL') || die();
  * Site configuration and Check API integration.
  */
 final class site_administration_test extends advanced_testcase {
+    /**
+     * test_tools_are_published_in_separate_registries
+     *
+     * @return void
+     * @throws coding_exception
+     */
     public function test_tools_are_published_in_separate_registries(): void {
         $this->assertArrayHasKey('get_site_config', read\registry::get_tools());
         $this->assertArrayHasKey('get_site_status', read\registry::get_tools());
@@ -43,6 +53,12 @@ final class site_administration_test extends advanced_testcase {
         $this->assertSame('moodle/site:config', (new get_site_status())->get_required_capability());
     }
 
+    /**
+     * test_settings_are_strictly_validated
+     *
+     * @return void
+     * @throws api_exception
+     */
     public function test_settings_are_strictly_validated(): void {
         $this->assertSame('1', site_config::normalize('themedesignermode', 'true'));
         $this->assertSame('0', site_config::normalize('enabledashboard', 'false'));
@@ -51,6 +67,13 @@ final class site_administration_test extends advanced_testcase {
         site_config::normalize('auth', 'email');
     }
 
+    /**
+     * test_invalid_batch_never_changes_existing_setting
+     *
+     * @return void
+     * @throws dml_exception
+     * @throws dml_transaction_exception
+     */
     public function test_invalid_batch_never_changes_existing_setting(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
@@ -67,6 +90,14 @@ final class site_administration_test extends advanced_testcase {
         }
     }
 
+    /**
+     * test_preview_is_safe_and_batch_changes_are_applied
+     *
+     * @return void
+     * @throws dml_exception
+     * @throws dml_transaction_exception
+     * @throws api_exception
+     */
     public function test_preview_is_safe_and_batch_changes_are_applied(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
@@ -90,6 +121,12 @@ final class site_administration_test extends advanced_testcase {
         $this->assertSame('3', site_config::current('defaulthomepage')['stored']);
     }
 
+    /**
+     * test_only_site_admin_can_read_or_edit_settings
+     *
+     * @return void
+     * @throws api_exception
+     */
     public function test_only_site_admin_can_read_or_edit_settings(): void {
         $this->resetAfterTest();
         $user = $this->getDataGenerator()->create_user();
@@ -99,6 +136,13 @@ final class site_administration_test extends advanced_testcase {
         (new get_site_config())->execute(['names' => ['themedesignermode']], $identity);
     }
 
+    /**
+     * test_performance_report_uses_core_checks
+     *
+     * @return void
+     * @throws moodle_exception
+     * @throws api_exception
+     */
     public function test_performance_report_uses_core_checks(): void {
         $this->resetAfterTest();
         $this->setAdminUser();

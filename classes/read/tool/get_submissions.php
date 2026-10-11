@@ -23,6 +23,7 @@
  */
 
 namespace local_mcp\read\tool;
+
 use assign;
 use context;
 use context_module;

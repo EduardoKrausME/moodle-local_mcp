@@ -60,9 +60,9 @@ final class token_resolver {
                 }
                 $connection = $DB->get_record('local_mcp_connection', ['id' => $rec->connectionid, 'enabled' => 1]);
                 if (!$connection || $connection->revokedat ||
-                        (int)$connection->userid !== (int)$rec->userid ||
-                        (int)$connection->clientid !== (int)$rec->clientid ||
-                        !$DB->record_exists('local_mcp_oauth_client', ['id' => $rec->clientid, 'enabled' => 1])) {
+                    (int)$connection->userid !== (int)$rec->userid ||
+                    (int)$connection->clientid !== (int)$rec->clientid ||
+                    !$DB->record_exists('local_mcp_oauth_client', ['id' => $rec->clientid, 'enabled' => 1])) {
                     throw new api_exception('invalid_token', 401);
                 }
                 // A connection can have its permissions reduced after an access token was issued.

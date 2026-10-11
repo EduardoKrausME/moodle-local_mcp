@@ -25,7 +25,9 @@
 namespace local_mcp;
 
 use advanced_testcase;
+use core\exception\moodle_exception;
 use core_course_category;
+use dml_exception;
 use local_mcp\exception\api_exception;
 use local_mcp\read\tool\list_categories;
 use local_mcp\security\authenticated_identity;
@@ -46,7 +48,7 @@ final class course_categories_test extends advanced_testcase {
      * @return void
      */
     public function test_category_tools_are_registered(): void {
-        $read = \local_mcp\read\registry::get_tools();
+        $read = read\registry::get_tools();
         $write = registry::get_tools();
         $this->assertInstanceOf(list_categories::class, $read['list_categories']);
         $this->assertInstanceOf(create_category::class, $write['create_category']);
@@ -54,6 +56,8 @@ final class course_categories_test extends advanced_testcase {
     }
 
     /**
+     * admin_identity
+     *
      * @return authenticated_identity
      */
     private function admin_identity(): authenticated_identity {
@@ -63,6 +67,8 @@ final class course_categories_test extends advanced_testcase {
     }
 
     /**
+     * test_create_and_list_categories
+     *
      * @return void
      */
     public function test_create_and_list_categories(): void {
@@ -86,7 +92,11 @@ final class course_categories_test extends advanced_testcase {
     }
 
     /**
+     * test_move_category_preserves_subcategories_and_courses
+     *
      * @return void
+     * @throws moodle_exception
+     * @throws dml_exception
      */
     public function test_move_category_preserves_subcategories_and_courses(): void {
         global $DB;
@@ -114,7 +124,10 @@ final class course_categories_test extends advanced_testcase {
     }
 
     /**
+     * test_cannot_move_category_into_its_own_descendant
+     *
      * @return void
+     * @throws moodle_exception
      */
     public function test_cannot_move_category_into_its_own_descendant(): void {
         $this->resetAfterTest();
@@ -126,7 +139,10 @@ final class course_categories_test extends advanced_testcase {
     }
 
     /**
+     * test_create_course_accepts_html_summary_idnumber_and_base64_image
+     *
      * @return void
+     * @throws moodle_exception
      */
     public function test_create_course_accepts_html_summary_idnumber_and_base64_image(): void {
         $this->resetAfterTest();

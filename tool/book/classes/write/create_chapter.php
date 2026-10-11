@@ -24,8 +24,11 @@
 
 namespace mcptool_book\write;
 
+use coding_exception;
 use context;
 use context_module;
+use dml_exception;
+use dml_transaction_exception;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\write\tool\base_tool;
@@ -35,33 +38,55 @@ use mod_book\event\chapter_created;
  * Append a new chapter to an existing Book; requires confirmation.
  */
 final class create_chapter extends base_tool {
-    /** @return string */
+    /**
+     * get_name
+     *
+     * @return string
+     */
     public function get_name(): string {
         return 'book_create_chapter';
     }
 
-    /** @return string */
+    /**
+     * get_title
+     *
+     * @return string
+     */
     public function get_title(): string {
         return 'Book: create chapter';
     }
 
-    /** @return string */
+    /**
+     * get_description
+     *
+     * @return string
+     */
     public function get_description(): string {
         return 'Append a new chapter to an existing Book; requires confirmation.';
     }
 
-    /** @return string */
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
     public function get_required_capability(): string {
         return 'mod/book:edit';
     }
 
-    /** @return array */
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema(['cmid' => ['type' => 'integer', 'minimum' => 1], 'title' => ['type' => 'string', 'minLength' => 1], 'content' => ['type' => 'string'], 'subchapter' => ['type' => 'boolean']], ['cmid', 'title', 'content']);
     }
 
     /**
-     * @param array $arguments Tool input.
+     * resolve_context
+     *
+     * @param array $arguments
      * @return context
      */
     public function resolve_context(array $arguments): context {
@@ -69,12 +94,18 @@ final class create_chapter extends base_tool {
     }
 
     /**
-     * @param array $arguments Tool input.
-     * @param authenticated_identity $identity OAuth identity.
-     * @return array
+     * execute
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
+     * @return int[]
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws dml_transaction_exception
+     * @throws api_exception
      */
-    public function execute(array $arguments,
-            authenticated_identity $identity): array {
+    public function execute(array                  $arguments,
+                            authenticated_identity $identity): array {
         global $DB;
         $cm = get_coursemodule_from_id('book', (int)$arguments['cmid'], 0, false, MUST_EXIST);
         $book = $DB->get_record('book', ['id' => $cm->instance], '*', MUST_EXIST);

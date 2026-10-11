@@ -25,6 +25,7 @@
 namespace local_mcp;
 
 use local_mcp\exception\api_exception;
+use stdClass;
 use Throwable;
 
 /**
@@ -34,7 +35,9 @@ final class diagnostics {
     /** @var string|null A stable log identifier throughout the current PHP request. */
     private static ?string $requestid = null;
 
-    /** Explicit allowlist: unrecognised metadata never reaches the error log. */
+    /**
+     * Explicit allowlist: unrecognised metadata never reaches the error log.
+     */
     private const FIELDS = [
         'side', 'method', 'tool', 'http_method', 'auth_source', 'userid', 'tokenid',
         'clientid', 'connectionid', 'scopes', 'contextid', 'capability', 'phase',
@@ -66,7 +69,7 @@ final class diagnostics {
     private static function plugin_version(): string {
         static $release = null;
         if ($release === null) {
-            $plugin = new \stdClass();
+            $plugin = new stdClass();
             require(dirname(__DIR__) . '/version.php');
             $release = (string)$plugin->release;
         }
@@ -94,20 +97,24 @@ final class diagnostics {
             }
             if (is_bool($value) || is_int($value) || is_float($value)) {
                 $record[$key] = $value;
-            } else if (is_string($value)) {
-                $record[$key] = self::clean($value);
-            } else if ($key === 'args_keys' || $key === 'scopes') {
-                // Log only short argument NAMES or known scope names, never values.
-                if (is_array($value)) {
-                    $record[$key] = array_map(
-                        static fn($item): string => self::clean((string)$item),
-                        array_slice(array_values($value), 0, 60)
-                    );
+            } else {
+                if (is_string($value)) {
+                    $record[$key] = self::clean($value);
+                } else {
+                    if ($key === 'args_keys' || $key === 'scopes') {
+                        // Log only short argument NAMES or known scope names, never values.
+                        if (is_array($value)) {
+                            $record[$key] = array_map(
+                                static fn($item): string => self::clean((string)$item),
+                                array_slice(array_values($value), 0, 60)
+                            );
+                        }
+                    }
                 }
             }
         }
         return '[local_mcp] ' . json_encode($record,
-            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+                JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
     /**

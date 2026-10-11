@@ -24,44 +24,71 @@
 
 namespace mcptool_forum\read;
 
+use coding_exception;
 use context;
 use context_module;
+use dml_exception;
 use local_mcp\exception\api_exception;
 use local_mcp\read\tool\base_tool;
 use local_mcp\security\authenticated_identity;
+use moodle_exception;
 
 /**
  * Read visible posts from one forum discussion, respecting groups and per-post visibility.
  */
 final class get_posts extends base_tool {
-    /** @return string */
+    /**
+     * get_name
+     *
+     * @return string
+     */
     public function get_name(): string {
         return 'forum_get_posts';
     }
 
-    /** @return string */
+    /**
+     * get_title
+     *
+     * @return string
+     */
     public function get_title(): string {
         return 'Forum: read discussion';
     }
 
-    /** @return string */
+    /**
+     * get_description
+     *
+     * @return string
+     */
     public function get_description(): string {
         return 'Read visible posts from one forum discussion, respecting groups and per-post visibility.';
     }
 
-    /** @return string */
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
     public function get_required_capability(): string {
         return 'mod/forum:viewdiscussion';
     }
 
-    /** @return array */
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema(['discussionid' => ['type' => 'integer', 'minimum' => 1], 'limit' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 100], 'offset' => ['type' => 'integer', 'minimum' => 0]], ['discussionid']);
     }
 
     /**
-     * @param array $arguments Tool input.
+     * resolve_context
+     *
+     * @param array $arguments
      * @return context
+     * @throws coding_exception
+     * @throws dml_exception
      */
     public function resolve_context(array $arguments): context {
         global $DB;
@@ -71,12 +98,18 @@ final class get_posts extends base_tool {
     }
 
     /**
-     * @param array $arguments Tool input.
-     * @param authenticated_identity $identity OAuth identity.
+     * execute
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
      * @return array
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws moodle_exception
+     * @throws api_exception
      */
-    public function execute(array $arguments,
-            authenticated_identity $identity): array {
+    public function execute(array                  $arguments,
+                            authenticated_identity $identity): array {
         global $DB, $CFG, $USER;
         require_once($CFG->dirroot . '/mod/forum/lib.php');
         $discussion = $DB->get_record('forum_discussions', ['id' => (int)$arguments['discussionid']], '*', MUST_EXIST);

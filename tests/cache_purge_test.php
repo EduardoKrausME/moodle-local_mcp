@@ -25,6 +25,7 @@
 namespace local_mcp;
 
 use advanced_testcase;
+use coding_exception;
 use local_mcp\exception\api_exception;
 use local_mcp\protocol\tool_schema;
 use local_mcp\security\authenticated_identity;
@@ -38,8 +39,12 @@ defined('MOODLE_INTERNAL') || die();
  * Validate permissions and previews without purging the PHPUnit environment.
  */
 final class cache_purge_test extends advanced_testcase {
+
     /**
+     * test_tools_are_registered_with_safe_schemas
+     *
      * @return void
+     * @throws coding_exception
      */
     public function test_tools_are_registered_with_safe_schemas(): void {
         $tools = registry::get_tools();
@@ -58,6 +63,8 @@ final class cache_purge_test extends advanced_testcase {
     }
 
     /**
+     * test_admin_can_preview_without_purging
+     *
      * @return void
      */
     public function test_admin_can_preview_without_purging(): void {
@@ -73,6 +80,8 @@ final class cache_purge_test extends advanced_testcase {
     }
 
     /**
+     * test_non_admin_cannot_purge_caches
+     *
      * @return void
      */
     public function test_non_admin_cannot_purge_caches(): void {

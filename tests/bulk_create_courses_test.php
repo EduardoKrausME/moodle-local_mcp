@@ -25,7 +25,11 @@
 namespace local_mcp;
 
 use advanced_testcase;
+use coding_exception;
+use core\exception\moodle_exception;
 use core_course_category;
+use dml_exception;
+use dml_transaction_exception;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\write\registry;
@@ -38,6 +42,8 @@ defined('MOODLE_INTERNAL') || die();
  */
 final class bulk_create_courses_test extends advanced_testcase {
     /**
+     * admin_identity
+     *
      * @return authenticated_identity
      */
     private function admin_identity(): authenticated_identity {
@@ -47,8 +53,10 @@ final class bulk_create_courses_test extends advanced_testcase {
     }
 
     /**
-     * @param int $categoryid Destination category.
-     * @param string $code Shortname suffix.
+     * course
+     *
+     * @param int $categoryid
+     * @param string $code
      * @return array
      */
     private function course(int $categoryid, string $code): array {
@@ -64,7 +72,10 @@ final class bulk_create_courses_test extends advanced_testcase {
     }
 
     /**
+     * test_registration_and_schema
+     *
      * @return void
+     * @throws coding_exception
      */
     public function test_registration_and_schema(): void {
         $tools = registry::get_tools();
@@ -78,7 +89,13 @@ final class bulk_create_courses_test extends advanced_testcase {
     }
 
     /**
+     * test_preview_and_create_two_complete_courses
+     *
      * @return void
+     * @throws moodle_exception
+     * @throws dml_exception
+     * @throws dml_transaction_exception
+     * @throws api_exception
      */
     public function test_preview_and_create_two_complete_courses(): void {
         global $DB;
@@ -108,7 +125,13 @@ final class bulk_create_courses_test extends advanced_testcase {
     }
 
     /**
+     * test_existing_shortcode_or_idnumber_is_skipped_without_modification
+     *
      * @return void
+     * @throws moodle_exception
+     * @throws dml_exception
+     * @throws dml_transaction_exception
+     * @throws api_exception
      */
     public function test_existing_shortcode_or_idnumber_is_skipped_without_modification(): void {
         global $DB;
@@ -138,7 +161,13 @@ final class bulk_create_courses_test extends advanced_testcase {
     }
 
     /**
+     * test_idnumber_only_match_skips_existing_course
+     *
      * @return void
+     * @throws moodle_exception
+     * @throws dml_exception
+     * @throws dml_transaction_exception
+     * @throws api_exception
      */
     public function test_idnumber_only_match_skips_existing_course(): void {
         global $DB;
@@ -162,7 +191,11 @@ final class bulk_create_courses_test extends advanced_testcase {
     }
 
     /**
+     * test_duplicate_shortnames_within_batch_are_rejected
+     *
      * @return void
+     * @throws moodle_exception
+     * @throws api_exception
      */
     public function test_duplicate_shortnames_within_batch_are_rejected(): void {
         $this->resetAfterTest();
@@ -174,7 +207,11 @@ final class bulk_create_courses_test extends advanced_testcase {
     }
 
     /**
+     * test_excluded_category_including_descendants_is_rejected
+     *
      * @return void
+     * @throws moodle_exception
+     * @throws api_exception
      */
     public function test_excluded_category_including_descendants_is_rejected(): void {
         $this->resetAfterTest();
@@ -190,7 +227,11 @@ final class bulk_create_courses_test extends advanced_testcase {
     }
 
     /**
+     * test_cannot_create_incomplete_courses_without_html_summary
+     *
      * @return void
+     * @throws moodle_exception
+     * @throws api_exception
      */
     public function test_cannot_create_incomplete_courses_without_html_summary(): void {
         $this->resetAfterTest();
@@ -203,7 +244,11 @@ final class bulk_create_courses_test extends advanced_testcase {
     }
 
     /**
+     * test_rejects_batches_larger_than_thirty
+     *
      * @return void
+     * @throws moodle_exception
+     * @throws api_exception
      */
     public function test_rejects_batches_larger_than_thirty(): void {
         $this->resetAfterTest();

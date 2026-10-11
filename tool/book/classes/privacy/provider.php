@@ -30,7 +30,6 @@ use core_privacy\local\metadata\null_provider;
  * No local records are created by this integration.
  */
 final class provider implements null_provider {
-    /** @return string */
     public static function get_reason(): string {
         return 'privacy:metadata';
     }

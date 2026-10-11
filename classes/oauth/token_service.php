@@ -27,6 +27,7 @@ namespace local_mcp\oauth;
 use context_system;
 use local_mcp\event\connection_authorized;
 use local_mcp\exception\api_exception;
+use local_mcp\security\scope;
 use local_mcp\security\secret;
 
 /**
@@ -92,20 +93,20 @@ final class token_service {
         }
         $connection = $DB->get_record('local_mcp_connection', ['id' => $rec->connectionid, 'enabled' => 1]);
         if (!$connection || $connection->revokedat ||
-                (int)$connection->clientid !== (int)$client->id ||
-                (int)$connection->userid !== (int)$rec->userid) {
+            (int)$connection->clientid !== (int)$client->id ||
+            (int)$connection->userid !== (int)$rec->userid) {
             throw new api_exception('invalid_grant', 400);
         }
         $scopes = array_values(array_intersect(
-            \local_mcp\security\scope::parse($rec->scopes),
-            \local_mcp\security\scope::parse($connection->scopes)
+            scope::parse($rec->scopes),
+            scope::parse($connection->scopes)
         ));
         if (!$scopes) {
             throw new api_exception('invalid_grant', 400);
         }
         $DB->set_field('local_mcp_refresh_token', 'usedat', time(), ['id' => $rec->id]);
         return self::issue_pair($rec->userid, $client->id, $rec->connectionid,
-            \local_mcp\security\scope::to_string($scopes), $audience, $rec->family, $rec->generation + 1);
+            scope::to_string($scopes), $audience, $rec->family, $rec->generation + 1);
     }
 
     /**

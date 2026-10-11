@@ -24,8 +24,10 @@
 
 namespace mcptool_page\write;
 
+use coding_exception;
 use context;
 use context_module;
+use dml_exception;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\write\tool\base_tool;
@@ -34,33 +36,55 @@ use local_mcp\write\tool\base_tool;
  * Replace the HTML content of a Moodle Page using its activity API after user confirmation.
  */
 final class update_content extends base_tool {
-    /** @return string */
+    /**
+     * get_name
+     *
+     * @return string
+     */
     public function get_name(): string {
         return 'page_update_content';
     }
 
-    /** @return string */
+    /**
+     * get_title
+     *
+     * @return string
+     */
     public function get_title(): string {
         return 'Page: update content';
     }
 
-    /** @return string */
+    /**
+     * get_description
+     *
+     * @return string
+     */
     public function get_description(): string {
         return 'Replace the HTML content of a Moodle Page using its activity API after user confirmation.';
     }
 
-    /** @return string */
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
     public function get_required_capability(): string {
         return 'moodle/course:manageactivities';
     }
 
-    /** @return array */
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema(['cmid' => ['type' => 'integer', 'minimum' => 1], 'content' => ['type' => 'string'], 'expected_revision' => ['type' => 'integer', 'minimum' => 0]], ['cmid', 'content', 'expected_revision']);
     }
 
     /**
-     * @param array $arguments Tool input.
+     * resolve_context
+     *
+     * @param array $arguments
      * @return context
      */
     public function resolve_context(array $arguments): context {
@@ -68,12 +92,17 @@ final class update_content extends base_tool {
     }
 
     /**
-     * @param array $arguments Tool input.
-     * @param authenticated_identity $identity OAuth identity.
+     * execute
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
      * @return array
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws api_exception
      */
-    public function execute(array $arguments,
-            authenticated_identity $identity): array {
+    public function execute(array                  $arguments,
+                            authenticated_identity $identity): array {
         global $DB, $CFG;
         require_once($CFG->dirroot . '/mod/page/lib.php');
         $cm = get_coursemodule_from_id('page', (int)$arguments['cmid'], 0, false, MUST_EXIST);

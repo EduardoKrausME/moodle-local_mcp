@@ -27,6 +27,7 @@ namespace local_mcp\read\tool;
 use context;
 use context_course;
 use context_system;
+use dml_exception;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 
@@ -34,29 +35,61 @@ use local_mcp\security\authenticated_identity;
  * Fetch complete course metadata, including the Moodle site course (ID 1).
  */
 final class get_course extends base_tool {
+    /**
+     * get_name
+     *
+     * @return string
+     */
     public function get_name(): string {
         return 'get_course';
     }
 
+    /**
+     * get_title
+     *
+     * @return string
+     */
     public function get_title(): string {
         return 'Get course';
     }
 
+    /**
+     * get_description
+     *
+     * @return string
+     */
     public function get_description(): string {
         return 'Return complete metadata for a course, including its original HTML summary, '
             . 'category and visibility. Works for the Moodle site course (ID 1).';
     }
 
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
     public function get_required_capability(): string {
         return 'moodle/course:view';
     }
 
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema([
             'courseid' => ['type' => 'integer', 'minimum' => 1],
         ], ['courseid']);
     }
 
+    /**
+     * resolve_context
+     *
+     * @param array $arguments
+     * @return context
+     * @throws dml_exception
+     */
     public function resolve_context(array $arguments): context {
         $courseid = (int)$arguments['courseid'];
         return $courseid === SITEID
@@ -64,6 +97,15 @@ final class get_course extends base_tool {
             : context_course::instance($courseid, MUST_EXIST);
     }
 
+    /**
+     * execute
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
+     * @return array
+     * @throws dml_exception
+     * @throws api_exception
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         global $DB;
 
@@ -74,9 +116,9 @@ final class get_course extends base_tool {
         if ($courseid !== SITEID && !$course->visible) {
             $context = context_course::instance($courseid, MUST_EXIST);
             if (!has_any_capability([
-                    'moodle/course:viewhiddencourses',
-                    'moodle/course:update',
-                ], $context, $identity->userid)) {
+                'moodle/course:viewhiddencourses',
+                'moodle/course:update',
+            ], $context, $identity->userid)) {
                 throw new api_exception('permission_denied', 403);
             }
         }

@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Question bank MCP integration.
@@ -25,20 +25,60 @@
 namespace local_mcp\write\tool;
 
 use context;
+use local_mcp\exception\api_exception;
 use local_mcp\question\bank_service;
 use local_mcp\security\authenticated_identity;
 
-/** MCP WRITE: Update question version. */
+/**
+ * MCP WRITE: Update question version.
+ */
 final class update_question extends base_tool {
-    public function get_name(): string { return 'update_question'; }
-    public function get_title(): string { return 'Update question version'; }
-    public function get_description(): string { return 'Create a new version from the current question ID; expectedversion prevents overwriting newer edits. Requires complete new question content.'; }
-    public function get_required_capability(): string { return 'moodle/question:editmine'; }
+    /**
+     * get_name
+     *
+     * @return string
+     */
+    public function get_name(): string {
+        return 'update_question';
+    }
+
+    /**
+     * get_title
+     *
+     * @return string
+     */
+    public function get_title(): string {
+        return 'Update question version';
+    }
+
+    /**
+     * get_description
+     *
+     * @return string
+     */
+    public function get_description(): string {
+        return 'Create a new version from the current question ID; expectedversion prevents overwriting newer edits. Requires complete new question content.';
+    }
+
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
+    public function get_required_capability(): string {
+        return 'moodle/question:editmine';
+    }
+
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema([
- 'questionid' => ['type' => 'integer', 'minimum' => 1],
- 'expectedversion' => ['type' => 'integer', 'minimum' => 1],
- 'name' => ['type' => 'string', 'minLength' => 1],
+            'questionid' => ['type' => 'integer', 'minimum' => 1],
+            'expectedversion' => ['type' => 'integer', 'minimum' => 1],
+            'name' => ['type' => 'string', 'minLength' => 1],
             'questiontext' => ['type' => 'string', 'minLength' => 1, 'description' => 'HTML question text.'],
             'generalfeedback' => ['type' => 'string'],
             'defaultmark' => ['type' => 'number', 'exclusiveMinimum' => 0],
@@ -54,10 +94,52 @@ final class update_question extends base_tool {
                     'feedback' => ['type' => 'string']],
                     'required' => ['text', 'fraction'], 'additionalProperties' => false]],
 
- ], ['questionid', 'expectedversion', 'name', 'questiontext']);
+        ], ['questionid', 'expectedversion', 'name', 'questiontext']);
     }
-    public function resolve_context(array $a): context { return bank_service::question_context((int)$a['questionid']); }
-    public function supports_dry_run(): bool { return true; }
-    public function preview(array $a, authenticated_identity $identity): array { $old = bank_service::row((int)$a['questionid']); bank_service::authorize($old, $identity, true); bank_service::form($a, $old->qtype); return ['operation' => 'update_question', 'questionid' => (int)$old->id, 'bankentryid' => (int)$old->questionbankentryid, 'expectedversion' => (int)$a['expectedversion'], 'qtype' => $old->qtype]; }
-    public function execute(array $a, authenticated_identity $identity): array { return bank_service::save($a, $identity, (int)$a['questionid']); }
+
+    /**
+     * resolve_context
+     *
+     * @param array $a
+     * @return context
+     */
+    public function resolve_context(array $a): context {
+        return bank_service::question_context((int)$a['questionid']);
+    }
+
+    /**
+     * supports_dry_run
+     *
+     * @return bool
+     */
+    public function supports_dry_run(): bool {
+        return true;
+    }
+
+    /**
+     * preview
+     *
+     * @param array $a
+     * @param authenticated_identity $identity
+     * @return array
+     * @throws api_exception
+     */
+    public function preview(array $a, authenticated_identity $identity): array {
+        $old = bank_service::row((int)$a['questionid']);
+        bank_service::authorize($old, $identity, true);
+        bank_service::form($a, $old->qtype);
+        return ['operation' => 'update_question', 'questionid' => (int)$old->id, 'bankentryid' => (int)$old->questionbankentryid, 'expectedversion' => (int)$a['expectedversion'], 'qtype' => $old->qtype];
+    }
+
+    /**
+     * execute
+     *
+     * @param array $a
+     * @param authenticated_identity $identity
+     * @return array
+     * @throws api_exception
+     */
+    public function execute(array $a, authenticated_identity $identity): array {
+        return bank_service::save($a, $identity, (int)$a['questionid']);
+    }
 }

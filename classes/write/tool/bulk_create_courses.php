@@ -27,6 +27,7 @@ namespace local_mcp\write\tool;
 use context;
 use context_coursecat;
 use core_text;
+use dml_transaction_exception;
 use local_mcp\course\image_service;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
@@ -39,17 +40,34 @@ use Throwable;
  * Already existing courses are never modified, even when skipped.
  */
 final class bulk_create_courses extends base_tool {
-    /** Maximum number of courses in one MCP request. */
+    /**
+     * Maximum number of courses in one MCP request.
+     */
     private const MAX_COURSES = 30;
 
+    /**
+     * get_name
+     *
+     * @return string
+     */
     public function get_name(): string {
         return 'bulk_create_courses';
     }
 
+    /**
+     * get_title
+     *
+     * @return string
+     */
     public function get_title(): string {
         return 'Create courses in bulk';
     }
 
+    /**
+     * get_description
+     *
+     * @return string
+     */
     public function get_description(): string {
         return 'Validate and preview up to 30 Moodle courses, detect duplicate shortname/idnumber, '
             . 'and create the nonexisting courses with one confirmation. '
@@ -57,10 +75,20 @@ final class bulk_create_courses extends base_tool {
             . 'Existing courses are never edited. Use excluded_categoryids to forbid test category trees.';
     }
 
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
     public function get_required_capability(): string {
         return 'moodle/course:create';
     }
 
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         $course = [
             'type' => 'object',
@@ -93,14 +121,26 @@ final class bulk_create_courses extends base_tool {
         ], ['courses']);
     }
 
+    /**
+     * resolve_context
+     *
+     * @param array $arguments
+     * @return context
+     * @throws api_exception
+     */
     public function resolve_context(array $arguments): context {
         if (empty($arguments['courses']) || !is_array($arguments['courses'])
-                || !isset($arguments['courses'][0]['categoryid'])) {
+            || !isset($arguments['courses'][0]['categoryid'])) {
             throw new api_exception('invalid_courses', 400);
         }
         return context_coursecat::instance((int)$arguments['courses'][0]['categoryid'], MUST_EXIST);
     }
 
+    /**
+     * supports_dry_run
+     *
+     * @return bool
+     */
     public function supports_dry_run(): bool {
         return true;
     }
@@ -119,7 +159,7 @@ final class bulk_create_courses extends base_tool {
 
         $input = $arguments['courses'] ?? null;
         if (!is_array($input) || !array_is_list($input) || count($input) < 1
-                || count($input) > self::MAX_COURSES) {
+            || count($input) > self::MAX_COURSES) {
             throw new api_exception('invalid_courses', 400,
                 'Provide between 1 and 30 courses in a list.');
         }
@@ -145,13 +185,13 @@ final class bulk_create_courses extends base_tool {
             $summary = clean_param((string)$course['summary'], PARAM_CLEANHTML);
             $categoryid = (int)$course['categoryid'];
             if ($fullname === '' || $shortname === '' || trim(strip_tags($summary)) === ''
-                    || $categoryid < 1 || (isset($course['summaryformat']) &&
+                || $categoryid < 1 || (isset($course['summaryformat']) &&
                     (int)$course['summaryformat'] !== (int)FORMAT_HTML)) {
                 throw new api_exception('invalid_course', 400,
                     'Each course requires a valid name, HTML summary, category and summaryformat=1.');
             }
             if (core_text::strlen($fullname) > 254 || core_text::strlen($shortname) > 255
-                    || core_text::strlen($idnumber) > 100) {
+                || core_text::strlen($idnumber) > 100) {
                 throw new api_exception('invalid_course', 400, 'Course name or code is too long.');
             }
 
@@ -204,8 +244,10 @@ final class bulk_create_courses extends base_tool {
             $imageargs = [];
             if ($imagebase64 !== '') {
                 $imageargs['image_base64'] = $imagebase64;
-            } else if ($imageurl !== '') {
-                $imageargs['image_url'] = $imageurl;
+            } else {
+                if ($imageurl !== '') {
+                    $imageargs['image_url'] = $imageurl;
+                }
             }
             // Validate every new image before starting the DB transaction.
             if ($validateimages && !$existing && $imageargs) {
@@ -232,6 +274,14 @@ final class bulk_create_courses extends base_tool {
         return $rows;
     }
 
+    /**
+     * preview
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
+     * @return array
+     * @throws api_exception
+     */
     public function preview(array $arguments, authenticated_identity $identity): array {
         $rows = $this->inspect($arguments, $identity, false);
         $items = [];
@@ -265,6 +315,15 @@ final class bulk_create_courses extends base_tool {
         ];
     }
 
+    /**
+     * execute
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
+     * @return array
+     * @throws dml_transaction_exception
+     * @throws api_exception
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         global $DB;
 
@@ -286,14 +345,14 @@ final class bulk_create_courses extends base_tool {
                     continue;
                 }
                 $data = [
-                    'fullname' => $row['fullname'],
-                    'shortname' => $row['shortname'],
-                    'idnumber' => $row['idnumber'],
-                    'categoryid' => $row['categoryid'],
-                    'summary' => $row['summary'],
-                    'summaryformat' => FORMAT_HTML,
-                    'visible' => $row['visible'],
-                ] + $row['imageargs'];
+                        'fullname' => $row['fullname'],
+                        'shortname' => $row['shortname'],
+                        'idnumber' => $row['idnumber'],
+                        'categoryid' => $row['categoryid'],
+                        'summary' => $row['summary'],
+                        'summaryformat' => FORMAT_HTML,
+                        'visible' => $row['visible'],
+                    ] + $row['imageargs'];
                 $result = $creator->execute($data, $identity);
                 $created[] = [
                     'id' => (int)$result['id'],

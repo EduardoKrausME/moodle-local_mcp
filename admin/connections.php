@@ -73,35 +73,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Referrer-Policy: no-referrer');
         header('X-Robots-Tag: noindex, nofollow');
         unset($created);
-    } else if ($action === 'updatepermissions') {
-        $tokenid = required_param('tokenid', PARAM_INT);
-        $read = optional_param('read', 0, PARAM_BOOL);
-        $write = optional_param('write', 0, PARAM_BOOL);
-        if (!$read && !$write) {
-            throw new moodle_exception('invalidrequest', 'error');
-        }
-        $token = $DB->get_record('local_mcp_manual_token', ['id' => $tokenid], '*', MUST_EXIST);
-        if (!str_starts_with($token->name, 'ChatGPT (teste) - ')) {
-            throw new moodle_exception('invalidrequest', 'error');
-        }
-        manual_token_service::update_permissions($tokenid, (bool)$read, (bool)$write);
-        redirect($PAGE->url);
-    } else if ($action === 'revoketest') {
-        $tokenid = required_param('tokenid', PARAM_INT);
-        $token = $DB->get_record('local_mcp_manual_token', [
-            'id' => $tokenid,
-        ], '*', MUST_EXIST);
-        // This screen must only revoke its own test connections.
-        if (!str_starts_with($token->name, 'ChatGPT (teste) - ')) {
-            throw new moodle_exception('invalidrequest', 'error');
-        }
-        manual_token_service::revoke($tokenid);
-        redirect($PAGE->url);
-    } else if ($action === 'revokeoauth') {
-        connection_service::revoke(required_param('connectionid', PARAM_INT));
-        redirect($PAGE->url);
     } else {
-        throw new moodle_exception('invalidrequest', 'error');
+        if ($action === 'updatepermissions') {
+            $tokenid = required_param('tokenid', PARAM_INT);
+            $read = optional_param('read', 0, PARAM_BOOL);
+            $write = optional_param('write', 0, PARAM_BOOL);
+            if (!$read && !$write) {
+                throw new moodle_exception('invalidrequest', 'error');
+            }
+            $token = $DB->get_record('local_mcp_manual_token', ['id' => $tokenid], '*', MUST_EXIST);
+            if (!str_starts_with($token->name, 'ChatGPT (teste) - ')) {
+                throw new moodle_exception('invalidrequest', 'error');
+            }
+            manual_token_service::update_permissions($tokenid, (bool)$read, (bool)$write);
+            redirect($PAGE->url);
+        } else {
+            if ($action === 'revoketest') {
+                $tokenid = required_param('tokenid', PARAM_INT);
+                $token = $DB->get_record('local_mcp_manual_token', [
+                    'id' => $tokenid,
+                ], '*', MUST_EXIST);
+                // This screen must only revoke its own test connections.
+                if (!str_starts_with($token->name, 'ChatGPT (teste) - ')) {
+                    throw new moodle_exception('invalidrequest', 'error');
+                }
+                manual_token_service::revoke($tokenid);
+                redirect($PAGE->url);
+            } else {
+                if ($action === 'revokeoauth') {
+                    connection_service::revoke(required_param('connectionid', PARAM_INT));
+                    redirect($PAGE->url);
+                } else {
+                    throw new moodle_exception('invalidrequest', 'error');
+                }
+            }
+        }
     }
 }
 
@@ -109,7 +115,7 @@ $editing = false;
 if ($editid > 0) {
     $token = $DB->get_record('local_mcp_manual_token', ['id' => $editid], '*', MUST_EXIST);
     if (!str_starts_with($token->name, 'ChatGPT (teste) - ')
-            || !$token->enabled || ($token->expires && $token->expires <= time())) {
+        || !$token->enabled || ($token->expires && $token->expires <= time())) {
         throw new moodle_exception('invalidrequest', 'error');
     }
     $editing = [

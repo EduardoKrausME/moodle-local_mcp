@@ -27,6 +27,7 @@ namespace local_mcp\write\tool;
 use context;
 use context_coursecat;
 use context_system;
+use core\exception\moodle_exception;
 use core_course_category;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
@@ -36,24 +37,49 @@ use local_mcp\security\capability_guard;
  * Rename a category or move it without flattening its descendants.
  */
 final class update_category extends base_tool {
+    /**
+     * get_name
+     *
+     * @return string
+     */
     public function get_name(): string {
         return 'update_category';
     }
 
+    /**
+     * get_title
+     *
+     * @return string
+     */
     public function get_title(): string {
         return 'Update course category';
     }
 
+    /**
+     * get_description
+     *
+     * @return string
+     */
     public function get_description(): string {
         return 'Rename or move an existing course category under another parent. '
             . 'Moving an existing category preserves its subcategory tree and the courses in it. '
             . 'Supports optional category visibility changes.';
     }
 
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
     public function get_required_capability(): string {
         return 'moodle/category:manage';
     }
 
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema([
             'categoryid' => ['type' => 'integer', 'minimum' => 1],
@@ -64,10 +90,21 @@ final class update_category extends base_tool {
         ], ['categoryid']);
     }
 
+    /**
+     * resolve_context
+     *
+     * @param array $arguments
+     * @return context
+     */
     public function resolve_context(array $arguments): context {
         return context_coursecat::instance((int)$arguments['categoryid'], MUST_EXIST);
     }
 
+    /**
+     * supports_dry_run
+     *
+     * @return bool
+     */
     public function supports_dry_run(): bool {
         return true;
     }
@@ -105,7 +142,7 @@ final class update_category extends base_tool {
                 }
                 $parent = core_course_category::get($newparentid, MUST_EXIST, true);
                 if ($newparentid > 0 &&
-                        (str_starts_with($parent->path . '/', $category->path . '/'))) {
+                    (str_starts_with($parent->path . '/', $category->path . '/'))) {
                     throw new api_exception('category_cycle', 400);
                 }
                 $oldparentctx = $category->parent > 0
@@ -123,6 +160,14 @@ final class update_category extends base_tool {
         return [$category, $updates];
     }
 
+    /**
+     * preview
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
+     * @return array
+     * @throws api_exception
+     */
     public function preview(array $arguments, authenticated_identity $identity): array {
         [$category, $updates] = $this->validate_update($arguments, $identity);
         return [
@@ -136,6 +181,15 @@ final class update_category extends base_tool {
         ];
     }
 
+    /**
+     * execute
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
+     * @return array
+     * @throws moodle_exception
+     * @throws api_exception
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         [$category, $updates] = $this->validate_update($arguments, $identity);
         $category->update($updates);

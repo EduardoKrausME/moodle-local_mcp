@@ -77,7 +77,7 @@ final class authorization_service {
      * @return string Return value.
      */
     public static function issue_code(stdClass $client, int $userid, string $redirecturi, array $scopes,
-                                      string $challenge, string $resource): string {
+                                      string   $challenge, string $resource): string {
         global $DB;
         $code = secret::generate('mcp_code_', 32);
         $ttl = (int)get_config('local_mcp', 'codettl') ?: 300;

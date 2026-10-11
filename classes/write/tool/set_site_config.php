@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 //
 // @package   local_mcp
 // @copyright 2026 Eduardo Kraus
@@ -22,6 +22,8 @@ namespace local_mcp\write\tool;
 
 use context;
 use context_system;
+use dml_exception;
+use dml_transaction_exception;
 use local_mcp\audit\logger;
 use local_mcp\config\site_config;
 use local_mcp\exception\api_exception;
@@ -32,14 +34,29 @@ use local_mcp\security\capability_guard;
  * Confirmed, restricted core mdl_config editing using Moodle set_config().
  */
 final class set_site_config extends base_tool {
+    /**
+     * get_name
+     *
+     * @return string
+     */
     public function get_name(): string {
         return 'set_site_config';
     }
 
+    /**
+     * get_title
+     *
+     * @return string
+     */
     public function get_title(): string {
         return 'Update Moodle site configuration';
     }
 
+    /**
+     * get_description
+     *
+     * @return string
+     */
     public function get_description(): string {
         return 'Change one or more approved core Moodle mdl_config settings with set_config(), '
             . 'after displaying the old/new values and obtaining explicit confirmation. '
@@ -48,10 +65,20 @@ final class set_site_config extends base_tool {
             . 'Secrets, arbitrary keys and plugin configurations are not supported.';
     }
 
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
     public function get_required_capability(): string {
         return 'moodle/site:config';
     }
 
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema([
             'settings' => [
@@ -75,10 +102,22 @@ final class set_site_config extends base_tool {
         ], ['settings']);
     }
 
+    /**
+     * resolve_context
+     *
+     * @param array $arguments
+     * @return context
+     * @throws dml_exception
+     */
     public function resolve_context(array $arguments): context {
         return context_system::instance();
     }
 
+    /**
+     * supports_dry_run
+     *
+     * @return bool
+     */
     public function supports_dry_run(): bool {
         return true;
     }
@@ -122,6 +161,14 @@ final class set_site_config extends base_tool {
         return $warnings;
     }
 
+    /**
+     * preview
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
+     * @return array
+     * @throws api_exception
+     */
     public function preview(array $arguments, authenticated_identity $identity): array {
         $this->assert_admin($identity);
         $settings = site_config::validate_batch($arguments['settings'] ?? []);
@@ -143,6 +190,16 @@ final class set_site_config extends base_tool {
         ];
     }
 
+    /**
+     * execute
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
+     * @return array
+     * @throws dml_exception
+     * @throws dml_transaction_exception
+     * @throws api_exception
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         global $DB;
         $this->assert_admin($identity);

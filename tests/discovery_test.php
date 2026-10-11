@@ -53,6 +53,8 @@ final class discovery_test extends advanced_testcase {
     }
 
     /**
+     * test_discovery_identity_reflects_endpoint_and_release
+     *
      * @return void
      */
     public function test_discovery_identity_reflects_endpoint_and_release(): void {
@@ -79,6 +81,8 @@ final class discovery_test extends advanced_testcase {
     }
 
     /**
+     * test_detects_modern_request_from_client_meta
+     *
      * @return void
      */
     public function test_detects_modern_request_from_client_meta(): void {
@@ -98,6 +102,8 @@ final class discovery_test extends advanced_testcase {
     }
 
     /**
+     * test_modern_tools_list_has_private_cache_fields
+     *
      * @return void
      */
     public function test_modern_tools_list_has_private_cache_fields(): void {
@@ -112,6 +118,8 @@ final class discovery_test extends advanced_testcase {
     }
 
     /**
+     * test_tool_calls_are_complete_without_cache_hints
+     *
      * @return void
      */
     public function test_tool_calls_are_complete_without_cache_hints(): void {

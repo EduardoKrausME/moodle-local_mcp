@@ -25,25 +25,40 @@
 namespace local_mcp;
 
 use advanced_testcase;
+use coding_exception;
 use context_course;
+use file_exception;
 use local_mcp\course\image_service;
 use local_mcp\exception\api_exception;
 use local_mcp\read\tool\get_course_image;
 use local_mcp\write\registry;
 use local_mcp\write\tool\set_course_image;
+use stored_file_creation_exception;
+use Throwable;
 
 defined('MOODLE_INTERNAL') || die;
 
-/** Course image integration tests. */
+/**
+ * Course image integration tests.
+ */
 final class course_image_test extends advanced_testcase {
-    /** @return string A small valid PNG. */
+    /**
+     * png
+     *
+     * @return string
+     */
     private static function png(): string {
         return base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg==');
     }
 
-    /** @return void */
+    /**
+     * test_tools_are_registered_on_the_correct_sides
+     *
+     * @return void
+     * @throws coding_exception
+     */
     public function test_tools_are_registered_on_the_correct_sides(): void {
-        $read = \local_mcp\read\registry::get_tools();
+        $read = read\registry::get_tools();
         $write = registry::get_tools();
         $this->assertInstanceOf(get_course_image::class, $read['get_course_image']);
         $this->assertInstanceOf(set_course_image::class, $write['set_course_image']);
@@ -51,7 +66,15 @@ final class course_image_test extends advanced_testcase {
         $this->assertArrayNotHasKey('get_course_image', $write);
     }
 
-    /** @return void */
+    /**
+     * test_read_replace_and_preserve_non_image_files
+     *
+     * @return void
+     * @throws Throwable
+     * @throws file_exception
+     * @throws stored_file_creation_exception
+     * @throws api_exception
+     */
     public function test_read_replace_and_preserve_non_image_files(): void {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course();
@@ -90,7 +113,12 @@ final class course_image_test extends advanced_testcase {
         $this->assertNotFalse($fs->get_file($context->id, 'course', 'overviewfiles', 0, '/', 'guide.txt'));
     }
 
-    /** @return void */
+    /**
+     * test_png_data_uri_is_accepted_without_conversion
+     *
+     * @return void
+     * @throws api_exception
+     */
     public function test_png_data_uri_is_accepted_without_conversion(): void {
         [$bytes, $mime, $extension, $width, $height] = image_service::decode([
             'courseid' => 39,
@@ -103,7 +131,13 @@ final class course_image_test extends advanced_testcase {
         $this->assertSame(1, $height);
     }
 
-    /** @return void */
+    /**
+     * test_invalid_or_outdated_upload_is_rejected
+     *
+     * @return void
+     * @throws Throwable
+     * @throws api_exception
+     */
     public function test_invalid_or_outdated_upload_is_rejected(): void {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course();
@@ -114,7 +148,12 @@ final class course_image_test extends advanced_testcase {
         ], get_admin()->id);
     }
 
-    /** @return void */
+    /**
+     * test_rejects_svg_and_private_url
+     *
+     * @return void
+     * @throws api_exception
+     */
     public function test_rejects_svg_and_private_url(): void {
         $this->expectException(api_exception::class);
         image_service::decode(['image_base64' => base64_encode('<svg><script>alert(1)</script></svg>')]);

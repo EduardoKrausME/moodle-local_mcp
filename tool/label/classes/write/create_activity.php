@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Create a label course module.
@@ -28,15 +28,27 @@ use local_mcp\security\authenticated_identity;
 use local_mcp\write\tool\activity_create_base;
 use stdClass;
 
-/** Moodle activity creation via standard module hooks. */
+/**
+ * Moodle activity creation via standard module hooks.
+ */
 final class create_activity extends activity_create_base {
-    protected function module_name(): string { return 'label'; }
-    protected function requires_name(): bool { return false; }
+    protected function module_name(): string {
+        return 'label';
+    }
+
+    protected function requires_name(): bool {
+        return false;
+    }
+
     protected function extra_properties(): array {
         return ['content' => ['type' => 'string', 'minLength' => 1,
             'description' => 'HTML content displayed in the course section.']];
     }
-    protected function extra_required(): array { return ['content']; }
+
+    protected function extra_required(): array {
+        return ['content'];
+    }
+
     protected function configure(stdClass $info, array $a, authenticated_identity $identity): void {
         // Moodle mod_label derives its activity name from the HTML introduction.
         $info->intro = clean_text($a['content'], FORMAT_HTML);

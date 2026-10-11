@@ -23,6 +23,7 @@
  */
 
 namespace local_mcp\write\tool;
+
 use assign;
 use context;
 use context_module;

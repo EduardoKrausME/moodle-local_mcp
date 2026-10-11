@@ -28,33 +28,57 @@ use context;
 use context_course;
 use local_mcp\course\image_service;
 use local_mcp\diagnostics;
+use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\security\capability_guard;
+use Throwable;
 
-/** Replace the course image through Moodle's own File API. */
+/**
+ * Replace the course image through Moodle's own File API.
+ */
 final class set_course_image extends base_tool {
-    /** @return string Tool identifier. */
+    /**
+     * get_name
+     *
+     * @return string
+     */
     public function get_name(): string {
         return 'set_course_image';
     }
 
-    /** @return string Tool title. */
+    /**
+     * get_title
+     *
+     * @return string
+     */
     public function get_title(): string {
         return 'Set course image';
     }
 
-    /** @return string Tool description. */
+    /**
+     * get_description
+     *
+     * @return string
+     */
     public function get_description(): string {
         return 'Replace the course cover image using a Base64 PNG/JPEG/WebP or a publicly downloadable HTTPS URL. '
             . 'Requires confirmation, preserves non-image overview files and supports a content-hash concurrency check.';
     }
 
-    /** @return string Capability. */
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
     public function get_required_capability(): string {
         return 'moodle/course:update';
     }
 
-    /** @return array Input schema. */
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema([
             'courseid' => ['type' => 'integer', 'minimum' => 1],
@@ -65,8 +89,10 @@ final class set_course_image extends base_tool {
     }
 
     /**
-     * @param array $arguments MCP input.
-     * @return context Course context.
+     * resolve_context
+     *
+     * @param array $arguments
+     * @return context
      */
     public function resolve_context(array $arguments): context {
         return context_course::instance((int)$arguments['courseid'], MUST_EXIST);
@@ -105,9 +131,13 @@ final class set_course_image extends base_tool {
     }
 
     /**
-     * @param array $arguments MCP input.
-     * @param authenticated_identity $identity Authenticated identity.
-     * @return array New image metadata.
+     * execute
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
+     * @return array
+     * @throws Throwable
+     * @throws api_exception
      */
     public function execute(array $arguments, authenticated_identity $identity): array {
         $context = $this->resolve_context($arguments);

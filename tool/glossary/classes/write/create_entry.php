@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Create an entry in an existing Moodle glossary.
@@ -28,13 +28,28 @@ use context;
 use context_module;
 use local_mcp\security\authenticated_identity;
 use local_mcp\write\tool\base_tool;
+use mod_glossary\external;
 
-/** Delegate to the existing Moodle glossary external API, including its validation and events. */
+/**
+ * Delegate to the existing Moodle glossary external API, including its validation and events.
+ */
 final class create_entry extends base_tool {
-    public function get_name(): string { return 'glossary_create_entry'; }
-    public function get_title(): string { return 'Glossary: create entry'; }
-    public function get_description(): string { return 'Add a concept and HTML definition to a glossary.'; }
-    public function get_required_capability(): string { return 'mod/glossary:write'; }
+    public function get_name(): string {
+        return 'glossary_create_entry';
+    }
+
+    public function get_title(): string {
+        return 'Glossary: create entry';
+    }
+
+    public function get_description(): string {
+        return 'Add a concept and HTML definition to a glossary.';
+    }
+
+    public function get_required_capability(): string {
+        return 'mod/glossary:write';
+    }
+
     public function get_input_schema(): array {
         return $this->object_schema([
             'cmid' => ['type' => 'integer', 'minimum' => 1],
@@ -42,14 +57,16 @@ final class create_entry extends base_tool {
             'definition' => ['type' => 'string', 'minLength' => 1],
         ], ['cmid', 'concept', 'definition']);
     }
+
     public function resolve_context(array $a): context {
         return context_module::instance((int)$a['cmid'], MUST_EXIST);
     }
+
     public function execute(array $a, authenticated_identity $identity): array {
         global $DB;
         $cm = get_coursemodule_from_id('glossary', (int)$a['cmid'], 0, false, MUST_EXIST);
         $glossary = $DB->get_record('glossary', ['id' => $cm->instance], '*', MUST_EXIST);
-        $result = \mod_glossary\external::add_entry(
+        $result = external::add_entry(
             (int)$glossary->id,
             clean_param($a['concept'], PARAM_TEXT),
             clean_text($a['definition'], FORMAT_HTML),

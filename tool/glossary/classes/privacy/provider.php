@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Moodle privacy metadata provider.
@@ -26,9 +26,10 @@ namespace mcptool_glossary\privacy;
 
 use core_privacy\local\metadata\null_provider;
 
-/** This subplugin creates no private records of its own. */
+/**
+ * This subplugin creates no private records of its own.
+ */
 final class provider implements null_provider {
-    /** @return string */
     public static function get_reason(): string {
         return 'privacy:metadata';
     }

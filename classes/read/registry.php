@@ -57,7 +57,13 @@ use local_mcp\read\tool\search_users;
  * Class registry.
  */
 final class registry {
-    /** @return tool_interface[] */
+
+    /**
+     * get_tools
+     *
+     * @return array
+     * @throws coding_exception
+     */
     public static function get_tools(): array {
         $tools = [
             new list_question_banks(),

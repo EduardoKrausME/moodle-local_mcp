@@ -24,8 +24,11 @@
 
 namespace mcptool_book\write;
 
+use coding_exception;
 use context;
 use context_module;
+use dml_exception;
+use dml_transaction_exception;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\write\tool\base_tool;
@@ -35,34 +38,58 @@ use mod_book\event\chapter_updated;
  * Update a Book chapter with revision conflict checking and confirmation.
  */
 final class update_chapter extends base_tool {
-    /** @return string */
+    /**
+     * get_name
+     *
+     * @return string
+     */
     public function get_name(): string {
         return 'book_update_chapter';
     }
 
-    /** @return string */
+    /**
+     * get_title
+     *
+     * @return string
+     */
     public function get_title(): string {
         return 'Book: update chapter';
     }
 
-    /** @return string */
+    /**
+     * get_description
+     *
+     * @return string
+     */
     public function get_description(): string {
         return 'Update a Book chapter with revision conflict checking and confirmation.';
     }
 
-    /** @return string */
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
     public function get_required_capability(): string {
         return 'mod/book:edit';
     }
 
-    /** @return array */
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema(['chapterid' => ['type' => 'integer', 'minimum' => 1], 'title' => ['type' => 'string'], 'content' => ['type' => 'string'], 'expected_revision' => ['type' => 'integer', 'minimum' => 0]], ['chapterid', 'content', 'expected_revision']);
     }
 
     /**
-     * @param array $arguments Tool input.
+     * resolve_context
+     *
+     * @param array $arguments
      * @return context
+     * @throws coding_exception
+     * @throws dml_exception
      */
     public function resolve_context(array $arguments): context {
         global $DB;
@@ -73,12 +100,18 @@ final class update_chapter extends base_tool {
     }
 
     /**
-     * @param array $arguments Tool input.
-     * @param authenticated_identity $identity OAuth identity.
+     * execute
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
      * @return array
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws dml_transaction_exception
+     * @throws api_exception
      */
-    public function execute(array $arguments,
-            authenticated_identity $identity): array {
+    public function execute(array                  $arguments,
+                            authenticated_identity $identity): array {
         global $DB;
         $chapter = $DB->get_record('book_chapters', ['id' => (int)$arguments['chapterid']], '*', MUST_EXIST);
         $book = $DB->get_record('book', ['id' => $chapter->bookid], '*', MUST_EXIST);

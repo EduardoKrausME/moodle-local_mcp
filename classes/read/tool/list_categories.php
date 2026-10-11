@@ -24,32 +24,59 @@
 
 namespace local_mcp\read\tool;
 
+use coding_exception;
 use context;
 use context_coursecat;
 use context_system;
+use dml_exception;
 use local_mcp\security\authenticated_identity;
 
 /**
  * Return the category tree to authorised Moodle category managers.
  */
 final class list_categories extends base_tool {
+    /**
+     * get_name
+     *
+     * @return string
+     */
     public function get_name(): string {
         return 'list_categories';
     }
 
+    /**
+     * get_title
+     *
+     * @return string
+     */
     public function get_title(): string {
         return 'List course categories';
     }
 
+    /**
+     * get_description
+     *
+     * @return string
+     */
     public function get_description(): string {
         return 'List authorised course categories, optionally including hidden categories '
             . 'and their direct course counts. Returns id, name, parent, visible and coursecount.';
     }
 
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
     public function get_required_capability(): string {
         return 'moodle/category:manage';
     }
 
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema([
             'includehidden' => [
@@ -63,10 +90,26 @@ final class list_categories extends base_tool {
         ]);
     }
 
+    /**
+     * resolve_context
+     *
+     * @param array $arguments
+     * @return context
+     * @throws dml_exception
+     */
     public function resolve_context(array $arguments): context {
         return context_system::instance();
     }
 
+    /**
+     * execute
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
+     * @return array
+     * @throws coding_exception
+     * @throws dml_exception
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         global $DB;
 

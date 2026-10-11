@@ -24,54 +24,89 @@
 
 namespace mcptool_page\write;
 
+use coding_exception;
 use context;
 use context_course;
+use dml_exception;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\write\tool\base_tool;
+use moodle_exception;
 use moodle_url;
 
 /**
  * Create a real Moodle page instance through the standard core course-module API.
  */
 final class create_activity extends base_tool {
-    /** @return string */
+    /**
+     * get_name
+     *
+     * @return string
+     */
     public function get_name(): string {
         return 'page_create_activity';
     }
 
-    /** @return string */
+    /**
+     * get_title
+     *
+     * @return string
+     */
     public function get_title(): string {
         return 'page: create activity';
     }
 
-    /** @return string */
+    /**
+     * get_description
+     *
+     * @return string
+     */
     public function get_description(): string {
         return 'Create a page activity in a course section through the Moodle core course API.';
     }
 
-    /** @return string */
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
     public function get_required_capability(): string {
         return 'moodle/course:manageactivities';
     }
 
-    /** @return array */
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema(['courseid' => ['type' => 'integer', 'minimum' => 1], 'sectionnum' => ['type' => 'integer', 'minimum' => 0], 'name' => ['type' => 'string', 'minLength' => 1], 'content' => ['type' => 'string'], 'intro' => ['type' => 'string']], ['courseid', 'sectionnum', 'name', 'content']);
     }
 
-    /** @return context */
+    /**
+     * resolve_context
+     *
+     * @param array $arguments
+     * @return context
+     */
     public function resolve_context(array $arguments): context {
         return context_course::instance((int)$arguments['courseid'], MUST_EXIST);
     }
 
     /**
-     * @param array $arguments Tool input.
-     * @param authenticated_identity $identity OAuth identity.
+     * execute
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
      * @return array
+     * @throws coding_exception
+     * @throws \core\exception\moodle_exception
+     * @throws dml_exception
+     * @throws moodle_exception
+     * @throws api_exception
      */
-    public function execute(array $arguments,
-            authenticated_identity $identity): array {
+    public function execute(array                  $arguments,
+                            authenticated_identity $identity): array {
         global $CFG;
         require_once($CFG->dirroot . '/course/modlib.php');
         $course = get_course((int)$arguments['courseid']);

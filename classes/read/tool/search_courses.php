@@ -24,9 +24,11 @@
 
 namespace local_mcp\read\tool;
 
+use coding_exception;
 use context;
 use context_course;
 use context_system;
+use dml_exception;
 use local_mcp\security\authenticated_identity;
 
 /**
@@ -35,24 +37,49 @@ use local_mcp\security\authenticated_identity;
  * Unlike get_courses(), this search does not pre-filter hidden courses.
  */
 final class search_courses extends base_tool {
+    /**
+     * get_name
+     *
+     * @return string
+     */
     public function get_name(): string {
         return 'search_courses';
     }
 
+    /**
+     * get_title
+     *
+     * @return string
+     */
     public function get_title(): string {
         return 'Search courses';
     }
 
+    /**
+     * get_description
+     *
+     * @return string
+     */
     public function get_description(): string {
         return 'Search courses the user can manage, including invisible courses. '
             . 'Supports an exact shortname lookup to prevent duplicate course creation. '
             . 'Returns raw HTML summary and category metadata.';
     }
 
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
     public function get_required_capability(): string {
         return 'moodle/course:view';
     }
 
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema([
             'query' => ['type' => 'string', 'description' => 'Substring of fullname or shortname.'],
@@ -65,10 +92,26 @@ final class search_courses extends base_tool {
         ]);
     }
 
+    /**
+     * resolve_context
+     *
+     * @param array $arguments
+     * @return context
+     * @throws dml_exception
+     */
     public function resolve_context(array $arguments): context {
         return context_system::instance();
     }
 
+    /**
+     * execute
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
+     * @return array
+     * @throws coding_exception
+     * @throws dml_exception
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         global $DB;
 
@@ -103,7 +146,7 @@ final class search_courses extends base_tool {
                        c.summary, c.summaryformat, c.visible
                   FROM {course} c
                  WHERE " . implode(' AND ', $where) .
-                 " ORDER BY c.sortorder ASC, c.id ASC";
+            " ORDER BY c.sortorder ASC, c.id ASC";
         $records = $DB->get_recordset_sql($sql, $params);
         $courses = [];
         $skipped = 0;

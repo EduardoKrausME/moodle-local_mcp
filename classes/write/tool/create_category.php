@@ -27,7 +27,9 @@ namespace local_mcp\write\tool;
 use context;
 use context_coursecat;
 use context_system;
+use core\exception\moodle_exception;
 use core_course_category;
+use dml_exception;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\security\capability_guard;
@@ -36,23 +38,48 @@ use local_mcp\security\capability_guard;
  * Create a top-level or nested course category.
  */
 final class create_category extends base_tool {
+    /**
+     * get_name
+     *
+     * @return string
+     */
     public function get_name(): string {
         return 'create_category';
     }
 
+    /**
+     * get_title
+     *
+     * @return string
+     */
     public function get_title(): string {
         return 'Create course category';
     }
 
+    /**
+     * get_description
+     *
+     * @return string
+     */
     public function get_description(): string {
         return 'Create a Moodle course category. Use parentid=0 for a top-level category '
             . 'such as Teste. Does not move courses or existing categories.';
     }
 
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
     public function get_required_capability(): string {
         return 'moodle/category:manage';
     }
 
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema([
             'name' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
@@ -60,10 +87,22 @@ final class create_category extends base_tool {
         ], ['name', 'parentid']);
     }
 
+    /**
+     * resolve_context
+     *
+     * @param array $arguments
+     * @return context
+     * @throws dml_exception
+     */
     public function resolve_context(array $arguments): context {
         return context_system::instance();
     }
 
+    /**
+     * supports_dry_run
+     *
+     * @return bool
+     */
     public function supports_dry_run(): bool {
         return true;
     }
@@ -85,8 +124,10 @@ final class create_category extends base_tool {
             if (!$parent->can_create_subcategory()) {
                 throw new api_exception('permission_denied', 403);
             }
-        } else if (!core_course_category::can_create_top_level_category()) {
-            throw new api_exception('permission_denied', 403);
+        } else {
+            if (!core_course_category::can_create_top_level_category()) {
+                throw new api_exception('permission_denied', 403);
+            }
         }
         if ($DB->record_exists('course_categories', ['name' => $name, 'parent' => $parentid])) {
             throw new api_exception('category_already_exists', 409);
@@ -94,12 +135,29 @@ final class create_category extends base_tool {
         return [$name, $parentid];
     }
 
+    /**
+     * preview
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
+     * @return array
+     * @throws api_exception
+     */
     public function preview(array $arguments, authenticated_identity $identity): array {
         [$name, $parentid] = $this->validated_input($arguments, $identity);
         return ['operation' => 'create_category', 'name' => $name, 'parentid' => $parentid,
             'changes_existing_categories' => false, 'changes_existing_courses' => false];
     }
 
+    /**
+     * execute
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
+     * @return array
+     * @throws moodle_exception
+     * @throws api_exception
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         [$name, $parentid] = $this->validated_input($arguments, $identity);
         $category = core_course_category::create(['name' => $name, 'parent' => $parentid]);

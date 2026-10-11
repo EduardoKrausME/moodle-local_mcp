@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Activity MCP providers and upload validation regression tests.
@@ -25,6 +25,7 @@
 namespace local_mcp;
 
 use advanced_testcase;
+use coding_exception;
 use core_component;
 use local_mcp\course\activity_upload;
 use local_mcp\exception\api_exception;
@@ -33,9 +34,16 @@ use local_mcp\write\registry;
 
 defined('MOODLE_INTERNAL') || die();
 
-/** The six activity integrations must be installable and discoverable. */
+/**
+ * The six activity integrations must be installable and discoverable.
+ */
 final class activity_integrations_test extends advanced_testcase {
-    /** @return void */
+    /**
+     * test_provider_registry_exposes_new_activity_tools
+     *
+     * @return void
+     * @throws coding_exception
+     */
     public function test_provider_registry_exposes_new_activity_tools(): void {
         $installed = core_component::get_plugin_list('mcptool');
         $tools = registry::get_tools();
@@ -60,7 +68,12 @@ final class activity_integrations_test extends advanced_testcase {
         }
     }
 
-    /** @return void */
+    /**
+     * test_upload_decoder_accepts_base64_and_checks_h5p_type
+     *
+     * @return void
+     * @throws api_exception
+     */
     public function test_upload_decoder_accepts_base64_and_checks_h5p_type(): void {
         [$filename, $bytes] = activity_upload::decode(
             'data:application/pdf;base64,' . base64_encode('%PDF-1.7'), 'handout.pdf'
@@ -72,13 +85,23 @@ final class activity_integrations_test extends advanced_testcase {
         $this->assertStringStartsWith('PK', $zip);
     }
 
-    /** @return void */
+    /**
+     * test_upload_decoder_rejects_traversal_and_unexpected_h5p
+     *
+     * @return void
+     * @throws api_exception
+     */
     public function test_upload_decoder_rejects_traversal_and_unexpected_h5p(): void {
         $this->expectException(api_exception::class);
         activity_upload::decode(base64_encode('1234'), '../payload.php');
     }
 
-    /** @return void */
+    /**
+     * test_h5p_requires_package_extension
+     *
+     * @return void
+     * @throws api_exception
+     */
     public function test_h5p_requires_package_extension(): void {
         $this->expectException(api_exception::class);
         activity_upload::decode(base64_encode("PK\x03\x04test"), 'lesson.zip', true);

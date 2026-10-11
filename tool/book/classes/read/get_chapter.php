@@ -24,44 +24,71 @@
 
 namespace mcptool_book\read;
 
+use coding_exception;
 use context;
 use context_module;
+use dml_exception;
 use local_mcp\exception\api_exception;
 use local_mcp\read\tool\base_tool;
 use local_mcp\security\authenticated_identity;
+use moodle_exception;
 
 /**
  * Read the HTML content of one visible book chapter.
  */
 final class get_chapter extends base_tool {
-    /** @return string */
+    /**
+     * get_name
+     *
+     * @return string
+     */
     public function get_name(): string {
         return 'book_get_chapter';
     }
 
-    /** @return string */
+    /**
+     * get_title
+     *
+     * @return string
+     */
     public function get_title(): string {
         return 'Book: read chapter';
     }
 
-    /** @return string */
+    /**
+     * get_description
+     *
+     * @return string
+     */
     public function get_description(): string {
         return 'Read the HTML content of one visible book chapter.';
     }
 
-    /** @return string */
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
     public function get_required_capability(): string {
         return 'mod/book:read';
     }
 
-    /** @return array */
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema(['chapterid' => ['type' => 'integer', 'minimum' => 1]], ['chapterid']);
     }
 
     /**
-     * @param array $arguments Tool input.
+     * resolve_context
+     *
+     * @param array $arguments
      * @return context
+     * @throws coding_exception
+     * @throws dml_exception
      */
     public function resolve_context(array $arguments): context {
         global $DB;
@@ -72,12 +99,18 @@ final class get_chapter extends base_tool {
     }
 
     /**
-     * @param array $arguments Tool input.
-     * @param authenticated_identity $identity OAuth identity.
+     * execute
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
      * @return array
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws moodle_exception
+     * @throws api_exception
      */
-    public function execute(array $arguments,
-            authenticated_identity $identity): array {
+    public function execute(array                  $arguments,
+                            authenticated_identity $identity): array {
         global $DB;
         $chapter = $DB->get_record('book_chapters', ['id' => (int)$arguments['chapterid']], '*', MUST_EXIST);
         $book = $DB->get_record('book', ['id' => $chapter->bookid], '*', MUST_EXIST);
@@ -85,7 +118,7 @@ final class get_chapter extends base_tool {
         $context = context_module::instance($cm->id);
         if (!get_fast_modinfo($cm->course, $identity->userid)->get_cm($cm->id)->uservisible
             || ($chapter->hidden && !has_capability('mod/book:viewhiddenchapters',
-                $context, $identity->userid))) {
+                    $context, $identity->userid))) {
             throw new api_exception('permission_denied', 403);
         }
         return ['id' => (int)$chapter->id, 'bookid' => (int)$book->id,

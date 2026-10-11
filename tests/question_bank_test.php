@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Question bank MCP integration.
@@ -25,7 +25,9 @@
 namespace local_mcp;
 
 use advanced_testcase;
+use coding_exception;
 use context_course;
+use local_mcp\exception\api_exception;
 use local_mcp\question\bank_service;
 use local_mcp\read\registry as read_registry;
 use local_mcp\security\authenticated_identity;
@@ -33,9 +35,16 @@ use local_mcp\write\registry as write_registry;
 
 defined('MOODLE_INTERNAL') || die;
 
-/** Question bank READ/WRITE integration tests. */
+/**
+ * Question bank READ/WRITE integration tests.
+ */
 final class question_bank_test extends advanced_testcase {
-    /** @return void */
+    /**
+     * test_question_bank_tools_are_registered
+     *
+     * @return void
+     * @throws coding_exception
+     */
     public function test_question_bank_tools_are_registered(): void {
         $r = read_registry::get_tools();
         $w = write_registry::get_tools();
@@ -50,7 +59,12 @@ final class question_bank_test extends advanced_testcase {
         }
     }
 
-    /** @return void */
+    /**
+     * test_category_creation_and_single_choice_round_trip
+     *
+     * @return void
+     * @throws exception\api_exception
+     */
     public function test_category_creation_and_single_choice_round_trip(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
@@ -82,9 +96,14 @@ final class question_bank_test extends advanced_testcase {
             bank_service::details($created['questionid'], $identity)['name']);
     }
 
-    /** @return void */
+    /**
+     * test_invalid_multichoice_payload_is_rejected
+     *
+     * @return void
+     * @throws exception\api_exception
+     */
     public function test_invalid_multichoice_payload_is_rejected(): void {
-        $this->expectException(\local_mcp\exception\api_exception::class);
+        $this->expectException(api_exception::class);
         bank_service::form(['name' => 'Q', 'questiontext' => 'Text',
             'answers' => [
                 ['text' => 'Wrong', 'fraction' => 0],

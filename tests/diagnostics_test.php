@@ -27,6 +27,7 @@ namespace local_mcp;
 use advanced_testcase;
 use local_mcp\diagnostics;
 use local_mcp\exception\api_exception;
+use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -34,7 +35,10 @@ defined('MOODLE_INTERNAL') || die();
  * Test safe and useful PHP error_log diagnostic formats.
  */
 final class diagnostics_test extends advanced_testcase {
+
     /**
+     * test_structured_milestone_includes_request_id_and_approved_metadata
+     *
      * @return void
      */
     public function test_structured_milestone_includes_request_id_and_approved_metadata(): void {
@@ -50,7 +54,7 @@ final class diagnostics_test extends advanced_testcase {
         $decoded = json_decode(substr($log, strlen('[local_mcp] ')), true);
         $this->assertIsArray($decoded);
         $this->assertSame('tools_listed', $decoded['event']);
-        $plugin = new \stdClass();
+        $plugin = new stdClass();
         require(__DIR__ . '/../version.php');
         $this->assertSame($plugin->release, $decoded['version']);
         $this->assertSame(str_repeat('a', 64), $decoded['catalog_sha256']);
@@ -64,6 +68,8 @@ final class diagnostics_test extends advanced_testcase {
     }
 
     /**
+     * test_cover_upload_logs_contain_only_safe_metadata
+     *
      * @return void
      */
     public function test_cover_upload_logs_contain_only_safe_metadata(): void {
@@ -88,6 +94,8 @@ final class diagnostics_test extends advanced_testcase {
     }
 
     /**
+     * test_scrubs_tokens_urls_html_base64_and_newlines
+     *
      * @return void
      */
     public function test_scrubs_tokens_urls_html_base64_and_newlines(): void {
@@ -106,6 +114,8 @@ final class diagnostics_test extends advanced_testcase {
     }
 
     /**
+     * test_handles_exception_without_exposing_confirmation_details
+     *
      * @return void
      */
     public function test_handles_exception_without_exposing_confirmation_details(): void {

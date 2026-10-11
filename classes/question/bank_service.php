@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Question bank MCP integration.
@@ -31,22 +31,31 @@ use core_question\category_manager;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\security\capability_guard;
+use question_bank;
+use stdClass;
 
 /**
  * Read question bank records and write using Moodle's versioned question APIs.
  */
 final class bank_service {
+    /**
+     *
+     */
     private const WRITABLE_TYPES = ['multichoice', 'truefalse', 'shortanswer', 'essay'];
 
-    /** Get the owning context for a question category. */
+    /**
+     * Get the owning context for a question category.
+     */
     public static function category_context(int $categoryid): context {
         global $DB;
         $id = $DB->get_field('question_categories', 'contextid', ['id' => $categoryid], MUST_EXIST);
         return context::instance_by_id((int)$id, MUST_EXIST);
     }
 
-    /** Return question, version and bank entry in one record. */
-    public static function row(int $questionid): \stdClass {
+    /**
+     * Return question, version and bank entry in one record.
+     */
+    public static function row(int $questionid): stdClass {
         global $DB;
         return $DB->get_record_sql(
             "SELECT q.*, v.version, v.status, v.questionbankentryid,
@@ -58,30 +67,36 @@ final class bank_service {
             ['id' => $questionid], MUST_EXIST);
     }
 
-    /** Return context for an individual version. */
+    /**
+     * Return context for an individual version.
+     */
     public static function question_context(int $id): context {
         return self::category_context((int)self::row($id)->questioncategoryid);
     }
 
-    /** Authorisation for own/all questions, including answers. */
-    public static function authorize(\stdClass $q, authenticated_identity $identity, bool $edit = false): void {
+    /**
+     * Authorisation for own/all questions, including answers.
+     */
+    public static function authorize(stdClass $q, authenticated_identity $identity, bool $edit = false): void {
         $ctx = self::category_context((int)$q->questioncategoryid);
         $all = $edit ? 'moodle/question:editall' : 'moodle/question:viewall';
         $mine = $edit ? 'moodle/question:editmine' : 'moodle/question:viewmine';
         if (!has_capability($all, $ctx, $identity->userid) &&
             ((int)$q->ownerid !== $identity->userid ||
-            !has_capability($mine, $ctx, $identity->userid))) {
+                !has_capability($mine, $ctx, $identity->userid))) {
             throw new api_exception('permission_denied', 403);
         }
     }
 
-    /** Discover the legacy course context and the quiz/qbank module contexts. */
+    /**
+     * Discover the legacy course context and the quiz/qbank module contexts.
+     */
     public static function banks(int $courseid, authenticated_identity $identity): array {
         global $DB;
         $banks = [];
         $ctx = context_course::instance($courseid, MUST_EXIST);
         if (has_any_capability(['moodle/question:viewmine', 'moodle/question:viewall'],
-                $ctx, $identity->userid)) {
+            $ctx, $identity->userid)) {
             $banks[] = ['contextid' => (int)$ctx->id, 'courseid' => $courseid,
                 'cmid' => null, 'type' => 'course', 'name' => get_course($courseid)->fullname];
         }
@@ -93,7 +108,7 @@ final class bank_service {
         foreach ($DB->get_records_sql($sql, ['courseid' => $courseid]) as $cm) {
             $context = context_module::instance((int)$cm->id, IGNORE_MISSING);
             if (!$context || !has_any_capability(['moodle/question:viewmine',
-                'moodle/question:viewall'], $context, $identity->userid)) {
+                    'moodle/question:viewall'], $context, $identity->userid)) {
                 continue;
             }
             $instance = $DB->get_record($cm->modname, ['id' => $cm->instance], 'id, name');
@@ -104,7 +119,9 @@ final class bank_service {
         return ['count' => count($banks), 'banks' => $banks];
     }
 
-    /** List categories for exactly one context (bank). */
+    /**
+     * List categories for exactly one context (bank).
+     */
     public static function categories(int $contextid): array {
         global $DB;
         $rows = $DB->get_records('question_categories', ['contextid' => $contextid],
@@ -180,7 +197,9 @@ final class bank_service {
             'count' => count($out), 'hasmore' => $hasmore, 'questions' => $out];
     }
 
-    /** Return question authoring data including answers, guarded by question permissions. */
+    /**
+     * Return question authoring data including answers, guarded by question permissions.
+     */
     public static function details(int $id, authenticated_identity $identity): array {
         global $DB;
         $q = self::row($id);
@@ -195,10 +214,12 @@ final class bank_service {
             if ($r) {
                 if ($q->qtype === 'multichoice') {
                     $options = ['single' => (bool)$r->single, 'shuffleanswers' => (bool)$r->shuffleanswers];
-                } else if ($q->qtype === 'shortanswer') {
-                    $options = ['usecase' => (bool)$r->usecase];
                 } else {
-                    $options = ['responseformat' => $r->responseformat];
+                    if ($q->qtype === 'shortanswer') {
+                        $options = ['usecase' => (bool)$r->usecase];
+                    } else {
+                        $options = ['responseformat' => $r->responseformat];
+                    }
                 }
             }
         }
@@ -217,8 +238,10 @@ final class bank_service {
             'answers' => $answers, 'options' => $options];
     }
 
-    /** Validate an entire question payload before saving; never store arbitrary qtype data. */
-    public static function form(array $a, string $qtype): \stdClass {
+    /**
+     * Validate an entire question payload before saving; never store arbitrary qtype data.
+     */
+    public static function form(array $a, string $qtype): stdClass {
         if (!in_array($qtype, self::WRITABLE_TYPES, true)) {
             throw new api_exception('unsupported_question_type', 400);
         }
@@ -227,7 +250,7 @@ final class bank_service {
         $mark = (float)($a['defaultmark'] ?? 1);
         $status = (string)($a['status'] ?? 'ready');
         if ($name === '' || $text === '' || !is_finite($mark) || $mark <= 0 ||
-                !in_array($status, ['ready', 'draft'], true)) {
+            !in_array($status, ['ready', 'draft'], true)) {
             throw new api_exception('invalid_question', 400);
         }
         $f = (object)['name' => $name, 'defaultmark' => $mark, 'status' => $status,
@@ -243,63 +266,65 @@ final class bank_service {
             $f->feedbacktrue = ['text' => '', 'format' => FORMAT_HTML];
             $f->feedbackfalse = ['text' => '', 'format' => FORMAT_HTML];
             $f->showstandardinstruction = 1;
-        } else if ($qtype === 'multichoice' || $qtype === 'shortanswer') {
-            $answers = $a['answers'] ?? [];
-            if (!is_array($answers) || count($answers) < ($qtype === 'multichoice' ? 2 : 1) ||
-                count($answers) > 50) {
-                throw new api_exception('invalid_answers', 400);
-            }
-            $f->answer = [];
-            $f->fraction = [];
-            $f->feedback = [];
-            $correct = 0;
-            $sum = 0.0;
-            foreach ($answers as $answer) {
-                if (!is_array($answer) || !is_string($answer['text'] ?? null) ||
-                    trim($answer['text']) === '' || !is_numeric($answer['fraction'] ?? null)) {
+        } else {
+            if ($qtype === 'multichoice' || $qtype === 'shortanswer') {
+                $answers = $a['answers'] ?? [];
+                if (!is_array($answers) || count($answers) < ($qtype === 'multichoice' ? 2 : 1) ||
+                    count($answers) > 50) {
                     throw new api_exception('invalid_answers', 400);
                 }
-                $fraction = (float)$answer['fraction'];
-                if (!is_finite($fraction) || $fraction < -1 || $fraction > 1) {
-                    throw new api_exception('invalid_answer_fraction', 400);
+                $f->answer = [];
+                $f->fraction = [];
+                $f->feedback = [];
+                $correct = 0;
+                $sum = 0.0;
+                foreach ($answers as $answer) {
+                    if (!is_array($answer) || !is_string($answer['text'] ?? null) ||
+                        trim($answer['text']) === '' || !is_numeric($answer['fraction'] ?? null)) {
+                        throw new api_exception('invalid_answers', 400);
+                    }
+                    $fraction = (float)$answer['fraction'];
+                    if (!is_finite($fraction) || $fraction < -1 || $fraction > 1) {
+                        throw new api_exception('invalid_answer_fraction', 400);
+                    }
+                    $correct += $fraction >= 0.999999 ? 1 : 0;
+                    $sum += max(0, $fraction);
+                    $value = clean_param($answer['text'],
+                        $qtype === 'multichoice' ? PARAM_CLEANHTML : PARAM_TEXT);
+                    $f->answer[] = $qtype === 'multichoice' ? ['text' => $value, 'format' => FORMAT_HTML] : $value;
+                    $f->fraction[] = $fraction;
+                    $f->feedback[] = ['text' => clean_param((string)($answer['feedback'] ?? ''),
+                        PARAM_CLEANHTML), 'format' => FORMAT_HTML];
                 }
-                $correct += $fraction >= 0.999999 ? 1 : 0;
-                $sum += max(0, $fraction);
-                $value = clean_param($answer['text'],
-                    $qtype === 'multichoice' ? PARAM_CLEANHTML : PARAM_TEXT);
-                $f->answer[] = $qtype === 'multichoice' ? ['text' => $value, 'format' => FORMAT_HTML] : $value;
-                $f->fraction[] = $fraction;
-                $f->feedback[] = ['text' => clean_param((string)($answer['feedback'] ?? ''),
-                    PARAM_CLEANHTML), 'format' => FORMAT_HTML];
-            }
-            if ($qtype === 'multichoice') {
-                $f->single = (int)($a['single'] ?? true);
-                $f->shuffleanswers = (int)($a['shuffleanswers'] ?? true);
-                $f->answernumbering = 'abc';
-                $f->showstandardinstruction = 1;
-                $f->correctfeedback = ['text' => '', 'format' => FORMAT_HTML];
-                $f->partiallycorrectfeedback = ['text' => '', 'format' => FORMAT_HTML];
-                $f->incorrectfeedback = ['text' => '', 'format' => FORMAT_HTML];
-                if ($f->single && $correct !== 1) {
-                    throw new api_exception('single_choice_requires_one_correct_answer', 400);
-                }
-                if (!$f->single && abs($sum - 1.0) > 0.00001) {
-                    throw new api_exception('multiple_choice_fractions_must_total_one', 400);
+                if ($qtype === 'multichoice') {
+                    $f->single = (int)($a['single'] ?? true);
+                    $f->shuffleanswers = (int)($a['shuffleanswers'] ?? true);
+                    $f->answernumbering = 'abc';
+                    $f->showstandardinstruction = 1;
+                    $f->correctfeedback = ['text' => '', 'format' => FORMAT_HTML];
+                    $f->partiallycorrectfeedback = ['text' => '', 'format' => FORMAT_HTML];
+                    $f->incorrectfeedback = ['text' => '', 'format' => FORMAT_HTML];
+                    if ($f->single && $correct !== 1) {
+                        throw new api_exception('single_choice_requires_one_correct_answer', 400);
+                    }
+                    if (!$f->single && abs($sum - 1.0) > 0.00001) {
+                        throw new api_exception('multiple_choice_fractions_must_total_one', 400);
+                    }
+                } else {
+                    $f->usecase = (int)($a['usecase'] ?? false);
+                    if (!$correct) {
+                        throw new api_exception('shortanswer_requires_full_credit_answer', 400);
+                    }
                 }
             } else {
-                $f->usecase = (int)($a['usecase'] ?? false);
-                if (!$correct) {
-                    throw new api_exception('shortanswer_requires_full_credit_answer', 400);
-                }
+                $f->responseformat = 'editor';
+                $f->responserequired = 1;
+                $f->responsefieldlines = 15;
+                $f->attachments = 0;
+                $f->attachmentsrequired = 0;
+                $f->graderinfo = ['text' => '', 'format' => FORMAT_HTML];
+                $f->responsetemplate = ['text' => '', 'format' => FORMAT_HTML];
             }
-        } else {
-            $f->responseformat = 'editor';
-            $f->responserequired = 1;
-            $f->responsefieldlines = 15;
-            $f->attachments = 0;
-            $f->attachmentsrequired = 0;
-            $f->graderinfo = ['text' => '', 'format' => FORMAT_HTML];
-            $f->responsetemplate = ['text' => '', 'format' => FORMAT_HTML];
         }
         return $f;
     }
@@ -335,14 +360,16 @@ final class bank_service {
         $form = self::form($a, $qtype);
         $form->category = $categoryid . ',' . $ctx->id;
         $base = $old ?: (object)['qtype' => $qtype, 'category' => $categoryid];
-        $result = \question_bank::get_qtype($qtype)->save_question($base, $form);
+        $result = question_bank::get_qtype($qtype)->save_question($base, $form);
         $new = self::row((int)$result->id);
         return ['questionid' => (int)$new->id, 'bankentryid' => (int)$new->questionbankentryid,
             'categoryid' => $categoryid, 'version' => (int)$new->version,
             'status' => $new->status, 'qtype' => $qtype, 'updated' => (bool)$old];
     }
 
-    /** Validate question category creation prior to preview or execution. */
+    /**
+     * Validate question category creation prior to preview or execution.
+     */
     public static function validate_category(array $a, authenticated_identity $identity): array {
         global $DB;
         $ctx = context::instance_by_id((int)$a['contextid'], MUST_EXIST);
@@ -359,7 +386,7 @@ final class bank_service {
             throw new api_exception('invalid_category', 400);
         }
         if ($parent > 0 && (int)$DB->get_field('question_categories', 'contextid',
-            ['id' => $parent], MUST_EXIST) !== (int)$ctx->id) {
+                ['id' => $parent], MUST_EXIST) !== (int)$ctx->id) {
             throw new api_exception('invalid_category_parent_context', 400);
         }
         $mgr = new category_manager();
@@ -369,7 +396,9 @@ final class bank_service {
         return [(int)$ctx->id, $name, $parent, $idnumber, $info];
     }
 
-    /** Create a question category through the core API and events. */
+    /**
+     * Create a question category through the core API and events.
+     */
     public static function create_category(array $a, authenticated_identity $identity): array {
         global $CFG;
         require_once($CFG->libdir . '/questionlib.php');

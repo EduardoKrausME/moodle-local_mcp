@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Safe Base64 upload into the Moodle user draft file area.
@@ -25,9 +25,12 @@
 namespace local_mcp\course;
 
 use context_user;
+use core_user;
 use local_mcp\exception\api_exception;
 
-/** Convert a single file payload into a Moodle draft item, for use by add_moduleinfo(). */
+/**
+ * Convert a single file payload into a Moodle draft item, for use by add_moduleinfo().
+ */
 final class activity_upload {
     /** Maximum decoded upload size for resource files and H5P packages (40 MiB). */
     public const MAX_BYTES = 41943040;
@@ -90,7 +93,7 @@ final class activity_upload {
             'filename' => $filename,
             'userid' => $userid,
             'license' => 'allrightsreserved',
-            'author' => fullname(\core_user::get_user($userid)),
+            'author' => fullname(core_user::get_user($userid)),
         ], $binary);
         return $draftid;
     }

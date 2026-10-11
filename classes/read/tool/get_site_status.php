@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 //
 // @package   local_mcp
 // @copyright 2026 Eduardo Kraus
@@ -24,32 +24,60 @@ use context;
 use context_system;
 use core\check\manager;
 use core\check\result;
+use dml_exception;
+use local_mcp\diagnostics;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
+use moodle_exception;
 use Throwable;
 
 /**
  * Expose exactly the Moodle core Check API results used by admin reports.
  */
 final class get_site_status extends base_tool {
+    /**
+     * get_name
+     *
+     * @return string
+     */
     public function get_name(): string {
         return 'get_site_status';
     }
 
+    /**
+     * get_title
+     *
+     * @return string
+     */
     public function get_title(): string {
         return 'Moodle performance and system status';
     }
 
+    /**
+     * get_description
+     *
+     * @return string
+     */
     public function get_description(): string {
         return 'Run the same Moodle Check API checks as Reports > Performance overview, System status '
             . 'or Security overview (including third-party checks). Default: performance. '
             . 'Detailed checks may be expensive; use checkref to inspect a single check.';
     }
 
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
     public function get_required_capability(): string {
         return 'moodle/site:config';
     }
 
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema([
             'type' => [
@@ -69,6 +97,13 @@ final class get_site_status extends base_tool {
         ]);
     }
 
+    /**
+     * resolve_context
+     *
+     * @param array $arguments
+     * @return context
+     * @throws dml_exception
+     */
     public function resolve_context(array $arguments): context {
         return context_system::instance();
     }
@@ -84,6 +119,15 @@ final class get_site_status extends base_tool {
         return trim((string)preg_replace('/\s+/u', ' ', $text));
     }
 
+    /**
+     * execute
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
+     * @return array
+     * @throws moodle_exception
+     * @throws api_exception
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         global $CFG;
         if (!is_siteadmin($identity->userid)) {
@@ -134,7 +178,7 @@ final class get_site_status extends base_tool {
                     'status' => result::UNKNOWN,
                     'summary' => 'The check failed. Inspect the Moodle server logs.',
                 ];
-                \local_mcp\diagnostics::exception($e, [
+                diagnostics::exception($e, [
                     'side' => 'read',
                     'tool' => 'get_site_status',
                     'check' => $check->get_ref(),

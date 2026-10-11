@@ -24,44 +24,69 @@
 
 namespace mcptool_forum\read;
 
+use coding_exception;
 use context;
 use context_module;
+use dml_exception;
 use local_mcp\exception\api_exception;
 use local_mcp\read\tool\base_tool;
 use local_mcp\security\authenticated_identity;
+use moodle_exception;
 use moodle_url;
 
 /**
  * List the visible discussions in a Moodle forum.
  */
 final class list_discussions extends base_tool {
-    /** @return string */
+    /**
+     * get_name
+     *
+     * @return string
+     */
     public function get_name(): string {
         return 'forum_list_discussions';
     }
 
-    /** @return string */
+    /**
+     * get_title
+     *
+     * @return string
+     */
     public function get_title(): string {
         return 'Forum: list discussions';
     }
 
-    /** @return string */
+    /**
+     * get_description
+     *
+     * @return string
+     */
     public function get_description(): string {
         return 'List the visible discussions in a Moodle forum.';
     }
 
-    /** @return string */
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
     public function get_required_capability(): string {
         return 'mod/forum:viewdiscussion';
     }
 
-    /** @return array */
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema(['cmid' => ['type' => 'integer', 'minimum' => 1], 'limit' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 100]], ['cmid']);
     }
 
     /**
-     * @param array $arguments Tool input.
+     * resolve_context
+     *
+     * @param array $arguments
      * @return context
      */
     public function resolve_context(array $arguments): context {
@@ -69,12 +94,19 @@ final class list_discussions extends base_tool {
     }
 
     /**
-     * @param array $arguments Tool input.
-     * @param authenticated_identity $identity OAuth identity.
+     * execute
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
      * @return array
+     * @throws coding_exception
+     * @throws \core\exception\moodle_exception
+     * @throws dml_exception
+     * @throws moodle_exception
+     * @throws api_exception
      */
-    public function execute(array $arguments,
-            authenticated_identity $identity): array {
+    public function execute(array                  $arguments,
+                            authenticated_identity $identity): array {
         global $DB, $CFG, $USER;
         require_once($CFG->dirroot . '/mod/forum/lib.php');
         $cm = get_coursemodule_from_id('forum', (int)$arguments['cmid'], 0, false, MUST_EXIST);

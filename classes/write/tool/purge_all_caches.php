@@ -26,6 +26,8 @@ namespace local_mcp\write\tool;
 
 use context;
 use context_system;
+use dml_exception;
+use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\security\capability_guard;
 
@@ -33,53 +35,89 @@ use local_mcp\security\capability_guard;
  * An administrator-only WRITE tool with an explicit confirmation preview.
  */
 final class purge_all_caches extends base_tool {
-    /** @return string Tool identifier. */
+
+    /**
+     * get_name
+     *
+     * @return string
+     */
     public function get_name(): string {
         return 'purge_all_caches';
     }
 
-    /** @return string Displayed title. */
+    /**
+     * get_title
+     *
+     * @return string
+     */
     public function get_title(): string {
         return 'Purge all Moodle caches';
     }
 
-    /** @return string Description for MCP clients. */
+    /**
+     * get_description
+     *
+     * @return string
+     */
     public function get_description(): string {
         return 'Clear every Moodle cache via the core API. Rebuilding caches can temporarily slow the site. Requires explicit user approval.';
     }
 
-    /** @return string Required Moodle capability. */
+    /**
+     * get_required_capability
+     *
+     * @return string
+     */
     public function get_required_capability(): string {
         return 'moodle/site:config';
     }
 
-    /** @return array JSON Schema for a tool without inputs. */
+    /**
+     * get_input_schema
+     *
+     * @return array
+     */
     public function get_input_schema(): array {
         return $this->object_schema([]);
     }
 
     /**
-     * @param array $arguments Tool arguments.
-     * @return context System context.
+     * resolve_context
+     *
+     * @param array $arguments
+     * @return context
+     * @throws dml_exception
      */
     public function resolve_context(array $arguments): context {
         return context_system::instance();
     }
 
-    /** @return bool Previews must never purge caches. */
+    /**
+     * supports_dry_run
+     *
+     * @return bool
+     */
     public function supports_dry_run(): bool {
         return true;
     }
 
-    /** @return bool Full cache purging is a site-wide operation. */
+    /**
+     * is_destructive
+     *
+     * @return bool
+     */
     public function is_destructive(): bool {
         return true;
     }
 
     /**
-     * @param array $arguments Tool arguments.
-     * @param authenticated_identity $identity Connected user.
-     * @return array Safe preview.
+     * preview
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
+     * @return array
+     * @throws dml_exception
+     * @throws api_exception
      */
     public function preview(array $arguments, authenticated_identity $identity): array {
         capability_guard::check($this->get_required_capability(), $this->resolve_context($arguments),
@@ -92,9 +130,13 @@ final class purge_all_caches extends base_tool {
     }
 
     /**
-     * @param array $arguments Tool arguments.
-     * @param authenticated_identity $identity Connected user.
-     * @return array Successful operation metadata.
+     * execute
+     *
+     * @param array $arguments
+     * @param authenticated_identity $identity
+     * @return array
+     * @throws dml_exception
+     * @throws api_exception
      */
     public function execute(array $arguments, authenticated_identity $identity): array {
         capability_guard::check($this->get_required_capability(), $this->resolve_context($arguments),

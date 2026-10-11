@@ -26,6 +26,7 @@ namespace local_mcp;
 
 use advanced_testcase;
 use context_system;
+use dml_exception;
 use local_mcp\exception\api_exception;
 use local_mcp\protocol\http;
 use local_mcp\security\manual_token_service;
@@ -39,8 +40,12 @@ defined('MOODLE_INTERNAL') || die();
  * Test temporary URL-token authentication without OAuth.
  */
 final class url_connection_test extends advanced_testcase {
+
     /**
+     * test_query_token_authenticates_and_can_be_revoked
+     *
      * @return void
+     * @throws api_exception
      */
     public function test_query_token_authenticates_and_can_be_revoked(): void {
         $this->resetAfterTest();
@@ -77,7 +82,10 @@ final class url_connection_test extends advanced_testcase {
     }
 
     /**
+     * test_query_token_must_be_explicitly_allowed
+     *
      * @return void
+     * @throws api_exception
      */
     public function test_query_token_must_be_explicitly_allowed(): void {
         $oldget = $_GET;
@@ -99,7 +107,10 @@ final class url_connection_test extends advanced_testcase {
     }
 
     /**
+     * test_query_token_rejects_oauth_access_tokens
+     *
      * @return void
+     * @throws api_exception
      */
     public function test_query_token_rejects_oauth_access_tokens(): void {
         $oldget = $_GET;
@@ -120,7 +131,10 @@ final class url_connection_test extends advanced_testcase {
     }
 
     /**
+     * test_query_token_rejects_ambiguous_authorization
+     *
      * @return void
+     * @throws api_exception
      */
     public function test_query_token_rejects_ambiguous_authorization(): void {
         $oldget = $_GET;
@@ -139,6 +153,7 @@ final class url_connection_test extends advanced_testcase {
             }
         }
     }
+
     /**
      * Existing test URLs retain the same token while READ/WRITE are edited.
      *
@@ -177,7 +192,10 @@ final class url_connection_test extends advanced_testcase {
     }
 
     /**
+     * test_update_permissions_rejects_zero_permissions
+     *
      * @return void
+     * @throws api_exception
      */
     public function test_update_permissions_rejects_zero_permissions(): void {
         $this->resetAfterTest();
@@ -189,7 +207,10 @@ final class url_connection_test extends advanced_testcase {
     }
 
     /**
+     * test_update_permissions_rejects_revoked_tokens
+     *
      * @return void
+     * @throws api_exception
      */
     public function test_update_permissions_rejects_revoked_tokens(): void {
         $this->resetAfterTest();
@@ -202,7 +223,11 @@ final class url_connection_test extends advanced_testcase {
     }
 
     /**
+     * test_update_permissions_clears_outstanding_write_confirmations
+     *
      * @return void
+     * @throws dml_exception
+     * @throws api_exception
      */
     public function test_update_permissions_clears_outstanding_write_confirmations(): void {
         global $DB;

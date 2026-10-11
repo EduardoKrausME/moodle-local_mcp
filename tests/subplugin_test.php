@@ -25,6 +25,7 @@
 namespace local_mcp;
 
 use advanced_testcase;
+use coding_exception;
 use core_component;
 use local_mcp\extension\manager;
 use local_mcp\extension\read_provider_interface;
@@ -39,6 +40,8 @@ defined('MOODLE_INTERNAL') || die();
  */
 final class subplugin_test extends advanced_testcase {
     /**
+     * test_activity_subplugins_are_discovered
+     *
      * @return void
      */
     public function test_activity_subplugins_are_discovered(): void {
@@ -56,20 +59,23 @@ final class subplugin_test extends advanced_testcase {
     }
 
     /**
+     * test_mcp_registry_includes_activity_tools
+     *
      * @return void
+     * @throws coding_exception
      */
     public function test_mcp_registry_includes_activity_tools(): void {
-        $read = \local_mcp\read\registry::get_tools();
+        $read = read\registry::get_tools();
         $write = registry::get_tools();
 
         foreach (['forum_list_discussions', 'forum_get_posts',
-                'page_get_content', 'book_list_chapters', 'book_get_chapter'] as $name) {
+                     'page_get_content', 'book_list_chapters', 'book_get_chapter'] as $name) {
             $this->assertArrayHasKey($name, $read);
             $this->assertArrayNotHasKey($name, $write);
         }
         foreach (['forum_create_activity', 'page_create_activity', 'book_create_activity',
-                'forum_create_discussion', 'forum_reply_to_post',
-                'page_update_content', 'book_create_chapter', 'book_update_chapter'] as $name) {
+                     'forum_create_discussion', 'forum_reply_to_post',
+                     'page_update_content', 'book_create_chapter', 'book_update_chapter'] as $name) {
             $this->assertArrayHasKey($name, $write);
             $this->assertArrayNotHasKey($name, $read);
             $this->assertTrue($write[$name]->requires_confirmation());
@@ -77,12 +83,14 @@ final class subplugin_test extends advanced_testcase {
     }
 
     /**
+     * test_no_activity_tool_requires_plugin_controller_special_cases
+     *
      * @return void
      */
     public function test_no_activity_tool_requires_plugin_controller_special_cases(): void {
         foreach (manager::read_providers() as $provider) {
             foreach ($provider->get_read_tools() as $tool) {
-                $this->assertInstanceOf(\local_mcp\read\tool_interface::class, $tool);
+                $this->assertInstanceOf(read\tool_interface::class, $tool);
             }
         }
         foreach (manager::write_providers() as $provider) {

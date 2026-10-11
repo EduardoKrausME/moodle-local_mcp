@@ -23,6 +23,7 @@
  */
 
 namespace local_mcp\read\tool;
+
 use context;
 use context_course;
 use local_mcp\security\authenticated_identity;

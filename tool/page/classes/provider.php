@@ -34,14 +34,22 @@ use mcptool_page\write\update_content;
  * All Moodle page tooling is self-contained in this subplugin.
  */
 final class provider implements read_provider_interface, write_provider_interface {
-    /** @return array */
+    /**
+     * get_read_tools
+     *
+     * @return get_content[]
+     */
     public function get_read_tools(): array {
         return [
             new get_content(),
         ];
     }
 
-    /** @return array */
+    /**
+     * get_write_tools
+     *
+     * @return array
+     */
     public function get_write_tools(): array {
         return [
             new create_activity(),

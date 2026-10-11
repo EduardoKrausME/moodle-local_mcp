@@ -24,6 +24,7 @@
 
 use local_mcp\protocol\http;
 
+// phpcs:disable moodle.Files.RequireLogin.Missing
 require_once(__DIR__ . '/../../config.php');
 
 $base = $CFG->wwwroot . '/local/mcp';

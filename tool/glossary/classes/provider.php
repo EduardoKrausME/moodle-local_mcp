@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * MCP tools provider.
@@ -28,9 +28,10 @@ use local_mcp\extension\write_provider_interface;
 use mcptool_glossary\write\create_activity;
 use mcptool_glossary\write\create_entry;
 
-/** Register writable activity tools. */
+/**
+ * Register writable activity tools.
+ */
 final class provider implements write_provider_interface {
-    /** @return array */
     public function get_write_tools(): array {
         return [
             new create_activity(),

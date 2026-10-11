@@ -33,7 +33,10 @@ defined('MOODLE_INTERNAL') || die();
  * Verify invalid schemas are normalized or diagnosed before response delivery.
  */
 final class tool_schema_test extends advanced_testcase {
+
     /**
+     * test_empty_properties_are_normalized_and_reported
+     *
      * @return void
      */
     public function test_empty_properties_are_normalized_and_reported(): void {
@@ -52,6 +55,8 @@ final class tool_schema_test extends advanced_testcase {
     }
 
     /**
+     * test_nested_objects_keep_required_and_enum_arrays
+     *
      * @return void
      */
     public function test_nested_objects_keep_required_and_enum_arrays(): void {
@@ -74,6 +79,8 @@ final class tool_schema_test extends advanced_testcase {
     }
 
     /**
+     * test_bad_map_is_not_silently_accepted
+     *
      * @return void
      */
     public function test_bad_map_is_not_silently_accepted(): void {
@@ -85,6 +92,8 @@ final class tool_schema_test extends advanced_testcase {
     }
 
     /**
+     * test_schema_error_metadata_is_logged_without_secret_values
+     *
      * @return void
      */
     public function test_schema_error_metadata_is_logged_without_secret_values(): void {

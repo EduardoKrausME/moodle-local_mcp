@@ -93,7 +93,6 @@ final class create_course extends base_tool {
         ], ['fullname', 'shortname', 'categoryid']);
     }
 
-
     /**
      * Method resolve_context.
      *
@@ -179,8 +178,10 @@ final class create_course extends base_tool {
         $imagedata = [];
         if (!empty($arguments['image_base64'])) {
             $imagedata['image_base64'] = $arguments['image_base64'];
-        } else if (!empty($arguments['image_url'])) {
-            $imagedata['image_url'] = $arguments['image_url'];
+        } else {
+            if (!empty($arguments['image_url'])) {
+                $imagedata['image_url'] = $arguments['image_url'];
+            }
         }
         // Verify the supplied bytes or URL before creating a new course.
         if ($imagedata) {
