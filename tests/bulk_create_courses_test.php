@@ -115,7 +115,7 @@ final class bulk_create_courses_test extends advanced_testcase {
         $this->assertSame(0, $result['skipped_count']);
         foreach ($result['created'] as $course) {
             $record = $DB->get_record('course', ['id' => $course['id']], '*', MUST_EXIST);
-            $this->assertSame(FORMAT_HTML, (int)$record->summaryformat);
+            $this->assertSame((int)FORMAT_HTML, (int)$record->summaryformat);
             $this->assertStringContainsString('<strong>Cidades Inteligentes</strong>', $record->summary);
             $this->assertSame(0, (int)$record->visible);
             $this->assertSame((int)$category->id, (int)$record->category);

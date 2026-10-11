@@ -163,7 +163,7 @@ final class course_categories_test extends advanced_testcase {
         $this->assertArrayNotHasKey('image_base64', $preview);
         $created = $tool->execute($input, $identity);
         $this->assertSame('CITTA-101', $created['idnumber']);
-        $this->assertSame(FORMAT_HTML, $created['summaryformat']);
+        $this->assertSame((int)FORMAT_HTML, $created['summaryformat']);
         $this->assertStringContainsString('<strong>Course description</strong>', $created['summary']);
         $this->assertFalse($created['visible']);
         $this->assertNotEmpty($created['image']);

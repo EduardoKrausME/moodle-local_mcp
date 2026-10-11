@@ -61,7 +61,7 @@ final class course_read_test extends advanced_testcase {
         $this->assertEquals(context_system::instance()->id,
             $tool->resolve_context(['courseid' => SITEID])->id);
         $result = $tool->execute(['courseid' => SITEID], $identity);
-        $this->assertSame(SITEID, $result['id']);
+        $this->assertSame((int)SITEID, $result['id']);
         $this->assertArrayHasKey('summary', $result);
         $this->assertArrayHasKey('summaryformat', $result);
         $this->assertArrayHasKey('categoryid', $result);
@@ -96,16 +96,16 @@ final class course_read_test extends advanced_testcase {
         $this->assertSame((int)$hidden->id, $found['id']);
         $this->assertSame((int)$category->id, $found['categoryid']);
         $this->assertSame('<p>HTML description</p>', $found['summary']);
-        $this->assertSame(FORMAT_HTML, $found['summaryformat']);
+        $this->assertSame((int)FORMAT_HTML, $found['summaryformat']);
         $this->assertFalse($found['visible']);
 
-        $withoutHidden = $tool->execute(['shortname' => 'CITTA-EXACT',
+        $withouthidden = $tool->execute(['shortname' => 'CITTA-EXACT',
             'includehidden' => false], $identity);
-        $this->assertCount(0, $withoutHidden['courses']);
+        $this->assertCount(0, $withouthidden['courses']);
 
-        $siteExcluded = $tool->execute(['query' => '',
+        $siteexcluded = $tool->execute(['query' => '',
             'includehidden' => true], $identity);
-        foreach ($siteExcluded['courses'] as $course) {
+        foreach ($siteexcluded['courses'] as $course) {
             $this->assertNotEquals(SITEID, $course['id']);
         }
     }
@@ -136,9 +136,23 @@ final class course_read_test extends advanced_testcase {
             'categoryid' => (int)$destination->id,
         ], $identity);
         $this->assertSame((int)$destination->id, $result['categoryid']);
-        $this->assertSame(FORMAT_HTML, $result['summaryformat']);
+        $this->assertSame((int)FORMAT_HTML, $result['summaryformat']);
         $this->assertStringContainsString('<strong>Updated HTML</strong>', $result['summary']);
         $this->assertSame((int)$destination->id,
             (int)$DB->get_field('course', 'category', ['id' => $course->id]));
+    }
+    /**
+     * Verify the site course cannot be edited through the course update tool.
+     *
+     * @return void
+     */
+    public function test_update_course_rejects_site_course(): void {
+        $this->resetAfterTest();
+        $identity = $this->admin_identity();
+        $this->expectException(exception\api_exception::class);
+        (new update_course())->execute([
+            'courseid' => (int)SITEID,
+            'fullname' => 'Must not change the site course',
+        ], $identity);
     }
 }

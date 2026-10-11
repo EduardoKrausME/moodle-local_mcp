@@ -92,7 +92,7 @@ final class get_course extends base_tool {
      */
     public function resolve_context(array $arguments): context {
         $courseid = (int)$arguments['courseid'];
-        return $courseid === SITEID
+        return $courseid === (int)SITEID
             ? context_system::instance()
             : context_course::instance($courseid, MUST_EXIST);
     }
@@ -113,7 +113,7 @@ final class get_course extends base_tool {
         // Read the complete DB record instead of reusing the possibly partial
         // $SITE/$COURSE global returned by get_course(), particularly for SITEID.
         $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
-        if ($courseid !== SITEID && !$course->visible) {
+        if ($courseid !== (int)SITEID && !$course->visible) {
             $context = context_course::instance($courseid, MUST_EXIST);
             if (!has_any_capability([
                 'moodle/course:viewhiddencourses',

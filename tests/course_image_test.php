@@ -90,7 +90,7 @@ final class course_image_test extends advanced_testcase {
         ], 'Other material should not be lost');
         $this->assertFalse(image_service::read($course->id)['hasimage']);
         $result = image_service::replace($course->id, ['image_base64' => base64_encode(self::png())], $userid);
-        $this->assertSame($course->id, $result['courseid']);
+        $this->assertSame((int)$course->id, $result['courseid']);
         $this->assertSame('image/png', $result['image']['mimetype']);
         $this->assertSame(1, $result['image']['width']);
         $this->assertNotEmpty($result['image']['url']);

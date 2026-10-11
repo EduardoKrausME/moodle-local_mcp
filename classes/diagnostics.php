@@ -162,6 +162,8 @@ final class diagnostics {
         $value = preg_replace('~https?://[^\\s<>"\\x27]+~i', '[url]', $value);
         // Access and confirmation tokens use the same "mcp_" prefix.
         $value = preg_replace('/mcp_[A-Za-z0-9_-]{12,}/', '[token]', $value);
+        // Bearer credentials must be redacted even after the token itself was replaced.
+        $value = preg_replace('/\\bBearer\\s+(?:\\[token\\]|[^\\s&]+)/i', 'Bearer=[redacted]', $value);
         $value = preg_replace('/\\b(Bearer|authorization|password|secret|toke|token)\\s*[:=]\\s*[^\\s&]+/i',
             '$1=[redacted]', $value);
         // Avoid accidental Base64 and HTML blobs from third-party exception messages.

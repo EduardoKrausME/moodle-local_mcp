@@ -111,10 +111,10 @@ final class update_course extends base_tool {
     public function execute(array $arguments, authenticated_identity $identity): array {
         global $CFG;
         require_once($CFG->dirroot . '/course/lib.php');
-        if ((int)$arguments['courseid'] === SITEID) {
+        if ((int)$arguments['courseid'] === (int)SITEID) {
             throw new api_exception('invalid_course', 400, 'The site course cannot be updated this way.');
         }
-        if (isset($arguments['summaryformat']) && (int)$arguments['summaryformat'] !== FORMAT_HTML) {
+        if (isset($arguments['summaryformat']) && (int)$arguments['summaryformat'] !== (int)FORMAT_HTML) {
             throw new api_exception('invalid_summaryformat', 400, 'Only summaryformat=1 (HTML) is supported.');
         }
         $context = $this->resolve_context($arguments);
