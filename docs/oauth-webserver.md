@@ -55,14 +55,22 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ## Apache
 
-For a Moodle installed at the document root, add these rules to `.htaccess`
-*before* generic fallback rules (mod_rewrite and AllowOverride required):
+The plugin installs its own [`.htaccess`](../.htaccess) in `local/mcp`, which handles
+`/local/mcp/server.php/.well-known/openid-configuration` and the equivalent
+authorization-server metadata fallback for `read.php` and `write.php`. This
+specific URL must respond HTTP 200 with JSON and an `issuer` equal to the
+full `https://<host>/local/mcp/server.php` URL.
 
-```apache
-RewriteEngine On
-RewriteRule ^\.well-known/(oauth-authorization-server|openid-configuration)(/local/mcp(/(server|read|write)\.php)?)?/?$ local/mcp/oauth-metadata.php [L,QSA]
-RewriteRule ^\.well-known/oauth-protected-resource(/local/mcp/(server|read|write)\.php)?/?$ local/mcp/oauth-resource.php [L,QSA]
-```
+A `.htaccess` inside `local/mcp` **cannot** handle `/.well-known/` URLs at the
+domain root. For those paths, merge the separate deployable
+[`docs/moodle-root.htaccess`](moodle-root.htaccess) into the Moodle installation's
+*existing document-root* `.htaccess`, before catch-all rules. Do not overwrite
+Moodle's existing `.htaccess` or its security rules. Apache 2.4 `mod_rewrite`
+and `AllowOverride FileInfo` or `All` are required.
+
+**This Apache setup does not work on Nginx.** In the Univasco deployment,
+configure the Nginx `location` directives above; putting `.htaccess`
+anywhere on that server does not change its request routing.
 
 ## Verify on `univasco.eadsuporte.com.br`
 
@@ -76,6 +84,7 @@ BASE=https://univasco.eadsuporte.com.br
 curl -i "$BASE/.well-known/oauth-authorization-server/local/mcp"
 curl -i "$BASE/.well-known/oauth-authorization-server/local/mcp/server.php"
 curl -i "$BASE/.well-known/oauth-authorization-server"
+curl -i "$BASE/local/mcp/server.php/.well-known/openid-configuration"
 
 # A GET without credentials should discover OAuth (HTTP 401 with resource_metadata).
 curl -i "$BASE/local/mcp/server.php"

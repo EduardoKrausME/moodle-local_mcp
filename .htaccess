@@ -1,0 +1,16 @@
+# Moodle MCP: Apache 2.4+ OAuth/OIDC discovery aliases.
+# This file is installed in Moodle's local/mcp directory.
+# A .htaccess here cannot handle host-root /.well-known/ URLs.
+# Those require the Moodle document-root rules in docs/moodle-root.htaccess.
+# Nginx ignores .htaccess entirely; see docs/oauth-webserver.md.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # MCP clients may append metadata paths to server.php (also read.php/write.php).
+    # The PHP endpoint uses REQUEST_URI to select the matching OAuth issuer.
+    RewriteRule ^(server|read|write)\.php/\.well-known/(oauth-authorization-server|openid-configuration)/?$ oauth-metadata.php [END,QSA]
+
+    # Local plugin metadata discovery and compatibility with prior hidden PHP paths.
+    RewriteRule ^\.well-known/(oauth-authorization-server|openid-configuration)(\.php)?/?$ oauth-metadata.php [END,QSA]
+    RewriteRule ^\.well-known/oauth-protected-resource(\.php)?/?$ oauth-resource.php [END,QSA]
+</IfModule>
