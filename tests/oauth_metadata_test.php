@@ -28,8 +28,6 @@ use advanced_testcase;
 use local_mcp\oauth\metadata;
 use local_mcp\oauth\resource;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Tests RFC 8414 discovery and compatibility with path-aware MCP clients.
  */

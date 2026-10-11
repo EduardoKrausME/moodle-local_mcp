@@ -118,6 +118,7 @@ final class diagnostics {
     }
 
     /**
+     * phpcs:disable moodle.PHP.ForbiddenFunctions.FoundWithAlternative
      * Always record a significant MCP lifecycle event using PHP error_log().
      *
      * @param string $event Event name.
@@ -126,7 +127,6 @@ final class diagnostics {
      * @return void
      */
     public static function event(string $event, array $fields = [], string $level = 'INFO'): void {
-        // phpc:disable moodle.PHP.ForbiddenFunctions.FoundWithAlternative
         error_log(self::format($level, $event, $fields));
     }
 

@@ -34,8 +34,6 @@ use local_mcp\security\manual_token_service;
 use local_mcp\security\secret;
 use local_mcp\security\token_resolver;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class oauth_test.
  */

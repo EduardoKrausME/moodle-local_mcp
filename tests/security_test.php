@@ -29,8 +29,6 @@ use context_system;
 use local_mcp\security\confirmation_service;
 use local_mcp\security\secret;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class security_test.
  */

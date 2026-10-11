@@ -33,8 +33,6 @@ use local_mcp\read\registry as read_registry;
 use local_mcp\security\authenticated_identity;
 use local_mcp\write\registry as write_registry;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Question bank READ/WRITE integration tests.
  */

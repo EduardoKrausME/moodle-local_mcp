@@ -36,8 +36,6 @@ use local_mcp\write\tool\create_category;
 use local_mcp\write\tool\update_category;
 use local_mcp\write\tool\create_course;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Exercising course/category tool operations on test Moodle data.
  */

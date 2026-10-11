@@ -34,8 +34,6 @@ use local_mcp\read\tool\search_courses;
 use local_mcp\security\authenticated_identity;
 use local_mcp\write\tool\update_course;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Validate safe administration queries and course metadata changes.
  */

@@ -28,8 +28,6 @@ use advanced_testcase;
 use local_mcp\exception\api_exception;
 use local_mcp\security\rate_limiter;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Test independent counters and requests sharing one token.
  */

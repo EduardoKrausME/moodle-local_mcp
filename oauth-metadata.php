@@ -25,6 +25,7 @@
 use local_mcp\oauth\metadata;
 use local_mcp\protocol\http;
 
+// phpcs:disable moodle.Files.RequireLogin.Missing
 require_once(__DIR__ . '/../../config.php');
 
 http::json(metadata::authorization_server());
