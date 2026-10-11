@@ -29,8 +29,6 @@ use local_mcp\read\tool_interface;
 use local_mcp\security\authenticated_identity;
 use local_mcp\write\registry;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Class registry_test.
  */

@@ -28,6 +28,7 @@ use local_mcp\protocol\http;
 use local_mcp\security\rate_limiter;
 use local_mcp\security\transport;
 
+// phpcs:disable moodle.Files.RequireLogin.Missing
 define('NO_DEBUG_DISPLAY', true);
 require_once(__DIR__ . '/../../../config.php');
 

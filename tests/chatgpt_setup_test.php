@@ -29,8 +29,6 @@ use dml_exception;
 use local_mcp\oauth\connection_service;
 use local_mcp\ui\chatgpt_setup;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Tests for the conditional ChatGPT getting-started guide.
  */

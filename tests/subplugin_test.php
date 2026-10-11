@@ -33,8 +33,6 @@ use local_mcp\extension\write_provider_interface;
 use local_mcp\write\registry;
 use local_mcp\write\tool_interface;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Subplugins are visible to Moodle and exposed without core activity switches.
  */

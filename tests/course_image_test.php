@@ -36,8 +36,6 @@ use local_mcp\write\tool\set_course_image;
 use stored_file_creation_exception;
 use Throwable;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Course image integration tests.
  */

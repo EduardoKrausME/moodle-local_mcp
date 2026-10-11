@@ -29,8 +29,6 @@ use local_mcp\protocol\mcp_server;
 use local_mcp\security\authenticated_identity;
 use ReflectionMethod;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Test the two-phase MCP WRITE flow with a real course category tool.
  */

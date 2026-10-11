@@ -97,11 +97,12 @@ final class http {
                 throw new api_exception('invalid_token', 401);
             }
             $token = $hastoke ? $_GET['toke'] : $_GET['token'];
-            if (!is_string($token) || strlen($token) > 128 ||
-                !preg_match('/^mcp_[A-Za-z0-9_-]{40,}$/D', $token)
-                || str_starts_with($token, 'mcp_at_')
-                || str_starts_with($token, 'mcp_rt_')
-                || str_starts_with($token, 'mcp_confirm_')) {
+            if (!is_string($token) ||
+                strlen($token) > 128 ||
+                !preg_match('/^mcp_[A-Za-z0-9_-]{40,}$/D', $token) ||
+                str_starts_with($token, 'mcp_at_') ||
+                str_starts_with($token, 'mcp_rt_') ||
+                str_starts_with($token, 'mcp_confirm_')) {
                 throw new api_exception('invalid_token', 401);
             }
             return ['Bearer ' . $token, $token];

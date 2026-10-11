@@ -27,8 +27,6 @@ namespace local_mcp;
 use advanced_testcase;
 use local_mcp\protocol\discovery;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Validate the new MCP handshake without needing an HTTP session.
  */

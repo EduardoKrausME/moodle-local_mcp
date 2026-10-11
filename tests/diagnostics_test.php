@@ -29,8 +29,6 @@ use local_mcp\diagnostics;
 use local_mcp\exception\api_exception;
 use stdClass;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Test safe and useful PHP error_log diagnostic formats.
  */

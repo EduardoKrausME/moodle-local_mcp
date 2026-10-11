@@ -34,8 +34,6 @@ use local_mcp\security\scope;
 use local_mcp\security\secret;
 use local_mcp\security\token_resolver;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Test temporary URL-token authentication without OAuth.
  */

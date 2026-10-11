@@ -126,6 +126,7 @@ final class diagnostics {
      * @return void
      */
     public static function event(string $event, array $fields = [], string $level = 'INFO'): void {
+        // phpc:disable moodle.PHP.ForbiddenFunctions.FoundWithAlternative
         error_log(self::format($level, $event, $fields));
     }
 

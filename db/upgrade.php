@@ -24,8 +24,6 @@
 
 use local_mcp\security\rate_limiter;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Upgrade the MCP plugin schema.
  *

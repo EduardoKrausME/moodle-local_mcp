@@ -27,8 +27,6 @@ namespace local_mcp;
 use advanced_testcase;
 use local_mcp\protocol\tool_schema;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Verify invalid schemas are normalized or diagnosed before response delivery.
  */

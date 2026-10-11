@@ -32,8 +32,6 @@ use local_mcp\exception\api_exception;
 use local_mcp\extension\write_provider_interface;
 use local_mcp\write\registry;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * The six activity integrations must be installable and discoverable.
  */

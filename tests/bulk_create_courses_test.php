@@ -35,8 +35,6 @@ use local_mcp\security\authenticated_identity;
 use local_mcp\write\registry;
 use local_mcp\write\tool\bulk_create_courses;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Batch creation must be safe to retry and avoid modifying existing courses.
  */

@@ -25,6 +25,7 @@
 use local_mcp\oauth\authorization_service;
 use local_mcp\security\transport;
 
+// phpcs:disable moodle.Files.RequireLogin.Missing
 require_once(__DIR__ . '/../../../config.php');
 
 transport::require_secure();

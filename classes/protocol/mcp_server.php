@@ -65,7 +65,7 @@ final class mcp_server {
      */
     private static function plugin_release(): string {
         $plugin = new stdClass();
-        require dirname(__DIR__, 2) . '/version.php';
+        require(dirname(__DIR__, 2) . '/version.php');
         return (string)$plugin->release;
     }
 

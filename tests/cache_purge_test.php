@@ -33,8 +33,6 @@ use local_mcp\write\registry;
 use local_mcp\write\tool\purge_all_caches;
 use local_mcp\write\tool\purge_css_cache;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Validate permissions and previews without purging the PHPUnit environment.
  */

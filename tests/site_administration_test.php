@@ -32,8 +32,6 @@ use local_mcp\security\authenticated_identity;
 use local_mcp\write\tool\set_site_config;
 use moodle_exception;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Site configuration and Check API integration.
  */
