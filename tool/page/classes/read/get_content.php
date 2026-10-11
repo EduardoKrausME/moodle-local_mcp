@@ -122,6 +122,5 @@ final class get_content extends base_tool {
             'revision' => (int)$page->revision,
             'url' => (new moodle_url('/mod/page/view.php', ['id' => $cm->id]))->out(false),
         ];
-
     }
 }

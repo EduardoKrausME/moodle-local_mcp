@@ -130,6 +130,5 @@ final class list_chapters extends base_tool {
         }
         return ['cmid' => (int)$cm->id, 'bookid' => (int)$book->id, 'chapters' => $rows,
             'revision' => (int)$book->revision];
-
     }
 }

@@ -135,6 +135,5 @@ final class list_discussions extends base_tool {
             }
         }
         return ['cmid' => (int)$cm->id, 'forumid' => (int)$forum->id, 'discussions' => $rows];
-
     }
 }

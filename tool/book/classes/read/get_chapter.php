@@ -125,6 +125,5 @@ final class get_chapter extends base_tool {
             'title' => $chapter->title, 'pagenum' => (int)$chapter->pagenum,
             'content' => format_text($chapter->content, $chapter->contentformat,
                 ['context' => $context, 'filter' => true])];
-
     }
 }

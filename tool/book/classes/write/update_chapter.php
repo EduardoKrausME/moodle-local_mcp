@@ -131,6 +131,5 @@ final class update_chapter extends base_tool {
         chapter_updated::create_from_chapter($book, $context, $chapter)->trigger();
         $transaction->allow_commit();
         return ['updated' => true, 'chapterid' => (int)$chapter->id, 'revision' => (int)$book->revision + 1];
-
     }
 }

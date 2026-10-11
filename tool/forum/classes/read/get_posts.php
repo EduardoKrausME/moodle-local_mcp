@@ -142,6 +142,5 @@ final class get_posts extends base_tool {
         }
         return ['discussionid' => (int)$discussion->id, 'title' => $discussion->name, 'offset' => $offset,
             'limit' => $limit, 'posts' => $posts];
-
     }
 }

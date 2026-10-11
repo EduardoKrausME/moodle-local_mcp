@@ -126,6 +126,5 @@ final class create_discussion extends base_tool {
         $id = forum_add_discussion($discussion, null, null, $identity->userid);
         return ['discussionid' => (int)$id,
             'url' => (new moodle_url('/mod/forum/discuss.php', ['d' => $id]))->out(false)];
-
     }
 }

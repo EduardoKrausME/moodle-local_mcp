@@ -118,6 +118,5 @@ final class update_content extends base_tool {
         page_update_instance($page, null);
         rebuild_course_cache($cm->course, true);
         return ['updated' => true, 'cmid' => (int)$cm->id, 'revision' => (int)$page->revision];
-
     }
 }

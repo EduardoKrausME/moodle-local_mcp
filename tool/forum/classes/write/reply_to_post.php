@@ -130,6 +130,5 @@ final class reply_to_post extends base_tool {
         ];
         $id = forum_add_new_post($post, null);
         return ['postid' => (int)$id, 'discussionid' => (int)$discussion->id];
-
     }
 }

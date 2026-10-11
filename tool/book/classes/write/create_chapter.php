@@ -128,6 +128,5 @@ final class create_chapter extends base_tool {
         chapter_created::create_from_chapter($book, $context, $chapter)->trigger();
         $transaction->allow_commit();
         return ['chapterid' => (int)$chapter->id, 'bookid' => (int)$book->id];
-
     }
 }
