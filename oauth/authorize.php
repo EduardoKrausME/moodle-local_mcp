@@ -56,6 +56,7 @@ require_login(null, false);
 
 $PAGE->set_context(context_system::instance());
 $PAGE->set_url($returnurl);
+$PAGE->requires->css(new moodle_url('/local/mcp/styles/consent.css'));
 $PAGE->set_title(get_string('pluginname', 'local_mcp'));
 $PAGE->set_heading(get_string('pluginname', 'local_mcp'));
 
@@ -107,8 +108,11 @@ if (!empty($parts['scheme']) && !empty($parts['host'])) {
 }
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('local_mcp/authorization_consent', [
-    'clientname' => s($client->name),
-    'origin' => s($origin),
+    // Moodle Mustache escapes these values when rendering untrusted client metadata.
+    'clientname' => $client->name,
+    'origin' => $origin,
+    'sitename' => $SITE->fullname,
+    'sitedomain' => (string)parse_url($CFG->wwwroot, PHP_URL_HOST),
     'read' => in_array('mcp:read', $scopes, true),
     'write' => in_array('mcp:write', $scopes, true),
     'date' => userdate(time()),
