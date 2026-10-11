@@ -55,22 +55,16 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ## Apache
 
-The plugin installs its own [`.htaccess`](../.htaccess) in `local/mcp`, which handles
-`/local/mcp/server.php/.well-known/openid-configuration` and the equivalent
-authorization-server metadata fallback for `read.php` and `write.php`. This
-specific URL must respond HTTP 200 with JSON and an `issuer` equal to the
-full `https://<host>/local/mcp/server.php` URL.
+The `.htaccess` is **inside the plugin's own directory**, at
+`local/mcp/.htaccess` (the repository root). It rewrites the MCP-local
+`server.php/.well-known/openid-configuration`, `read.php` and `write.php`
+fallbacks and the plugin-local `.well-known` paths to the OAuth metadata
+handlers. It requires Apache 2.4, mod_rewrite and AllowOverride FileInfo (or All).
 
-A `.htaccess` inside `local/mcp` **cannot** handle `/.well-known/` URLs at the
-domain root. For those paths, merge the separate deployable
-[`docs/moodle-root.htaccess`](moodle-root.htaccess) into the Moodle installation's
-*existing document-root* `.htaccess`, before catch-all rules. Do not overwrite
-Moodle's existing `.htaccess` or its security rules. Apache 2.4 `mod_rewrite`
-and `AllowOverride FileInfo` or `All` are required.
-
-**This Apache setup does not work on Nginx.** In the Univasco deployment,
-configure the Nginx `location` directives above; putting `.htaccess`
-anywhere on that server does not change its request routing.
+A file located inside `local/mcp` cannot catch requests for
+`/.well-known/...` at the domain root. The web server has to route those
+requests in its root configuration. Nginx does not process `.htaccess`;
+the Nginx configuration shown above remains necessary for that server.
 
 ## Verify on `univasco.eadsuporte.com.br`
 
