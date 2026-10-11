@@ -32,7 +32,7 @@ transport::require_secure();
 $clientid = required_param('client_id', PARAM_RAW_TRIMMED);
 $redirecturi = required_param('redirect_uri', PARAM_URL);
 $responsetype = required_param('response_type', PARAM_ALPHANUMEXT);
-$scopeparam = required_param('scope', PARAM_RAW_TRIMMED);
+$scopeparam = optional_param('scope', 'mcp:read', PARAM_RAW_TRIMMED);
 $state = required_param('state', PARAM_RAW_TRIMMED);
 $challenge = required_param('code_challenge', PARAM_RAW_TRIMMED);
 $method = required_param('code_challenge_method', PARAM_ALPHANUMEXT);

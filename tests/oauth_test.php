@@ -85,4 +85,113 @@ final class oauth_test extends advanced_testcase {
         resource::validate($read . '/other');
     }
 
+    /**
+     * An OAuth access token and a manual token authenticate independently.
+     *
+     * @return void
+     */
+    public function test_oauth_and_manual_tokens_coexist(): void {
+        global $DB, $USER;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $clientid = 'test_' . bin2hex(random_bytes(8));
+        $redirect = 'https://client.example/oauth/callback';
+        $id = $DB->insert_record('local_mcp_oauth_client', (object)[
+            'clientid' => $clientid, 'name' => 'OAuth test', 'description' => '',
+            'clienturi' => 'https://client.example',
+            'redirecturis' => json_encode([$redirect]), 'enabled' => 1, 'clienttype' => 'public',
+            'dynamic' => 0, 'timecreated' => time(), 'timemodified' => time(),
+        ]);
+        $client = $DB->get_record('local_mcp_oauth_client', ['id' => $id], '*', MUST_EXIST);
+        $verifier = str_repeat('v', 43);
+        $challenge = \local_mcp\security\secret::base64url(hash('sha256', $verifier, true));
+        $resource = resource::endpoint('server');
+        $code = authorization_service::issue_code($client, (int)$USER->id, $redirect,
+            ['mcp:read', 'mcp:write'], $challenge, $resource);
+        $pair = \local_mcp\oauth\token_service::exchange_code($clientid, $code, $redirect, $verifier, $resource);
+
+        $identity = \local_mcp\security\token_resolver::from_bearer('Bearer ' . $pair['access_token'], $resource);
+        $this->assertSame('oauth', $identity->type);
+        $this->assertTrue($identity->has_scope('mcp:read'));
+        $this->assertTrue($identity->has_scope('mcp:write'));
+
+        $manual = \local_mcp\security\manual_token_service::create(
+            'Legacy token', (int)$USER->id, true, false, time() + DAYSECS);
+        $legacy = \local_mcp\security\token_resolver::from_bearer('Bearer ' . $manual['token'], $resource);
+        $this->assertSame('manual', $legacy->type);
+        $this->assertTrue($legacy->has_scope('mcp:read'));
+        $this->assertFalse($legacy->has_scope('mcp:write'));
+
+        // Tightening an OAuth connection must immediately affect issued credentials.
+        $DB->set_field('local_mcp_connection', 'scopes', 'mcp:read', ['id' => $identity->connectionid]);
+        $reduced = \local_mcp\security\token_resolver::from_bearer('Bearer ' . $pair['access_token'], $resource);
+        $this->assertFalse($reduced->has_scope('mcp:write'));
+        $rotated = \local_mcp\oauth\token_service::refresh($clientid, $pair['refresh_token'], $resource);
+        $this->assertSame('mcp:read', $rotated['scope']);
+
+        // Disabling an OAuth client never disables manually issued tokens.
+        $DB->set_field('local_mcp_oauth_client', 'enabled', 0, ['id' => $id]);
+        try {
+            \local_mcp\security\token_resolver::from_bearer('Bearer ' . $rotated['access_token'], $resource);
+            $this->fail('Disabled clients must not authenticate.');
+        } catch (api_exception $e) {
+            $this->assertSame(401, $e->httpstatus);
+        }
+        $this->assertSame('manual',
+            \local_mcp\security\token_resolver::from_bearer('Bearer ' . $manual['token'], $resource)->type);
+    }
+
+    /**
+     * OAuth rejects unknown scopes rather than silently granting a subset.
+     *
+     * @return void
+     */
+    public function test_reject_unknown_oauth_scopes(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $clientid = 'test_' . bin2hex(random_bytes(8));
+        $DB->insert_record('local_mcp_oauth_client', (object)[
+            'clientid' => $clientid, 'name' => 'OAuth test', 'description' => '',
+            'clienturi' => 'https://client.example',
+            'redirecturis' => json_encode(['https://client.example/callback']), 'enabled' => 1,
+            'clienttype' => 'public', 'dynamic' => 0,
+            'timecreated' => time(), 'timemodified' => time(),
+        ]);
+        $this->expectException(api_exception::class);
+        authorization_service::validate_request([
+            'client_id' => $clientid, 'redirect_uri' => 'https://client.example/callback',
+            'response_type' => 'code', 'scope' => 'mcp:read admin:everything',
+            'state' => 'state', 'code_challenge' => str_repeat('a', 43),
+            'code_challenge_method' => 'S256', 'resource' => resource::endpoint('server'),
+        ]);
+    }
+
+    /**
+     * Without a scope parameter OAuth falls back to read-only.
+     *
+     * @return void
+     */
+    public function test_missing_oauth_scope_defaults_to_read(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $clientid = 'test_' . bin2hex(random_bytes(8));
+        $DB->insert_record('local_mcp_oauth_client', (object)[
+            'clientid' => $clientid, 'name' => 'OAuth test', 'description' => '',
+            'clienturi' => 'https://client.example',
+            'redirecturis' => json_encode(['https://client.example/callback']), 'enabled' => 1,
+            'clienttype' => 'public', 'dynamic' => 0,
+            'timecreated' => time(), 'timemodified' => time(),
+        ]);
+        [, $scopes] = authorization_service::validate_request([
+            'client_id' => $clientid, 'redirect_uri' => 'https://client.example/callback',
+            'response_type' => 'code', 'state' => 'state',
+            'code_challenge' => str_repeat('a', 43),
+            'code_challenge_method' => 'S256', 'resource' => resource::endpoint('server'),
+        ]);
+        $this->assertSame(['mcp:read'], $scopes);
+    }
+
 }

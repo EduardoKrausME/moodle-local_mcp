@@ -40,7 +40,7 @@ final class authorization_service {
      * @return array Return value.
      */
     public static function validate_request(array $params): array {
-        foreach (['client_id', 'redirect_uri', 'response_type', 'scope', 'state', 'code_challenge', 'code_challenge_method', 'resource'] as $required) {
+        foreach (['client_id', 'redirect_uri', 'response_type', 'state', 'code_challenge', 'code_challenge_method', 'resource'] as $required) {
             if (!isset($params[$required]) || $params[$required] === '') {
                 throw new api_exception('invalid_request', 400);
             }
@@ -54,8 +54,12 @@ final class authorization_service {
         resource::validate($params['resource']);
         $client = client_service::by_clientid($params['client_id']);
         client_service::validate_redirect_uri($client, $params['redirect_uri']);
-        $scopes = scope::parse($params['scope']);
-        if (!$scopes) {
+        // OAuth scopes are optional; default to the least-privileged MCP scope.
+        $requested = trim((string)($params['scope'] ?? ''));
+        $requested = $requested === '' ? scope::READ : $requested;
+        $scopes = scope::parse($requested);
+        $requestedscopes = preg_split('/\s+/', $requested, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        if (!$scopes || count($scopes) !== count(array_unique($requestedscopes))) {
             throw new api_exception('invalid_scope', 400);
         }
         return [$client, $scopes];

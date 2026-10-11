@@ -48,9 +48,12 @@ final class token_service {
         $client = client_service::by_clientid($clientid);
         client_service::validate_redirect_uri($client, $redirecturi);
         $resource = resource::validate($resource);
+        if (!preg_match('/^[A-Za-z0-9._~-]{43,128}$/D', $verifier)) {
+            throw new api_exception('invalid_grant', 400);
+        }
         $hash = secret::hash($code);
-        $rec = $DB->get_record('local_mcp_auth_code', ['codehash' => $hash, 'clientid' => $client->id], '*', MUST_EXIST);
-        if ($rec->used || $rec->expires < time() || !hash_equals($rec->redirecturi, $redirecturi)
+        $rec = $DB->get_record('local_mcp_auth_code', ['codehash' => $hash, 'clientid' => $client->id]);
+        if (!$rec || $rec->used || $rec->expires < time() || !hash_equals($rec->redirecturi, $redirecturi)
             || !hash_equals((string)$rec->resource, $resource)) {
             throw new api_exception('invalid_grant', 400);
         }
@@ -68,20 +71,41 @@ final class token_service {
      *
      * @param string $clientid Parameter clientid.
      * @param string $refresh Parameter refresh.
+     * @param ?string $resource Optional RFC 8707 resource indicator.
      * @return array Return value.
      */
-    public static function refresh(string $clientid, string $refresh): array {
+    public static function refresh(string $clientid, string $refresh, ?string $resource = null): array {
         global $DB;
         $client = client_service::by_clientid($clientid);
         $hash = secret::hash($refresh);
-        $rec = $DB->get_record('local_mcp_refresh_token', ['tokenhash' => $hash, 'clientid' => $client->id], '*', MUST_EXIST);
+        $rec = $DB->get_record('local_mcp_refresh_token', ['tokenhash' => $hash, 'clientid' => $client->id]);
+        if (!$rec) {
+            throw new api_exception('invalid_grant', 400);
+        }
         if ($rec->revokedat || $rec->usedat || $rec->expiresat < time()) {
             self::revoke_family($rec->family);
             throw new api_exception('invalid_grant', 400);
         }
+        $audience = resource::validate((string)$rec->resource);
+        if ($resource !== null && !hash_equals($audience, resource::validate($resource))) {
+            throw new api_exception('invalid_grant', 400);
+        }
+        $connection = $DB->get_record('local_mcp_connection', ['id' => $rec->connectionid, 'enabled' => 1]);
+        if (!$connection || $connection->revokedat ||
+                (int)$connection->clientid !== (int)$client->id ||
+                (int)$connection->userid !== (int)$rec->userid) {
+            throw new api_exception('invalid_grant', 400);
+        }
+        $scopes = array_values(array_intersect(
+            \local_mcp\security\scope::parse($rec->scopes),
+            \local_mcp\security\scope::parse($connection->scopes)
+        ));
+        if (!$scopes) {
+            throw new api_exception('invalid_grant', 400);
+        }
         $DB->set_field('local_mcp_refresh_token', 'usedat', time(), ['id' => $rec->id]);
-        return self::issue_pair($rec->userid, $client->id, $rec->connectionid, $rec->scopes,
-            resource::validate((string)$rec->resource), $rec->family, $rec->generation + 1);
+        return self::issue_pair($rec->userid, $client->id, $rec->connectionid,
+            \local_mcp\security\scope::to_string($scopes), $audience, $rec->family, $rec->generation + 1);
     }
 
     /**

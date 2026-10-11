@@ -738,3 +738,24 @@ The MCP endpoint does not fetch arbitrary remote URLs for file uploads.
 
 After installing the new subplugins, run Moodle's upgrade process and refresh
 the MCP connector so these WRITE tools appear in the published tool schema.
+
+## OAuth for ChatGPT and legacy tokens (1.3.13)
+
+OAuth 2.1 Authorization Code + PKCE S256 is the recommended authentication method for clients
+that support interactive sign-in. Manual `mcp_...` tokens remain fully supported using
+`Authorization: Bearer mcp_...`; for compatibility, the combined `server.php` endpoint also
+accepts exactly one of `?token=mcp_...` or `?toke=mcp_...`. The query-string form is
+intended for legacy/testing integrations because URLs can appear in web-server logs.
+Neither OAuth access nor refresh tokens are allowed in query strings.
+
+For OAuth, connect to `/local/mcp/server.php`, sign in to Moodle, approve READ and/or
+WRITE, and let the client exchange the authorization code with PKCE. OAuth access and refresh
+tokens use separate tables from manual tokens; revoking one authentication method does not
+revoke the other. OAuth scopes cannot exceed the current connection permissions, even if a
+previous access token had broader permissions. Missing OAuth scope defaults to `mcp:read`.
+
+**Important deployment step:** because Moodle plugins cannot themselves register site-root
+`/.well-known/` routes, an RFC 8414 discovery rewrite must be configured on the front-end
+web server for automatic OAuth client discovery. See [OAuth discovery setup](docs/oauth-webserver.md).
+The protected-resource document is already discoverable from the MCP server's
+`WWW-Authenticate` response; the authorization-server metadata rewrite is still needed.

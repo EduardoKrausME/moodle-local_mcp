@@ -87,7 +87,8 @@ final class http {
      * @return array Bearer authorization header and raw token.
      */
     public static function bearer(bool $allowquerytoken = false): array {
-        $header = (string)($_SERVER['HTTP_AUTHORIZATION'] ?? '');
+        // PHP-FPM/CGI deployments may forward Authorization through REDIRECT_HTTP_AUTHORIZATION.
+        $header = (string)($_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '');
         $hastoke = array_key_exists('toke', $_GET);
         $hastoken = array_key_exists('token', $_GET);
 

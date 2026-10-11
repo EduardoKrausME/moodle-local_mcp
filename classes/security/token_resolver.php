@@ -59,14 +59,23 @@ final class token_resolver {
                     throw new api_exception('expired_token', 401);
                 }
                 $connection = $DB->get_record('local_mcp_connection', ['id' => $rec->connectionid, 'enabled' => 1]);
-                if (!$connection || $connection->revokedat) {
+                if (!$connection || $connection->revokedat ||
+                        (int)$connection->userid !== (int)$rec->userid ||
+                        (int)$connection->clientid !== (int)$rec->clientid ||
+                        !$DB->record_exists('local_mcp_oauth_client', ['id' => $rec->clientid, 'enabled' => 1])) {
+                    throw new api_exception('invalid_token', 401);
+                }
+                // A connection can have its permissions reduced after an access token was issued.
+                // Do not let an older token restore the permissions that were removed.
+                $scopes = array_values(array_intersect(scope::parse($rec->scopes), scope::parse($connection->scopes)));
+                if (!$scopes) {
                     throw new api_exception('invalid_token', 401);
                 }
                 self::touch('local_mcp_access_token', $rec->id);
                 return new authenticated_identity(
                     (int)$rec->userid,
                     'oauth',
-                    scope::parse($rec->scopes),
+                    $scopes,
                     (int)$rec->clientid,
                     (int)$rec->connectionid,
                     (int)$rec->id,

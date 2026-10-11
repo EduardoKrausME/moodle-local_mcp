@@ -53,7 +53,8 @@ try {
     } else if ($grant === 'refresh_token') {
         $result = token_service::refresh(
             $clientid,
-            required_param('refresh_token', PARAM_RAW_TRIMMED)
+            required_param('refresh_token', PARAM_RAW_TRIMMED),
+            optional_param('resource', '', PARAM_URL) ?: null
         );
     } else {
         throw new api_exception('unsupported_grant_type', 400);
