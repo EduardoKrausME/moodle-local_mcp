@@ -141,6 +141,7 @@ final class course_read_test extends advanced_testcase {
         $this->assertSame((int)$destination->id,
             (int)$DB->get_field('course', 'category', ['id' => $course->id]));
     }
+
     /**
      * Verify the site course cannot be edited through the course update tool.
      *
