@@ -129,7 +129,7 @@ final class http {
             // Query-token clients intentionally do not use OAuth discovery.
             if ($e->httpstatus === 401 &&
                 !array_key_exists('toke', $_GET) && !array_key_exists('token', $_GET)) {
-                $metadata = (new moodle_url('/local/mcp/.well-known/oauth-protected-resource.php',
+                $metadata = (new moodle_url('/local/mcp/oauth-resource.php',
                     ['side' => $side]))->out(false);
                 $headers[] = 'WWW-Authenticate: Bearer resource_metadata="' . $metadata . '"';
             }

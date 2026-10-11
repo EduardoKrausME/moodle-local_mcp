@@ -31,6 +31,7 @@ use local_mcp\audit\logger;
 use local_mcp\event\destructive_operation_executed;
 use local_mcp\event\write_operation_executed;
 use local_mcp\oauth\resource;
+use local_mcp\oauth\metadata;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\security\capability_guard;
@@ -83,12 +84,20 @@ final class mcp_server {
                 ? 'url_token' : (isset($_SERVER['HTTP_AUTHORIZATION']) ? 'header' : 'none'),
         ]);
         try {
-            // Stateless Streamable HTTP: clients can use POST without an SSE session.
+            // Some MCP clients probe metadata appended to server.php. Serve only the
+            // exact public discovery path; normal MCP requests remain authenticated.
+            if (($_SERVER['REQUEST_METHOD'] ?? '') === 'GET' &&
+                    metadata::is_appended_discovery($this->side)) {
+                http::json(metadata::authorization_server());
+            }
+            // An anonymous GET must return a Bearer challenge so clients can discover
+            // OAuth through the protected-resource URL, instead of a bare HTTP 405.
+            [$authheader, $rawtoken] = http::bearer($this->side === 'server');
+            // Stateless Streamable HTTP only supports POST for normal MCP messages.
             if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
                 header('Allow: POST');
                 throw new api_exception('method_not_allowed', 405);
             }
-            [$authheader, $rawtoken] = http::bearer($this->side === 'server');
             $identity = token_resolver::from_bearer($authheader, resource::endpoint($this->side));
             // Moodle APIs frequently rely on the current user rather than a userid parameter.
             // Authentication is performed by the bearer token in this cookie-free request.

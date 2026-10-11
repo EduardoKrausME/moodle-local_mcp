@@ -1,68 +1,104 @@
-# OAuth automatic discovery for remote MCP clients
+# OAuth discovery for Moodle MCP behind Nginx or Apache
 
-Moodle's local plugin directory cannot automatically expose site-root `/.well-known/`
-paths. MCP clients discover authorization-server metadata using RFC 8414 from
-the issuer `https://moodle.example.org/local/mcp`, and therefore request
-`https://moodle.example.org/.well-known/oauth-authorization-server/local/mcp`.
-The PHP endpoint already exists at
-`https://moodle.example.org/local/mcp/.well-known/oauth-authorization-server.php`.
+MCP clients do not authenticate by reading `server.php` as a web page. They POST
+JSON-RPC to `/local/mcp/server.php`. Before the user signs in, the server returns
+`401` and a `WWW-Authenticate: Bearer resource_metadata="..."` challenge. Clients
+read the protected-resource metadata, then fetch authorization-server metadata.
 
-Configure ONE server-side internal rewrite for the canonical URL. This keeps the
-issuer constant and lets PKCE clients such as ChatGPT discover OAuth automatically.
+The PHP plugin already implements OAuth 2.1, including PKCE S256, but installing
+`local_mcp` cannot install the RFC 8414 site-root `/.well-known/` paths for you.
+Nginx and Apache must forward these paths to the plugin, without changing the
+public URL in the client's request. The plugin derives the issuer from the
+**original request path** and keeps it equal to the issuer the client probed.
 
-## Nginx
+## Nginx (Moodle at the HTTPS host root)
 
-Inside the HTTPS server block for a Moodle installed at the web root:
+Put these locations in your existing Moodle `server {}` block, **before a generic
+hidden-file deny regex**, and retain the existing PHP-FPM location. Do not put a
+`proxy_pass` or `fastcgi_pass` in these rules: internal rewrite to the PHP entrypoint
+allows your usual PHP location to handle the request.
 
 ```nginx
-location = /.well-known/oauth-authorization-server/local/mcp {
-    rewrite ^ /local/mcp/.well-known/oauth-authorization-server.php last;
+# OAuth 2.0 / RFC 8414: clients try root, /local/mcp and /local/mcp/server.php.
+location = /.well-known/oauth-authorization-server {
+    rewrite ^ /local/mcp/oauth-metadata.php last;
+}
+location = /.well-known/openid-configuration {
+    rewrite ^ /local/mcp/oauth-metadata.php last;
+}
+location ~ ^/\.well-known/(?:oauth-authorization-server|openid-configuration)/local/mcp(?:/(?:server|read|write)\.php)?/?$ {
+    rewrite ^ /local/mcp/oauth-metadata.php last;
+}
+
+# OAuth 2.0 protected-resource metadata / RFC 9728.
+location = /.well-known/oauth-protected-resource {
+    rewrite ^ /local/mcp/oauth-resource.php last;
+}
+location ~ ^/\.well-known/oauth-protected-resource/local/mcp/(?:server|read|write)\.php/?$ {
+    rewrite ^ /local/mcp/oauth-resource.php last;
 }
 ```
 
-Your existing PHP handler must process the rewritten file. Reload Nginx after
-validating its configuration. For a Moodle deployed in a subdirectory, include
-that subdirectory in both location and rewritten target, e.g.
-`/moodle/.well-known/oauth-authorization-server/local/mcp`.
+**Critical:** if a separate `location ~ /\.` block forbids `.well-known` paths,
+ensure the MCP regex locations appear before that block. The targets
+`oauth-metadata.php` and `oauth-resource.php` have no hidden path components.
+Do not route unrelated `/.well-known/` paths (such as ACME challenges) to MCP.
+
+For a Moodle installed under `/moodle`, prefix the matches and targets with
+`/moodle`. The PHP endpoints use `$CFG->wwwroot` and support a Moodle prefix.
+
+After updating the Moodle plugin and Nginx config, run:
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
 
 ## Apache
 
-In the Moodle document-root `.htaccess` (with mod_rewrite and AllowOverride enabled),
-before Moodle fallback rules:
+For a Moodle installed at the document root, add these rules to `.htaccess`
+*before* generic fallback rules (mod_rewrite and AllowOverride required):
 
 ```apache
 RewriteEngine On
-RewriteRule ^\.well-known/oauth-authorization-server/local/mcp/?$ local/mcp/.well-known/oauth-authorization-server.php [L,QSA]
+RewriteRule ^\.well-known/(oauth-authorization-server|openid-configuration)(/local/mcp(/(server|read|write)\.php)?)?/?$ local/mcp/oauth-metadata.php [L,QSA]
+RewriteRule ^\.well-known/oauth-protected-resource(/local/mcp/(server|read|write)\.php)?/?$ local/mcp/oauth-resource.php [L,QSA]
 ```
 
-Adapt the deployment prefix if Moodle is hosted under a subdirectory. Apache
-RewriteRules in a VirtualHost use leading slashes and different path handling.
+## Verify on `univasco.eadsuporte.com.br`
 
-## Verification
+First deploy the plugin and run the Moodle upgrade. Check the installed version:
+new PHP logs should report the updated release rather than `1.3.11`.
 
-1. GET the canonical discovery URL and confirm HTTP 200 with JSON containing
-   `issuer`, `authorization_endpoint`, `token_endpoint`,
-   `code_challenge_methods_supported: ["S256"]`, and
-   `registration_endpoint` when dynamic registration is enabled.
-2. Confirm the `issuer` value exactly matches `https://moodle.example.org/local/mcp`.
-3. POST to `/local/mcp/server.php` without credentials; confirm HTTP 401 and a
-   `WWW-Authenticate` header with `resource_metadata`.
-4. GET that resource metadata URL, confirm its `authorization_servers`
-   contains the same issuer and its `resource` is the canonical server URL.
-5. Sign in with a Moodle site administrator and authorize the requested scopes.
+```bash
+BASE=https://univasco.eadsuporte.com.br
 
-When reverse-proxy rules cannot be changed, use manual Bearer tokens on
-`server.php` as before, or configure the OAuth endpoint URLs explicitly if
-the client permits manual OAuth setup. **Do not** replace the issuer with the
-path of the PHP metadata file; that violates issuer matching and breaks
-OAuth server identification.
+# Both metadata URLs should return HTTP 200 and valid JSON.
+curl -i "$BASE/.well-known/oauth-authorization-server/local/mcp"
+curl -i "$BASE/.well-known/oauth-authorization-server/local/mcp/server.php"
+curl -i "$BASE/.well-known/oauth-authorization-server"
 
-For clients supporting OAuth, the endpoint URLs are:
+# A GET without credentials should discover OAuth (HTTP 401 with resource_metadata).
+curl -i "$BASE/local/mcp/server.php"
 
-- Authorization: `/local/mcp/oauth/authorize.php`
-- Token: `/local/mcp/oauth/token.php`
-- Dynamic registration: `/local/mcp/oauth/register.php`
-- Protected resource: `/local/mcp/.well-known/oauth-protected-resource.php?side=server`
+# The metadata URL advertised by WWW-Authenticate must return HTTP 200.
+curl -i "$BASE/local/mcp/oauth-resource.php?side=server"
+```
 
-OAuth access tokens must be sent via `Authorization: Bearer`, not as query
-parameters. Legacy query tokens are accepted only by combined `server.php`.
+Check the `issuer` field in each authorization-server JSON result: it must be
+exactly the *root*, `/local/mcp`, or `/local/mcp/server.php` URL whose
+`/.well-known/` metadata was requested, respectively. The protected-resource
+response must reference the canonical MCP resource and `/local/mcp` authorization
+server. If Nginx returns 404 for root well-known paths, inspect the loaded
+virtual-host configuration with `sudo nginx -T` and check which location is
+processing those requests.
+
+An unauthenticated **POST** to the server should also return `401` and an OAuth
+challenge. Once the user grants access, authenticated POST requests work with
+`Authorization: Bearer <OAuth access token>`.
+
+## Backwards compatibility
+
+Legacy manual tokens remain accepted with `Authorization: Bearer mcp_...`.
+`/local/mcp/server.php?token=mcp_...` and `?toke=mcp_...` are also retained for
+legacy clients, but URLs containing tokens can be logged by reverse proxies.
+OAuth access tokens must **never** be sent in query strings.

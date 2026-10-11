@@ -22,20 +22,5 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use local_mcp\protocol\http;
-use local_mcp\oauth\resource;
-
-require_once(__DIR__ . '/../../../config.php');
-
-$base = $CFG->wwwroot . '/local/mcp';
-$side = optional_param('side', 'server', PARAM_ALPHA);
-if (!in_array($side, ['read', 'write', 'server'], true)) {
-    http::json(['error' => 'invalid_target'], 400);
-}
-http::json([
-    'resource' => resource::endpoint($side),
-    'authorization_servers' => [$base],
-    'scopes_supported' => $side === 'read' ? ['mcp:read']
-        : ($side === 'write' ? ['mcp:write'] : ['mcp:read', 'mcp:write']),
-    'bearer_methods_supported' => ['header'],
-]);
+// Preserve the old metadata address for existing clients.
+require_once(__DIR__ . '/../oauth-resource.php');

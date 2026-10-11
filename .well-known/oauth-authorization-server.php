@@ -22,23 +22,5 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use local_mcp\protocol\http;
-
-require_once(__DIR__ . '/../../../config.php');
-
-$base = $CFG->wwwroot . '/local/mcp';
-$data = [
-    'issuer' => $base,
-    'authorization_endpoint' => $base . '/oauth/authorize.php',
-    'token_endpoint' => $base . '/oauth/token.php',
-    'scopes_supported' => ['mcp:read', 'mcp:write'],
-    'response_types_supported' => ['code'],
-    'grant_types_supported' => ['authorization_code', 'refresh_token'],
-    'code_challenge_methods_supported' => ['S256'],
-    'resource_indicators_supported' => true,
-    'token_endpoint_auth_methods_supported' => ['none'],
-];
-if (get_config('local_mcp', 'dynamicregistration')) {
-    $data['registration_endpoint'] = $base . '/oauth/register.php';
-}
-http::json($data);
+// Preserve the old metadata address for existing clients.
+require_once(__DIR__ . '/../oauth-metadata.php');
