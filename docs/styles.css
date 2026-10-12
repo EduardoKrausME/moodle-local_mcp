@@ -562,3 +562,14 @@ html[data-theme="dark"] .language-notice-close:hover{
 @media(max-width:900px){.integration-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:680px){.integration-grid{grid-template-columns:1fr}.integration-card-body{padding:18px}}
 html[data-theme="dark"] .integration-card{box-shadow:none}
+
+/* Bilingual privacy policy. */
+.privacy-policy .privacy-updated{margin-top:18px;font-size:14px;color:var(--muted)}
+.privacy-policy .privacy-sections section{scroll-margin-top:110px}
+.privacy-policy .privacy-sections section+section{margin-top:42px}
+.privacy-policy .privacy-sections h2{font-size:clamp(23px,2.4vw,30px);line-height:1.25}
+.privacy-policy .privacy-sections a{color:var(--blue);text-decoration:underline;text-underline-offset:3px}
+.privacy-policy .privacy-toc a{display:block;padding:12px 20px;border-bottom:1px solid var(--line);font-size:13px;color:var(--blue)}
+.privacy-policy .privacy-toc a:last-child{border-bottom:0}
+.privacy-policy .privacy-toc a:hover{background:var(--blue-pale)}
+html[data-theme="dark"] .privacy-policy .privacy-toc a:hover{background:#0c2443}

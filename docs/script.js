@@ -94,6 +94,15 @@
         notice.querySelector('.language-notice-close')?.addEventListener('click', () => notice.remove());
     };
 
+    // Show the privacy policy in every documentation page footer.
+    const footerLinks = document.querySelector('.footer-main > div');
+    if (footerLinks && !footerLinks.querySelector('a[href$="privacy.html"]')) {
+        const privacyLink = document.createElement('a');
+        privacyLink.href = location.pathname.includes('/recursos/') ? '../privacy.html' : 'privacy.html';
+        privacyLink.textContent = currentLanguage() === 'pt_br' ? 'Política de Privacidade' : 'Privacy Policy';
+        footerLinks.appendChild(privacyLink);
+    }
+
     createLanguageNotice();
     createLanguageMenu();
 
