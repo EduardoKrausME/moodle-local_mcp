@@ -1,51 +1,48 @@
 {{!
-    This file is part of Moodle - https://moodle.org/
-
-    Moodle is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Moodle is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-}}
-{{!
     @template local_mcp/audit
-
+    Read-only, escaped audit activity table.
     Example context (json):
-    {
-        Aqui tem que criar o context em inglês
-    }
+    {"rows":[{"time":"2026-10-11","event":"tool_called","side":"write",
+      "tool":"create_course","user":"Administrator (#2)","client":"ChatGPT",
+      "connection":"3","status":"ok","objects":"{}","requestid":"ab12",
+      "duration":"12","confirmation":"Yes","ip":"127.0.0.1"}],"empty":false}
 }}
-<table class="generaltable">
-    <thead>
-    <tr>
-        <th>Time</th>
-        <th>Event</th>
-        <th>Side</th>
-        <th>Tool</th>
-        <th>User</th>
-        <th>IP</th>
-        <th>Status</th>
-        <th>Destructive</th>
-    </tr>
-    </thead>
-    <tbody>
-    {{#rows}}
-        <tr>
-            <td>{{time}}</td>
-            <td>{{event}}</td>
-            <td>{{side}}</td>
-            <td><code>{{tool}}</code></td>
-            <td>{{userid}}</td>
-            <td>{{ip}}</td>
-            <td>{{status}}</td>
-            <td>{{destructive}}</td>
-        </tr>{{/rows}}
-    </tbody>
-</table>
+<div class="table-responsive">
+    <table class="generaltable table table-striped">
+        <thead><tr>
+            <th>{{#str}}auditwhen, local_mcp{{/str}}</th>
+            <th>{{#str}}auditevent, local_mcp{{/str}}</th>
+            <th>{{#str}}auditside, local_mcp{{/str}}</th>
+            <th>{{#str}}audittool, local_mcp{{/str}}</th>
+            <th>{{#str}}audituser, local_mcp{{/str}}</th>
+            <th>{{#str}}auditclient, local_mcp{{/str}}</th>
+            <th>{{#str}}auditconnection, local_mcp{{/str}}</th>
+            <th>{{#str}}auditstatus, local_mcp{{/str}}</th>
+            <th>{{#str}}auditobjects, local_mcp{{/str}}</th>
+            <th>{{#str}}auditrequestid, local_mcp{{/str}}</th>
+            <th>{{#str}}auditduration, local_mcp{{/str}}</th>
+            <th>{{#str}}auditconfirmed, local_mcp{{/str}}</th>
+            <th>IP</th>
+        </tr></thead>
+        <tbody>
+        {{#rows}}
+            <tr>
+                <td>{{time}}</td>
+                <td>{{event}}</td>
+                <td>{{side}}</td>
+                <td><code>{{tool}}</code></td>
+                <td>{{user}}</td>
+                <td>{{client}}</td>
+                <td>{{connection}}</td>
+                <td>{{status}}</td>
+                <td><small><code style="white-space:normal;overflow-wrap:anywhere">{{objects}}</code></small></td>
+                <td><code>{{requestid}}</code></td>
+                <td>{{duration}}</td>
+                <td>{{confirmation}}</td>
+                <td>{{ip}}</td>
+            </tr>
+        {{/rows}}
+        {{#empty}}<tr><td colspan="13">{{#str}}auditnone, local_mcp{{/str}}</td></tr>{{/empty}}
+        </tbody>
+    </table>
+</div>

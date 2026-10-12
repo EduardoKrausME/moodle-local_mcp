@@ -52,13 +52,10 @@ final class logger {
                                   bool    $destructive = false, bool $dryrun = false, bool $confirmation = false,
                                   ?string $status = null, ?int $durationms = null): void {
         global $DB;
-        $safe = [];
-        foreach ($metadata as $key => $value) {
-            if (preg_match('/token|code|secret|prompt|response/i', (string)$key)) {
-                continue;
-            }
-            $safe[$key] = $value;
-        }
+        // Store only approved field names, numeric IDs and status codes.
+        // Correlate this row with the safe PHP diagnostic log.
+        $metadata['request_id'] = \local_mcp\diagnostics::request_id();
+        $safe = summary::sanitise($metadata);
         $DB->insert_record('local_mcp_audit', (object)[
             'connectionid' => $identity?->connectionid,
             'clientid' => $identity?->clientid,
@@ -73,7 +70,7 @@ final class logger {
             'status' => $status,
             'dryrun' => (int)$dryrun,
             'confirmation' => (int)$confirmation,
-            'metadata' => $safe ? json_encode($safe, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : null,
+            'metadata' => json_encode($safe, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE),
             'timecreated' => time(),
         ]);
     }

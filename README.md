@@ -726,3 +726,24 @@ scopes continue to limit issued access tokens.
 
 **Deployment:** OAuth discovery needs server-side rewriting for site-root
 `/.well-known/` URLs. See [OAuth discovery setup](docs/oauth-webserver.md).
+
+## Auditing ChatGPT actions in Moodle
+
+Site administration > Plugins > Local plugins > Moodle MCP > Audit provides
+a filtered, paginated timeline of MCP activity (by ChatGPT OAuth client,
+tool, status, READ/WRITE side and Moodle user). Administrators can export
+filtered audit rows as CSV (up to 5,000 records). Retention is configurable
+through the existing Audit retention days setting (180 days by default).
+
+The audit distinguishes successful calls, dry-run previews, requests awaiting
+explicit confirmation, and failed calls. Entries include the OAuth client and
+connection IDs, Moodle actor, tool name, operation status, context, duration
+and a request ID matching the PHP diagnostic log. The metadata stores only
+requested field names, numeric Moodle entity IDs and operation counts. For
+example, `create_course` can identify the new course ID and
+`set_site_config` can list affected setting names, never their values.
+
+The audit covers only requests processed through this MCP server, not
+ChatGPT's conversation transcript or actions performed elsewhere. It does
+not include field-level before/after diffs, OAuth credentials, confirmation
+tokens, prompts, user-entered HTML, images or raw tool payloads.

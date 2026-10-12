@@ -28,6 +28,7 @@ use coding_exception;
 use local_mcp\diagnostics;
 use core\session\manager;
 use local_mcp\audit\logger;
+use local_mcp\audit\summary;
 use local_mcp\event\destructive_operation_executed;
 use local_mcp\event\write_operation_executed;
 use local_mcp\oauth\resource;
@@ -218,6 +219,17 @@ final class mcp_server {
                             'isError' => false,
                         ] + ($modern ? ['resultType' => 'complete'] : [])]);
                 } catch (api_exception $e) {
+                    $failedtool = $this->get_tools()[$toolname] ?? null;
+                    $failedwrite = $failedtool instanceof tool_interface;
+                    $failedargs = (array)($params['arguments'] ?? []);
+                    $metadata = summary::from_call($toolname, $failedargs);
+                    $metadata['error_code'] = $e->machinecode;
+                    logger::record('tool_failed', $identity, $toolname,
+                        $failedwrite ? 'write' : 'read', null, $metadata,
+                        $failedwrite && $failedtool->is_destructive(),
+                        !empty($failedargs['dry_run']) || !empty($params['dry_run']),
+                        !empty($failedargs['confirmation_token']), 'error',
+                        (int)round((microtime(true) - $startedrequest) * 1000));
                     diagnostics::event('tool_call_failed', [
                         'side' => $this->side,
                         'tool' => $toolname,
@@ -246,6 +258,17 @@ final class mcp_server {
                     // Keep internal details out of responses, but make 500-like
                     // failures diagnosable in the Moodle/PHP server log.
                     $reference = diagnostics::request_id();
+                    $failedtool = $this->get_tools()[$toolname] ?? null;
+                    $failedwrite = $failedtool instanceof tool_interface;
+                    $failedargs = (array)($params['arguments'] ?? []);
+                    $metadata = summary::from_call($toolname, $failedargs);
+                    $metadata['error_code'] = 'internal_error';
+                    logger::record('tool_failed', $identity, $toolname,
+                        $failedwrite ? 'write' : 'read', null, $metadata,
+                        $failedwrite && $failedtool->is_destructive(),
+                        !empty($failedargs['dry_run']) || !empty($params['dry_run']),
+                        !empty($failedargs['confirmation_token']), 'error',
+                        (int)round((microtime(true) - $startedrequest) * 1000));
                     diagnostics::event('tool_call_failed', [
                         'side' => $this->side,
                         'tool' => $toolname,
@@ -430,8 +453,8 @@ final class mcp_server {
         if (!$iswrite) {
             $started = microtime(true);
             $result = $tool->execute($arguments, $identity);
-            logger::record('tool_called', $identity, $name, 'read', $context, [],
-                false, false, false, 'ok', (int)round((microtime(true) - $started) * 1000));
+            logger::record('tool_called', $identity, $name, 'read', $context,
+                summary::from_call($name, $arguments), false, false, false, 'ok', (int)round((microtime(true) - $started) * 1000));
             diagnostics::event('tool_read_completed', [
                 'tool' => $name, 'contextid' => (int)$context->id,
                 'duration_ms' => (int)round((microtime(true) - $started) * 1000),
@@ -444,7 +467,8 @@ final class mcp_server {
                 throw new api_exception('dry_run_not_supported', 400);
             }
             $preview = $tool->preview($arguments, $identity);
-            logger::record('tool_called', $identity, $name, 'write', $context, [],
+            logger::record('tool_called', $identity, $name, 'write', $context,
+                summary::from_call($name, $arguments),
                 $tool->is_destructive(), true, false, 'preview');
             diagnostics::event('tool_dry_run_completed', [
                 'tool' => $name, 'contextid' => (int)$context->id,
@@ -457,6 +481,9 @@ final class mcp_server {
                 $preview = $tool->preview($arguments, $identity);
                 $token = confirmation_service::issue(
                     $identity, $rawtoken, $name, $arguments, $context);
+                logger::record('tool_called', $identity, $name, 'write', $context,
+                    summary::from_call($name, $arguments),
+                    $tool->is_destructive(), false, false, 'confirmation_pending');
                 diagnostics::event('confirmation_issued', [
                     'tool' => $name, 'userid' => $identity->userid,
                     'contextid' => (int)$context->id,
@@ -485,7 +512,8 @@ final class mcp_server {
         }
         $started = microtime(true);
         $result = $tool->execute($arguments, $identity);
-        logger::record('tool_called', $identity, $name, 'write', $context, [],
+        logger::record('tool_called', $identity, $name, 'write', $context,
+            summary::from_call($name, $arguments, $result),
             $tool->is_destructive(), false, ($tool->requires_confirmation() || $tool->is_destructive()),
             'ok', (int)round((microtime(true) - $started) * 1000));
         $eventclass = $tool->is_destructive()
