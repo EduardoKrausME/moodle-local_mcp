@@ -22,6 +22,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_mcp\oauth\connection_service;
+use local_mcp\ui\chatgpt_setup;
+
 require_once(__DIR__ . '/../../../config.php');
 require_login();
 
@@ -35,7 +38,15 @@ $PAGE->set_heading(get_string('connections', 'local_mcp'));
 $PAGE->requires->css(new moodle_url('/local/mcp/styles/connections.css'));
 
 // Always present the onboarding guide, even after a client is connected.
-$data = \local_mcp\ui\chatgpt_setup::template_data();
+$data = [
+    'showchatgptsetup' => !connection_service::has_active_chatgpt_connection(),
+    'mcpserverurl' => new moodle_url('/local/mcp/server.php'),
+    'settingsurl' => new moodle_url('/admin/settings.php', ['section' => 'local_mcp_settings']),
+    'discoveryurl' => new moodle_url('/.well-known/oauth-authorization-server/local/mcp'),
+    'registrationdisabled' => !get_config('local_mcp', 'dynamicregistration'),
+    'httpsdisabled' => stripos($CFG->wwwroot, 'https://') !== 0,
+    'connectionguidenameexample'=>"Moodle-{$SITE->shortname}"
+];
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('local_mcp/connections', $data);
 echo $OUTPUT->footer();

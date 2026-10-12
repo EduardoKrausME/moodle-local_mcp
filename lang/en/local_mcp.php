@@ -79,7 +79,6 @@ $string['connectionguideiconhint'] = 'PNG · 256 × 256 px or more · up to 10 K
 $string['connectionguideinstructionsintro'] = 'Match each numbered field to the sample on the left.';
 $string['connectionguideintro'] = 'Follow the fields shown in ChatGPT\'s Add custom MCP server dialog. This page is an illustrated guide; create the plugin in ChatGPT.';
 $string['connectionguidename'] = 'Name';
-$string['connectionguidenameexample'] = 'Moodle MCP';
 $string['connectionguidenamehelp'] = 'Enter Moodle MCP, or a distinctive name such as Moodle MCP – My School.';
 $string['connectionguideoauthhelp'] = 'Choose OAuth. This Moodle MCP uses the OAuth authorization flow; no manual token or No authentication option is needed.';
 $string['connectionguidepreviewnotice'] = 'Example of the fields in ChatGPT (not an active form).';

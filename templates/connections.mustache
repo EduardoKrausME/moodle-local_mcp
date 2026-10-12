@@ -21,7 +21,6 @@
 
     Example context (json):
     {
-        "chatgpturl": "https://chatgpt.com/",
         "mcpserverurl": "https://moodle.example.org/local/mcp/server.php",
         "settingsurl": "https://moodle.example.org/admin/settings.php?section=local_mcp_settings",
         "discoveryurl": "https://moodle.example.org/.well-known/oauth-authorization-server/local/mcp",
@@ -40,7 +39,7 @@
         </div>
         <h2>{{#str}}connectionguidetitle, local_mcp{{/str}}</h2>
         <p>{{#str}}connectionguideintro, local_mcp{{/str}}</p>
-        <a class="btn btn-light local-mcp-connection-guide__open" href="{{{chatgpturl}}}"
+        <a class="btn btn-light local-mcp-connection-guide__open" href="https://chatgpt.com/"
            target="_blank" rel="noopener noreferrer">
             {{#str}}chatgptsetupopenchatgpt, local_mcp{{/str}}
             <span aria-hidden="true">&nearr;</span>
@@ -89,7 +88,7 @@
                         {{#str}}connectionguidename, local_mcp{{/str}}
                     </label>
                     <input id="mcp-connection-guide-name" class="form-control" type="text"
-                           value="{{#str}}connectionguidenameexample, local_mcp{{/str}}" readonly>
+                           value="{{connectionguidenameexample}}" readonly>
                 </div>
                 <div class="local-mcp-connection-guide__field">
                     <label for="mcp-connection-guide-description">
