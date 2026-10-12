@@ -75,6 +75,7 @@
     gap: 12px;
     border-radius: 10px;
     font-weight: 740;
+    color: #000 !important;
 }
 .local-mcp-connection-guide__layout {
     display: grid;
@@ -107,7 +108,7 @@
 }
 .local-mcp-connection-guide__window-header h3 {
     margin: 0 0 6px;
-    color: var(--mcp-cg-ink);
+    color: var(--mcp-cg-ink) !important;
     font-size: 21px;
     font-weight: 800;
 }
@@ -247,7 +248,7 @@
 }
 .local-mcp-connection-guide__instructions-head h3 {
     margin: 0 0 5px;
-    color: var(--mcp-cg-ink);
+    color: var(--mcp-cg-ink) !important;
     font-size: 19px;
     font-weight: 800;
 }
