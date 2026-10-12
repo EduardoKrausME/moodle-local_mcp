@@ -8,6 +8,24 @@ READ and WRITE architecture.
 This is a **local plugin**: `local_mcp`. It does not use Moodle's traditional `wstoken` mechanism as its primary
 authentication layer.
 
+
+## Extend Moodle MCP with other Moodle plugins
+
+Moodle MCP automatically discovers MCP providers from compatible plugins installed on the same site. These three integrations are ready to use with ChatGPT: install the corresponding plugin, refresh the MCP connection, and use the READ/WRITE tools permitted to your Moodle account. Each image opens a practical guide in Brazilian Portuguese, with an English version available on the documentation website.
+
+| Kopere BI | Helpdesk | Kopere Proctoring |
+| --- | --- | --- |
+| [<img src="docs/print/02-local_kopere_bi.png" alt="Kopere BI integrated with ChatGPT using Moodle MCP" width="280">](https://eduardokrausme.github.io/moodle-local_mcp/pt_br/recursos/kopere-bi.html) | [<img src="docs/print/03-local_helpdesk.png" alt="Moodle Helpdesk integrated with ChatGPT using Moodle MCP" width="280">](https://eduardokrausme.github.io/moodle-local_mcp/pt_br/recursos/helpdesk.html) | [<img src="docs/print/04-local_kopere_proctoring.png" alt="Kopere Proctoring integrated with ChatGPT using Moodle MCP" width="280">](https://eduardokrausme.github.io/moodle-local_mcp/pt_br/recursos/kopere-proctoring.html) |
+| [How to use / Como usar](https://eduardokrausme.github.io/moodle-local_mcp/pt_br/recursos/kopere-bi.html) · [Moodle Marketplace](https://marketplace.moodle.com/plugins/local_kopere_bi) | [How to use / Como usar](https://eduardokrausme.github.io/moodle-local_mcp/pt_br/recursos/helpdesk.html) · [Moodle Marketplace](https://marketplace.moodle.com/plugins/local_helpdesk) | [How to use / Como usar](https://eduardokrausme.github.io/moodle-local_mcp/pt_br/recursos/kopere-proctoring.html) · [Moodle Marketplace](https://marketplace.moodle.com/plugins/local_kopere_proctoring) |
+
+**Kopere BI** publishes `kopere_bi_list_reports` plus one READ tool per accessible report, named `kopere_bi_report_<refkey>`. Ask ChatGPT which reports are available, then analyze their structured data by course, user or cohort as permissions allow. [Documentation (English)](https://eduardokrausme.github.io/moodle-local_mcp/en/recursos/kopere-bi.html).
+
+**Helpdesk** supports reading tickets, replies, knowledge-base articles and statistics, plus confirmable tools for creating, replying to and updating tickets and creating articles. For example, ask ChatGPT to identify urgent tickets and draft a response for approval. [Documentation (English)](https://eduardokrausme.github.io/moodle-local_mcp/en/recursos/helpdesk.html).
+
+**Kopere Proctoring** supports reviewing quiz settings, monitored attempts and recorded events, and a confirmable WRITE action to enable or disable monitoring on a quiz. Monitoring events must be reviewed by a person and are not proof of cheating. [Documentation (English)](https://eduardokrausme.github.io/moodle-local_mcp/en/recursos/kopere-proctoring.html).
+
+Every integration remains subject to Moodle capabilities and MCP scopes. READ and WRITE are separate, and WRITE calls require an explicit preview/confirmation flow. After installing or updating a plugin, refresh the ChatGPT connector to discover its tools.
+
 ## Site diagnostics and safe Moodle configuration
 
 The `get_site_status` READ tool uses Moodle's own `\core\check\manager::get_checks()` Check API,

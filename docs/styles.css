@@ -540,3 +540,25 @@ html[data-theme="dark"] .language-notice-close:hover{
 
 /* ChatGPT connection documentation steps. */
 .connection-steps{padding-left:24px}.connection-steps li{margin:18px 0;line-height:1.75}.connection-code{padding:14px 16px;max-width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--soft);line-height:1.6}.connection-code code{font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere}html[data-theme="dark"] .connection-steps{color:var(--ink)}
+
+
+/* MCP integrations on the home page and detail pages. */
+.integration-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-top:32px}
+.integration-card{min-width:0;overflow:hidden;border:1px solid var(--line);border-radius:20px;background:var(--surface);box-shadow:0 8px 24px rgba(15,32,60,.06)}
+.integration-card-image{display:block;aspect-ratio:16/9;overflow:hidden;background:var(--soft)}
+.integration-card-image img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .22s ease}
+.integration-card:hover .integration-card-image img{transform:scale(1.025)}
+.integration-card-body{padding:22px}
+.integration-card-body h3{font-size:22px;margin:10px 0}
+.integration-card-body h3 a{color:var(--ink)}
+.integration-card-body h3 a:hover{color:var(--blue)}
+.integration-card-body p{line-height:1.65;margin:0 0 18px;color:var(--muted)}
+.integration-footnote{margin:26px 0 0;color:var(--muted);font-size:14px;line-height:1.7}
+.integration-detail-image{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:16px;margin-bottom:28px}
+.integration-detail .prose blockquote{padding:18px 22px;margin:16px 0;border-left:3px solid var(--blue);background:var(--soft);border-radius:0 10px 10px 0;font-style:normal}
+.integration-detail .prose code{overflow-wrap:anywhere}
+.integration-detail .prose ol{padding-left:24px}
+.integration-detail .prose li{margin-bottom:12px;line-height:1.7}
+@media(max-width:900px){.integration-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){.integration-grid{grid-template-columns:1fr}.integration-card-body{padding:18px}}
+html[data-theme="dark"] .integration-card{box-shadow:none}
