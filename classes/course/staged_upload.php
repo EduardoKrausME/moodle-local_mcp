@@ -25,6 +25,7 @@
 namespace local_mcp\course;
 
 use context_user;
+use core\lock\lock_config;
 use core_user;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
@@ -82,52 +83,61 @@ final class staged_upload {
             throw new api_exception('upload_too_large', 413, 'File must be between 1 byte and 40 MiB.');
         }
 
-        // This quota is supplemental to HTTP size limits and per-token rate limiting.
-        $existing = $DB->get_records_select('local_mcp_upload',
-            'userid = ? AND connectionid = ? AND expiresat > ?',
-            [$identity->userid, $identity->connectionid, time()], '', 'id, filesize');
-        $total = 0;
-        foreach ($existing as $row) {
-            $total += (int)$row->filesize;
+        $lock = lock_config::get_lock_factory('local_mcp')->get_lock(
+            'upload_connection_' . $identity->connectionid, 10);
+        if (!$lock) {
+            throw new api_exception('upload_busy', 503, 'Could not lock the connection upload quota.');
         }
-        if (count($existing) >= self::MAX_ACTIVE_FILES || $total + $bytes > self::MAX_ACTIVE_BYTES) {
-            throw new api_exception('upload_quota_exceeded', 429);
+        try {
+            // This quota is supplemental to HTTP size limits and per-token rate limiting.
+            $existing = $DB->get_records_select('local_mcp_upload',
+                'userid = ? AND connectionid = ? AND expiresat > ?',
+                [$identity->userid, $identity->connectionid, time()], '', 'id, filesize');
+            $total = 0;
+            foreach ($existing as $row) {
+                $total += (int)$row->filesize;
+            }
+            if (count($existing) >= self::MAX_ACTIVE_FILES || $total + $bytes > self::MAX_ACTIVE_BYTES) {
+                throw new api_exception('upload_quota_exceeded', 429);
+            }
+
+            $now = time();
+            $token = secret::generate('mcp_file_', 32);
+            $record = (object)[
+                'tokenhash' => secret::hash($token),
+                'userid' => $identity->userid,
+                'clientid' => $identity->clientid,
+                'connectionid' => $identity->connectionid,
+                'filename' => $filename,
+                'filesize' => $bytes,
+                'timecreated' => $now,
+                'expiresat' => $now + self::TTL,
+            ];
+            $transaction = $DB->start_delegated_transaction();
+            $record->id = $DB->insert_record('local_mcp_upload', $record);
+            $file = get_file_storage()->create_file_from_pathname([
+                'contextid' => context_user::instance($identity->userid)->id,
+                'component' => 'local_mcp',
+                'filearea' => 'uploads',
+                'itemid' => $record->id,
+                'filepath' => '/',
+                'filename' => $filename,
+                'userid' => $identity->userid,
+                'license' => 'allrightsreserved',
+                'author' => fullname(core_user::get_user($identity->userid)),
+            ], $path);
+            $transaction->allow_commit();
+
+            return [
+                'upload_id' => $token,
+                'filename' => $filename,
+                'mime_type' => $file->get_mimetype(),
+                'size_bytes' => (int)$file->get_filesize(),
+                'expires_at' => $record->expiresat,
+            ];
+        } finally {
+            $lock->release();
         }
-
-        $now = time();
-        $token = secret::generate('mcp_file_', 32);
-        $record = (object)[
-            'tokenhash' => secret::hash($token),
-            'userid' => $identity->userid,
-            'clientid' => $identity->clientid,
-            'connectionid' => $identity->connectionid,
-            'filename' => $filename,
-            'filesize' => $bytes,
-            'timecreated' => $now,
-            'expiresat' => $now + self::TTL,
-        ];
-        $transaction = $DB->start_delegated_transaction();
-        $record->id = $DB->insert_record('local_mcp_upload', $record);
-        $file = get_file_storage()->create_file_from_pathname([
-            'contextid' => context_user::instance($identity->userid)->id,
-            'component' => 'local_mcp',
-            'filearea' => 'uploads',
-            'itemid' => $record->id,
-            'filepath' => '/',
-            'filename' => $filename,
-            'userid' => $identity->userid,
-            'license' => 'allrightsreserved',
-            'author' => fullname(core_user::get_user($identity->userid)),
-        ], $path);
-        $transaction->allow_commit();
-
-        return [
-            'upload_id' => $token,
-            'filename' => $filename,
-            'mime_type' => $file->get_mimetype(),
-            'size_bytes' => (int)$file->get_filesize(),
-            'expires_at' => $record->expiresat,
-        ];
     }
 
     /**
