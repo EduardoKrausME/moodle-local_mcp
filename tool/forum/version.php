@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->release = '1.0.0';
+$plugin->release = '1.0.1';
 $plugin->version = 2026100800;
 $plugin->component = 'mcptool_forum';
 $plugin->requires = 2024100700;
