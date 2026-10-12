@@ -1,5 +1,7 @@
 # Moodle MCP
 
+**Documentation:** [Moodle MCP website](https://eduardokrausme.github.io/moodle-local_mcp/)
+
 Moodle MCP turns a Moodle installation into an extensible Model Context Protocol server with a deliberately separated
 READ and WRITE architecture.
 
