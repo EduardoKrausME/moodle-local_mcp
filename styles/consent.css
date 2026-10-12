@@ -220,7 +220,7 @@
 
 .local-mcp-consent .local-mcp-consent__permissions-heading h3 {
     margin: 0;
-    color: var(--mcp-ink);
+    color: var(--mcp-ink) !important;
     font-size: 19px;
     font-weight: 780;
     letter-spacing: -.015em;
@@ -293,7 +293,7 @@
 
 .local-mcp-consent .local-mcp-consent__permission-head h4 {
     margin: 0;
-    color: var(--mcp-ink);
+    color: var(--mcp-ink) !important;
     font-size: 15px;
     font-weight: 760;
     line-height: 1.4;
