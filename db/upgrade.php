@@ -29,5 +29,19 @@
  * @return bool
  */
 function xmldb_local_mcp_upgrade(int $oldversion): bool {
+    global $DB;
+
+    if ($oldversion < 2026101104) {
+        // Manual-token authentication is no longer supported. Remove its legacy
+        // credentials from existing installations after upgrading to OAuth-only.
+        $dbman = $DB->get_manager();
+        $table = new xmldb_table('local_mcp_manual_token');
+        if ($dbman->table_exists($table)) {
+            $dbman->drop_table($table);
+        }
+
+        upgrade_plugin_savepoint(true, 2026101104, 'local', 'mcp');
+    }
+
     return true;
 }

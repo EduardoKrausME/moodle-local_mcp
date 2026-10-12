@@ -32,7 +32,6 @@ if ($hassiteconfig) {
         'dashboard' => '/local/mcp/index.php',
         'connections' => '/local/mcp/admin/connections.php',
         'oauthclients' => '/local/mcp/admin/clients.php',
-        'manualtokens' => '/local/mcp/admin/manualtokens.php',
         'readapis' => '/local/mcp/admin/readapis.php',
         'writeapis' => '/local/mcp/admin/writeapis.php',
         'audit' => '/local/mcp/admin/audit.php',

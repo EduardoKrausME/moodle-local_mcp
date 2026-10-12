@@ -79,36 +79,21 @@ final class http {
     }
 
     /**
-     * Read a bearer token or a manual token in the URL for testing.
+     * Read the OAuth bearer token from a request header.
      *
-     * Never accept OAuth tokens in query strings, which can leak in web logs.
+     * Query-string credentials are rejected; MCP no longer issues manual
+     * tokens, and OAuth access tokens must never be sent in a URL.
      *
-     * @param bool $allowquerytoken Whether to allow a test token in the server URL.
-     * @return array Bearer authorization header and raw token.
+     * @return array Authorization header and raw access token.
      */
-    public static function bearer(bool $allowquerytoken = false): array {
-        // PHP-FPM/CGI deployments may forward Authorization through REDIRECT_HTTP_AUTHORIZATION.
-        $header = (string)($_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '');
-        $hastoke = array_key_exists('toke', $_GET);
-        $hastoken = array_key_exists('token', $_GET);
-
-        if ($hastoke || $hastoken) {
-            if (!$allowquerytoken || $hastoke === $hastoken || trim($header) !== '') {
-                throw new api_exception('invalid_token', 401);
-            }
-            $token = $hastoke ? $_GET['toke'] : $_GET['token'];
-            if (!is_string($token) ||
-                strlen($token) > 128 ||
-                !preg_match('/^mcp_[A-Za-z0-9_-]{40,}$/D', $token) ||
-                str_starts_with($token, 'mcp_at_') ||
-                str_starts_with($token, 'mcp_rt_') ||
-                str_starts_with($token, 'mcp_confirm_')) {
-                throw new api_exception('invalid_token', 401);
-            }
-            return ['Bearer ' . $token, $token];
+    public static function bearer(): array {
+        if (array_key_exists('toke', $_GET) || array_key_exists('token', $_GET)) {
+            throw new api_exception('invalid_token', 401);
         }
 
-        if (!preg_match('/^Bearer\s+(.+)$/i', trim($header), $matches)) {
+        // PHP-FPM/CGI may forward Authorization through a redirect header.
+        $header = (string)($_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '');
+        if (!preg_match('/^Bearer\\s+(.+)$/i', trim($header), $matches)) {
             throw new api_exception('invalid_token', 401);
         }
         return [$header, trim($matches[1])];
@@ -126,9 +111,7 @@ final class http {
             $e instanceof api_exception ? 'WARNING' : 'ERROR');
         if ($e instanceof api_exception) {
             $headers = [];
-            // Query-token clients intentionally do not use OAuth discovery.
-            if ($e->httpstatus === 401 &&
-                !array_key_exists('toke', $_GET) && !array_key_exists('token', $_GET)) {
+            if ($e->httpstatus === 401) {
                 $metadata = (new moodle_url('/local/mcp/oauth-resource.php',
                     ['side' => $side]))->out(false);
                 $headers[] = 'WWW-Authenticate: Bearer resource_metadata="' . $metadata . '"';

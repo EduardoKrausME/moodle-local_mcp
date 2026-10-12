@@ -35,7 +35,7 @@ $PAGE->set_heading(get_string('pluginname', 'local_mcp'));
 
 echo $OUTPUT->header();
 echo html_writer::link(
-    new moodle_url('/local/mcp/admin/connections.php', ['new' => 1]),
+    new moodle_url('/local/mcp/admin/connections.php'),
     get_string('newconnection', 'local_mcp'),
     ['class' => 'btn btn-primary']
 );

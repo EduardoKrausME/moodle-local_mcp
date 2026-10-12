@@ -1,0 +1,313 @@
+/* Moodle MCP - Connections guide. All selectors are scoped to this admin screen. */
+.local-mcp-connection-guide {
+    --mcp-cg-ink: #182b49;
+    --mcp-cg-muted: #65738a;
+    --mcp-cg-border: #e1e8f1;
+    --mcp-cg-blue: #2563eb;
+    max-width: 1240px;
+    margin: 0 auto 40px;
+    color: var(--mcp-cg-ink);
+}
+.local-mcp-connection-guide *,
+.local-mcp-connection-guide *::before,
+.local-mcp-connection-guide *::after { box-sizing: border-box; }
+.local-mcp-connection-guide__hero {
+    position: relative;
+    overflow: hidden;
+    padding: 32px clamp(24px, 5vw, 46px);
+    border-radius: 20px;
+    color: #fff;
+    background: linear-gradient(120deg, #102746, #1d467c 65%, #2969bb);
+}
+.local-mcp-connection-guide__hero::after {
+    position: absolute;
+    top: -140px;
+    right: -70px;
+    width: 330px;
+    height: 330px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(132, 198, 255, .24), transparent 70%);
+    content: "";
+    pointer-events: none;
+}
+.local-mcp-connection-guide__eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    color: #d1e7ff;
+    font-size: 12px;
+    font-weight: 750;
+    letter-spacing: .075em;
+    text-transform: uppercase;
+}
+.local-mcp-connection-guide__hero-mark {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, .25);
+    border-radius: 11px;
+    color: white;
+    background: rgba(255, 255, 255, .12);
+    font-size: 16px;
+    font-weight: 800;
+}
+.local-mcp-connection-guide__hero h2 {
+    margin: 0;
+    color: #fff;
+    font-size: clamp(24px, 3vw, 33px);
+    font-weight: 780;
+    line-height: 1.2;
+}
+.local-mcp-connection-guide__hero p {
+    max-width: 700px;
+    margin: 12px 0 19px;
+    color: #e0ecfa;
+    font-size: 14px;
+    line-height: 1.7;
+}
+.local-mcp-connection-guide__open {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    border-radius: 10px;
+    font-weight: 740;
+}
+.local-mcp-connection-guide__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, .94fr);
+    gap: 23px;
+    align-items: start;
+    margin-top: 24px;
+}
+.local-mcp-connection-guide__preview,
+.local-mcp-connection-guide__instructions {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--mcp-cg-border);
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 12px 40px rgba(23, 47, 81, .045);
+}
+.local-mcp-connection-guide__window-header {
+    padding: 22px 26px 14px;
+    border-bottom: 1px solid #edf1f7;
+}
+.local-mcp-connection-guide__window-label {
+    display: inline-block;
+    margin-bottom: 5px;
+    color: var(--mcp-cg-blue);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .075em;
+    text-transform: uppercase;
+}
+.local-mcp-connection-guide__window-header h3 {
+    margin: 0 0 6px;
+    color: var(--mcp-cg-ink);
+    font-size: 21px;
+    font-weight: 800;
+}
+.local-mcp-connection-guide__window-header p {
+    margin: 0;
+    color: var(--mcp-cg-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+.local-mcp-connection-guide__window-body { padding: 9px 26px 24px; }
+.local-mcp-connection-guide__field { margin: 18px 0; }
+.local-mcp-connection-guide__fieldlabel,
+.local-mcp-connection-guide__field label:not(.local-mcp-connection-guide__checkbox) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 9px;
+    color: #263850;
+    font-size: 13px;
+    font-weight: 730;
+}
+.local-mcp-connection-guide__fieldnum {
+    display: inline-grid;
+    flex: 0 0 23px;
+    width: 23px;
+    height: 23px;
+    place-items: center;
+    border-radius: 8px;
+    color: #285fb4;
+    background: #e9f1ff;
+    font-size: 11px;
+    font-weight: 800;
+}
+.local-mcp-connection-guide__iconarea {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    color: var(--mcp-cg-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+.local-mcp-connection-guide__iconplaceholder {
+    display: grid;
+    flex: 0 0 46px;
+    width: 46px;
+    height: 46px;
+    place-items: center;
+    border: 2px solid #478aff;
+    border-radius: 11px;
+    color: #2469dc;
+    background: #f3f7ff;
+    font-size: 30px;
+    line-height: 1;
+}
+.local-mcp-connection-guide__field .form-control {
+    border-radius: 9px;
+    background: #fcfdff;
+    font-size: 13px;
+}
+.local-mcp-connection-guide__choice {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 13px;
+    border: 1px solid #d9e2ee;
+    border-radius: 10px;
+    background: #f7faff;
+    font-size: 13px;
+}
+.local-mcp-connection-guide__choice span { color: #a3aec0; }
+.local-mcp-connection-guide__oauth {
+    color: #1e5dbf;
+    background: #eef5ff;
+}
+.local-mcp-connection-guide__oauth span { color: #2e6bc8; }
+.local-mcp-connection-guide__urlfield { margin: 9px 0 4px; }
+.local-mcp-connection-guide__urlfield input { min-width: 0; }
+.local-mcp-connection-guide__urlfield .btn { border-radius: 0 9px 9px 0; font-size: 12px; }
+.local-mcp-connection-guide__advanced {
+    padding: 16px;
+    border: 1px solid #e3e9f1;
+    border-radius: 13px;
+    background: #fafcff;
+}
+.local-mcp-connection-guide__advanced p,
+.local-mcp-connection-guide__risk p {
+    margin: 0 0 7px;
+    color: var(--mcp-cg-muted);
+    font-size: 12px;
+    line-height: 1.6;
+}
+.local-mcp-connection-guide__advanced details {
+    margin-top: 10px;
+    font-size: 12px;
+}
+.local-mcp-connection-guide__advanced details code {
+    display: block;
+    margin-top: 5px;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+.local-mcp-connection-guide__risk {
+    margin-top: 17px;
+    padding: 15px;
+    border: 1px solid #f2dfcf;
+    border-radius: 12px;
+    background: #fffaf5;
+}
+.local-mcp-connection-guide__checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    color: #4b5970;
+    font-size: 12px;
+    line-height: 1.55;
+}
+.local-mcp-connection-guide__checkbox input { margin-top: 3px; }
+.local-mcp-connection-guide__mockfooter {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    margin-top: 22px;
+    color: #55647a;
+    font-size: 12px;
+}
+.local-mcp-connection-guide__mockbutton {
+    padding: 10px 16px;
+    border-radius: 10px;
+    color: #fff;
+    background: #6f7f95;
+    font-weight: 700;
+}
+.local-mcp-connection-guide__instructions-head {
+    padding: 23px 25px 16px;
+    border-bottom: 1px solid #edf1f7;
+}
+.local-mcp-connection-guide__instructions-head h3 {
+    margin: 0 0 5px;
+    color: var(--mcp-cg-ink);
+    font-size: 19px;
+    font-weight: 800;
+}
+.local-mcp-connection-guide__instructions-head p {
+    margin: 0;
+    color: var(--mcp-cg-muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+.local-mcp-connection-guide__steps {
+    margin: 0;
+    padding: 21px 28px 4px 48px;
+    list-style: decimal;
+}
+.local-mcp-connection-guide__steps li {
+    padding: 0 0 15px 6px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eef2f7;
+}
+.local-mcp-connection-guide__steps li::marker {
+    color: #2563eb;
+    font-size: 14px;
+    font-weight: 800;
+}
+.local-mcp-connection-guide__steps li:last-child { border-bottom: 0; margin-bottom: 0; }
+.local-mcp-connection-guide__steps strong {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    font-weight: 760;
+}
+.local-mcp-connection-guide__steps p {
+    margin: 0;
+    color: #617087;
+    font-size: 12px;
+    line-height: 1.7;
+}
+.local-mcp-connection-guide__finalnote {
+    margin: 7px 24px 24px;
+    padding: 15px 17px;
+    border: 1px solid #dce8f8;
+    border-radius: 12px;
+    background: #f1f7ff;
+}
+.local-mcp-connection-guide__finalnote strong { color: #2255a2; font-size: 13px; }
+.local-mcp-connection-guide__finalnote p {
+    margin: 6px 0 0;
+    color: #526b8f;
+    font-size: 12px;
+    line-height: 1.65;
+}
+@media (max-width: 1050px) {
+    .local-mcp-connection-guide__layout { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 600px) {
+    .local-mcp-connection-guide__hero { padding: 25px 22px; }
+    .local-mcp-connection-guide__window-header,
+    .local-mcp-connection-guide__window-body { padding-left: 17px; padding-right: 17px; }
+    .local-mcp-connection-guide__instructions-head { padding: 20px; }
+    .local-mcp-connection-guide__steps { padding-left: 41px; padding-right: 19px; }
+    .local-mcp-connection-guide__urlfield { display: flex; }
+    .local-mcp-connection-guide__urlfield .form-control { flex: 1 1 auto; }
+}

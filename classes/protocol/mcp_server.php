@@ -81,7 +81,9 @@ final class mcp_server {
             'side' => $this->side,
             'http_method' => (string)($_SERVER['REQUEST_METHOD'] ?? ''),
             'auth_source' => (isset($_GET['toke']) || isset($_GET['token']))
-                ? 'url_token' : (isset($_SERVER['HTTP_AUTHORIZATION']) ? 'header' : 'none'),
+                ? 'rejected_query_token'
+                : ((isset($_SERVER['HTTP_AUTHORIZATION']) || isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']))
+                    ? 'header' : 'none'),
         ]);
         try {
             // Some MCP clients probe metadata appended to server.php. Serve only the
@@ -92,7 +94,7 @@ final class mcp_server {
             }
             // An anonymous GET must return a Bearer challenge so clients can discover
             // OAuth through the protected-resource URL, instead of a bare HTTP 405.
-            [$authheader, $rawtoken] = http::bearer($this->side === 'server');
+            [$authheader, $rawtoken] = http::bearer();
             // Stateless Streamable HTTP only supports POST for normal MCP messages.
             if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
                 header('Allow: POST');

@@ -32,11 +32,10 @@ $PAGE->set_url('/local/mcp/admin/connections.php');
 $PAGE->set_context($context);
 $PAGE->set_title(get_string('connections', 'local_mcp'));
 $PAGE->set_heading(get_string('connections', 'local_mcp'));
+$PAGE->requires->css(new moodle_url('/local/mcp/styles/connections.css'));
 
-global $DB, $USER;
-
-$data = [
-];
+// Always present the onboarding guide, even after a client is connected.
+$data = \local_mcp\ui\chatgpt_setup::template_data();
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('local_mcp/connections', $data);
 echo $OUTPUT->footer();

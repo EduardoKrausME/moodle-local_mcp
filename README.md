@@ -196,13 +196,8 @@ For troubleshooting, this plugin does **not** write MCP request parameters,
 tool inputs, Base64 images or complete JSON-RPC responses to PHP logs.
 Unexpected exceptions retain a short reference and sanitized source location.
 
-**Important when using the temporary `?toke=` URL:** Nginx access logs
-commonly capture the entire request URL, including the bearer token. Rotate
-tokens exposed in logs and configure the Nginx access log format to omit query
-strings from the request target. For example, log
-`"$request_method $uri $server_protocol"` rather than `"$request"`
-or `"$request_uri"` for requests to the MCP endpoint. Prefer OAuth/Bearer
-headers to URL tokens for long-lived production connections.
+For security, pass OAuth access tokens only in the `Authorization: Bearer` header.
+MCP query-string tokens (`?token=` and `?toke=`) are not supported.
 
 ## MCP endpoints
 
@@ -272,14 +267,6 @@ valid token
 -> has_capability()
 -> operation
 ```
-
-## Manual tokens
-
-Site administrators can create manual tokens for Claude Desktop, IDEs, scripts, internal agents and test clients.
-
-Manual tokens start with `mcp_`. The complete secret is returned once. Only a prefix and hash are stored.
-
-Manual tokens and OAuth tokens have separate storage and lifecycle, but both resolve to `authenticated_identity`.
 
 ## WRITE confirmation
 
@@ -419,8 +406,7 @@ MCP requests, tool argument values, authorization headers, URL query strings,
 confirmation tokens, HTML content or uploaded Base64 images. Exception message
 strings are length-limited and redacted before being logged. Protocol response
 bodies remain unlogged. HTTP server access logs are managed separately from
-PHP; when using test `?toke=` URLs, configure Nginx/Apache not to record query
-strings, and rotate any token already exposed in server logs.
+PHP; ensure access logs do not reveal OAuth access tokens or authorization codes.
 
 Example:
 
@@ -448,7 +434,7 @@ Sensitive secrets are explicitly excluded from audit metadata.
 - OAuth `state` is preserved but never replaces Moodle `sesskey`.
 - Consent authorization is POST + `sesskey`.
 - External client text is escaped before presentation.
-- Access, refresh, manual, authorization and confirmation secrets are hashed at rest.
+- Access, refresh, authorization and confirmation secrets are hashed at rest.
 - 401 responses advertise Protected Resource Metadata.
 - READ and WRITE rate limits are independent.
 
@@ -471,44 +457,14 @@ Moodle URL
 -> `/local/mcp/server.php` (or the separate READ/WRITE endpoints)
 ```
 
-### Temporary ChatGPT connection without OAuth
+### Connect ChatGPT through OAuth
 
-The first-run screen at `/local/mcp/index.php` now contains only a link to
-`/local/mcp/admin/connections.php?new=1`. On the Connections page, choose
-**New connection** and enter a name. READ is preselected; enable WRITE explicitly
-if you need to modify Moodle. The administrator's Moodle account owns the token.
-
-Creating the connection uses the existing manual-token service. The result is
-a complete URL such as:
-
-```text
-https://YOUR-MOODLE/local/mcp/server.php?toke=mcp_RANDOM_SECRET
-```
-
-Copy this value into ChatGPT's **MCP Server URL** field and select
-**No authentication**. Do not configure OAuth for this temporary test connection.
-`?token=...` is accepted as an alias, but the interface always generates `?toke=...`.
-
-After a test connection is created, **Connections → Edit permissions** can change
-its READ and WRITE scopes without creating a new token or changing the MCP
-server URL. Only active, non-expired test connections can be edited, and at
-least one permission must remain selected. Saving immediately changes which
-tools the token can access and clears outstanding WRITE confirmation tokens.
-ChatGPT may need to reload or reconnect the plugin to refresh its tool listing.
-
-The URL is displayed once, immediately after token creation, and is not saved
-in plaintext. The token is SHA-256 hashed in Moodle's database, has a 7-day
-expiration, can be revoked on the Connections page, and inherits the permissions
-of the Moodle administrator who created it. READ/WRITE capabilities and
-the confirmation requirement for WRITE tools are unchanged.
-
-**Important:** a query-string token is a bearer credential. Web servers,
-reverse proxies, browser history and monitoring tools may log the complete URL.
-Anyone with that URL can use the token until it expires or is revoked. Use HTTPS,
-avoid sharing the URL, limit log access, and switch to OAuth for production.
-The query-string mechanism is only enabled on the combined `server.php` endpoint;
-OAuth access tokens are rejected in query strings. The existing OAuth
-implementation remains available for integrations that require it.
+Open `/local/mcp/admin/connections.php` for the illustrated setup guide.
+Upload an optional PNG icon in ChatGPT, enter the connector name and description,
+select **Server URL**, paste `https://YOUR-MOODLE/local/mcp/server.php`,
+and select **OAuth**. Keep dynamic registration enabled in Moodle settings.
+Accept ChatGPT's security notice and create the plugin, then complete Moodle
+administrator login and READ/WRITE consent. Do not place tokens in URL parameters.
 
 ## Development
 
@@ -755,23 +711,16 @@ The MCP endpoint does not fetch arbitrary remote URLs for file uploads.
 After installing the new subplugins, run Moodle's upgrade process and refresh
 the MCP connector so these WRITE tools appear in the published tool schema.
 
-## OAuth for ChatGPT and legacy tokens (1.3.13)
+## OAuth for ChatGPT (1.3.17)
 
-OAuth 2.1 Authorization Code + PKCE S256 is the recommended authentication method for clients
-that support interactive sign-in. Manual `mcp_...` tokens remain fully supported using
-`Authorization: Bearer mcp_...`; for compatibility, the combined `server.php` endpoint also
-accepts exactly one of `?token=mcp_...` or `?toke=mcp_...`. The query-string form is
-intended for legacy/testing integrations because URLs can appear in web-server logs.
-Neither OAuth access nor refresh tokens are allowed in query strings.
+OAuth Authorization Code + PKCE S256 is the sole client authentication
+mechanism. The MCP server requires an `Authorization: Bearer` header with a
+resource-bound OAuth access token. Manual tokens and URL query tokens are not
+accepted. Access and refresh tokens are stored as hashes and can be revoked.
 
-For OAuth, connect to `/local/mcp/server.php`, sign in to Moodle, approve READ and/or
-WRITE, and let the client exchange the authorization code with PKCE. OAuth access and refresh
-tokens use separate tables from manual tokens; revoking one authentication method does not
-revoke the other. OAuth scopes cannot exceed the current connection permissions, even if a
-previous access token had broader permissions. Missing OAuth scope defaults to `mcp:read`.
+To connect, use `/local/mcp/server.php`, sign in to Moodle, review READ
+and/or WRITE scopes, and authorize the requested access. Existing connection
+scopes continue to limit issued access tokens.
 
-**Important deployment step:** because Moodle plugins cannot themselves register site-root
-`/.well-known/` routes, an RFC 8414 discovery rewrite must be configured on the front-end
-web server for automatic OAuth client discovery. See [OAuth discovery setup](docs/oauth-webserver.md).
-The protected-resource document is already discoverable from the MCP server's
-`WWW-Authenticate` response; the authorization-server metadata rewrite is still needed.
+**Deployment:** OAuth discovery needs server-side rewriting for site-root
+`/.well-known/` URLs. See [OAuth discovery setup](docs/oauth-webserver.md).
