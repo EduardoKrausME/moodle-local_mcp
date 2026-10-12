@@ -25,18 +25,4 @@
 require_once(__DIR__ . '/../../config.php');
 require_login();
 
-$context = context_system::instance();
-require_capability('moodle/site:config', $context);
-
-$PAGE->set_url('/local/mcp/index.php');
-$PAGE->set_context($context);
-$PAGE->set_title(get_string('pluginname', 'local_mcp'));
-$PAGE->set_heading(get_string('pluginname', 'local_mcp'));
-
-echo $OUTPUT->header();
-echo html_writer::link(
-    new moodle_url('/local/mcp/admin/connections.php'),
-    get_string('newconnection', 'local_mcp'),
-    ['class' => 'btn btn-primary']
-);
-echo $OUTPUT->footer();
+redirect(new moodle_url('/local/mcp/admin/dashboard.php'));
