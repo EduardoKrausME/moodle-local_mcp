@@ -84,27 +84,6 @@ final class token_resolver {
             }
         }
 
-        if (str_starts_with($token, 'mcp_') && !str_starts_with($token, 'mcp_at_') && !str_starts_with($token, 'mcp_rt_')) {
-            $records = $DB->get_records('local_mcp_manual_token', ['prefix' => $prefix, 'enabled' => 1]);
-            foreach ($records as $rec) {
-                if (!hash_equals($rec->tokenhash, $hash)) {
-                    continue;
-                }
-                if ($rec->expires && $rec->expires < time()) {
-                    throw new api_exception('expired_token', 401);
-                }
-                self::touch('local_mcp_manual_token', $rec->id);
-                $scopes = [];
-                if ($rec->readenabled) {
-                    $scopes[] = scope::READ;
-                }
-                if ($rec->writeenabled) {
-                    $scopes[] = scope::WRITE;
-                }
-                return new authenticated_identity((int)$rec->userid, 'manual', $scopes, null, null, (int)$rec->id);
-            }
-        }
-
         throw new api_exception('invalid_token', 401);
     }
 
