@@ -88,7 +88,7 @@ final class discovery_test extends advanced_testcase {
             '_meta' => [
                 'io.modelcontextprotocol/protocolVersion' => '2026-07-28',
                 'io.modelcontextprotocol/clientInfo' => [
-                    'name' => 'openai-mcp', 
+                    'name' => 'openai-mcp',
                     'version' => '1.0.0',
                 ],
                 'io.modelcontextprotocol/clientCapabilities' => ['experimental' => []],

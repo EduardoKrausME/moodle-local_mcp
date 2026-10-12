@@ -45,7 +45,7 @@ $data = [
     'discoveryurl' => new moodle_url('/.well-known/oauth-authorization-server/local/mcp'),
     'registrationdisabled' => !get_config('local_mcp', 'dynamicregistration'),
     'httpsdisabled' => stripos($CFG->wwwroot, 'https://') !== 0,
-    'connectionguidenameexample'=>"Moodle-{$SITE->shortname}"
+    'connectionguidenameexample' => "Moodle-{$SITE->shortname}"
 ];
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('local_mcp/connections', $data);
