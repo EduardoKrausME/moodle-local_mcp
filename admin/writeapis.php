@@ -57,6 +57,35 @@ foreach ($groups as $group) {
     ];
 }
 
+// Show a compact reference to plugins that provide only READ tools. They cannot
+// appear in the WRITE registry, but administrators should still see the integration.
+$readonlyplugins = [];
+$readgroups = \local_mcp\dashboard\overview::group_tools(\local_mcp\read\registry::get_tools());
+foreach ($readgroups as $component => $group) {
+    if (isset($groups[$component])) {
+        continue;
+    }
+    $rows = [];
+    foreach (array_slice($group['tools'], 0, 5) as $tool) {
+        $rows[] = [
+            'name' => $tool->get_name(),
+            'description' => $tool->get_description(),
+            'capability' => $tool->get_required_capability(),
+        ];
+    }
+    $readurl = new moodle_url('/local/mcp/admin/readapis.php');
+    $readurl->set_anchor('local-mcp-' . $component);
+    $readonlyplugins[] = [
+        'pluginname' => $group['pluginname'],
+        'component' => $component,
+        'countlabel' => get_string('readapiscount', 'local_mcp', count($group['tools'])),
+        'rows' => $rows,
+        'more' => count($group['tools']) > count($rows)
+            ? get_string('dashboardmoretools', 'local_mcp', count($group['tools']) - count($rows)) : '',
+        'detailsurl' => $readurl->out(false),
+    ];
+}
+
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('local_mcp/writeapis', [
     'tables' => $tables,
@@ -69,5 +98,7 @@ echo $OUTPUT->render_from_template('local_mcp/writeapis', [
         'destructive' => get_string('writeapiscoldestructive', 'local_mcp'),
     ],
     'empty' => get_string('writeapisempty', 'local_mcp'),
+    'readonlyplugins' => $readonlyplugins,
+    'hasreadonlyplugins' => !empty($readonlyplugins),
 ]);
 echo $OUTPUT->footer();

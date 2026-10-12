@@ -34,12 +34,13 @@ use local_mcp\write\tool_interface;
  */
 final class overview {
     /**
-     * Group the already-discovered WRITE tools by their Moodle component.
+     * Group already-discovered READ or WRITE tools by their Moodle component.
+     * A shared grouping makes each administration page represent the same provider.
      *
-     * @param tool_interface[] $tools Tools from the WRITE registry.
+     * @param array $tools Tools from the matching registry.
      * @return array Groups keyed by component, with local_mcp first.
      */
-    public static function group_write_tools(array $tools): array {
+    public static function group_tools(array $tools): array {
         $groups = [];
         foreach ($tools as $tool) {
             $component = explode('\\', get_class($tool), 2)[0];
@@ -67,6 +68,16 @@ final class overview {
             ];
         }
         return $result;
+    }
+
+    /**
+     * Backwards-compatible entry point for existing WRITE API consumers.
+     *
+     * @param tool_interface[] $tools Tools from the WRITE registry.
+     * @return array Groups keyed by component.
+     */
+    public static function group_write_tools(array $tools): array {
+        return self::group_tools($tools);
     }
 
     /**

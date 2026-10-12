@@ -19,23 +19,49 @@
 
     Example context (json):
     {
-        Aqui tem que criar o context em inglês
+        "tables": [
+            {
+                "pluginname": "Kopere BI",
+                "component": "local_kopere_bi",
+                "countlabel": "READ tools: 1",
+                "rows": [
+                    {
+                        "name": "kopere_bi_list_reports",
+                        "description": "List accessible reports",
+                        "capability": "moodle/site:config"
+                    }
+                ]
+            }
+        ],
+        "empty": "No READ tools available."
     }
 }}
-<table class="generaltable">
-    <thead>
-    <tr>
-        <th>Name</th>
-        <th>Description</th>
-        <th>Capability</th>
-    </tr>
-    </thead>
-    <tbody>
-    {{#rows}}
-        <tr>
-            <td><code>{{name}}</code></td>
-            <td>{{description}}</td>
-            <td><code>{{capability}}</code></td>
-        </tr>{{/rows}}
-    </tbody>
-</table>
+{{#tables}}
+    <section class="mb-4" id="local-mcp-{{component}}">
+        <h3>{{pluginname}} <small class="text-muted"><code>{{component}}</code></small></h3>
+        <p class="text-muted">{{countlabel}}</p>
+        <div class="table-responsive">
+            <table class="generaltable">
+                <thead>
+                    <tr>
+                        <th scope="col">{{#str}}writeapiscolname, local_mcp{{/str}}</th>
+                        <th scope="col">{{#str}}writeapiscoldescription, local_mcp{{/str}}</th>
+                        <th scope="col">{{#str}}writeapiscolcapability, local_mcp{{/str}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#rows}}
+                        <tr>
+                            <td><code>{{name}}</code></td>
+                            <td>{{description}}</td>
+                            <td><code>{{capability}}</code></td>
+                        </tr>
+                    {{/rows}}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{{/tables}}
+{{^tables}}
+    <p>{{empty}}</p>
+{{/tables}}

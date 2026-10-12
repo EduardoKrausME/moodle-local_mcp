@@ -32,10 +32,28 @@ $PAGE->set_url('/local/mcp/admin/readapis.php');
 $PAGE->set_context($context);
 $PAGE->set_title(get_string('readapis', 'local_mcp'));
 $PAGE->set_heading(get_string('readapis', 'local_mcp'));
-$rows = [];
-foreach (registry::get_tools() as $tool) {
-    $rows[] = ['name' => $tool->get_name(), 'description' => $tool->get_description(), 'capability' => $tool->get_required_capability()];
+// The READ registry includes providers discovered from installed plugins such as Kopere BI.
+$groups = \local_mcp\dashboard\overview::group_tools(registry::get_tools());
+$tables = [];
+foreach ($groups as $group) {
+    $rows = [];
+    foreach ($group['tools'] as $tool) {
+        $rows[] = [
+            'name' => $tool->get_name(),
+            'description' => $tool->get_description(),
+            'capability' => $tool->get_required_capability(),
+        ];
+    }
+    $tables[] = [
+        'pluginname' => $group['pluginname'],
+        'component' => $group['component'],
+        'countlabel' => get_string('readapiscount', 'local_mcp', count($rows)),
+        'rows' => $rows,
+    ];
 }
 echo $OUTPUT->header();
-echo $OUTPUT->render_from_template('local_mcp/readapis', ['rows' => $rows]);
+echo $OUTPUT->render_from_template('local_mcp/readapis', [
+    'tables' => $tables,
+    'empty' => get_string('readapisempty', 'local_mcp'),
+]);
 echo $OUTPUT->footer();
