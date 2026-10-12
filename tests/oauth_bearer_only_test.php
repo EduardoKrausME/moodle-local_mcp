@@ -55,6 +55,55 @@ final class oauth_bearer_only_test extends advanced_testcase {
     }
 
     /**
+     * @return void
+     */
+    public function test_bearer_accepts_redirected_authorization_header(): void {
+        $oldget = $_GET;
+        $direct = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+        $redirect = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? null;
+        try {
+            $_GET = [];
+            unset($_SERVER['HTTP_AUTHORIZATION']);
+            $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] = 'Bearer mcp_at_redirect_example';
+            $this->assertSame('redirect_http_authorization', http::authorization_source());
+            $this->assertSame(['Bearer mcp_at_redirect_example', 'mcp_at_redirect_example'], http::bearer());
+        } finally {
+            $_GET = $oldget;
+            if ($direct === null) {
+                unset($_SERVER['HTTP_AUTHORIZATION']);
+            } else {
+                $_SERVER['HTTP_AUTHORIZATION'] = $direct;
+            }
+            if ($redirect === null) {
+                unset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']);
+            } else {
+                $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] = $redirect;
+            }
+        }
+    }
+
+    /**
+     * @return void
+     */
+    public function test_bearer_rejects_malformed_authorization_header(): void {
+        $oldget = $_GET;
+        $oldheader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+        try {
+            $_GET = [];
+            $_SERVER['HTTP_AUTHORIZATION'] = 'Basic abc';
+            $this->expectException(api_exception::class);
+            http::bearer();
+        } finally {
+            $_GET = $oldget;
+            if ($oldheader === null) {
+                unset($_SERVER['HTTP_AUTHORIZATION']);
+            } else {
+                $_SERVER['HTTP_AUTHORIZATION'] = $oldheader;
+            }
+        }
+    }
+
+    /**
      * @dataProvider legacy_query_parameters
      * @param string $key Disallowed URL parameter.
      * @return void

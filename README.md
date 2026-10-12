@@ -747,3 +747,37 @@ The audit covers only requests processed through this MCP server, not
 ChatGPT's conversation transcript or actions performed elsewhere. It does
 not include field-level before/after diffs, OAuth credentials, confirmation
 tokens, prompts, user-entered HTML, images or raw tool payloads.
+
+
+## Troubleshooting OAuth and MCP tool discovery
+
+An OAuth consent screen can complete successfully while the following MCP `POST`
+still fails with HTTP 401. A successful authorization-code exchange is not proof
+that the MCP endpoint received the access token. Inspect the PHP error log and
+correlate records by their `request` identifier:
+
+- `request_received.auth_source=none` means PHP did not see an Authorization header.
+- `auth_rejected.phase=bearer_extraction` and `reason=missing_authorization_header`
+  mean the request did not carry a header accessible to PHP.
+- `reason=malformed_authorization_header` means a header was present but did not
+  contain `Bearer <access-token>`.
+- `auth_rejected.phase=token_validation` identifies an invalid, revoked, expired,
+  audience-mismatched or disconnected OAuth access token.
+- `bearer_received`, followed by `authenticated`, means bearer validation succeeded;
+  `initialize_completed` and `tools_listed` then trace MCP action discovery.
+
+An `exception` log now contains up to eight safe `trace` frames (file basenames,
+line numbers and function names). No access tokens, request payloads, exception
+arguments or absolute filesystem paths are included in the trace. The response
+still returns the generic OAuth error rather than internal diagnostics.
+
+On Apache, enable `mod_rewrite` and allow the plugin's `.htaccess` to be applied,
+so `Authorization` reaches PHP as `HTTP_AUTHORIZATION`. On Nginx with PHP-FPM,
+pass the header explicitly within the PHP FastCGI configuration:
+
+```nginx
+fastcgi_param HTTP_AUTHORIZATION $http_authorization;
+```
+
+For reverse proxies, ensure that `Authorization` is passed unmodified to the
+origin. The plugin never accepts OAuth access tokens in URL query parameters.

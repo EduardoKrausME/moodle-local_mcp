@@ -88,15 +88,75 @@ final class http {
      */
     public static function bearer(): array {
         if (array_key_exists('toke', $_GET) || array_key_exists('token', $_GET)) {
-            throw new api_exception('invalid_token', 401);
+            self::reject_bearer('query_credentials_rejected');
         }
 
-        // PHP-FPM/CGI may forward Authorization through a redirect header.
-        $header = (string)($_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '');
-        if (!preg_match('/^Bearer\\s+(.+)$/i', trim($header), $matches)) {
-            throw new api_exception('invalid_token', 401);
+        [$header, $source] = self::authorization_header();
+        if ($header === '') {
+            self::reject_bearer('missing_authorization_header');
         }
-        return [$header, trim($matches[1])];
+        if (!preg_match('/^Bearer[ \t]+(\S+)$/iD', trim($header), $matches)) {
+            self::reject_bearer('malformed_authorization_header');
+        }
+
+        diagnostics::event('bearer_received', [
+            'phase' => 'bearer_extraction',
+            'auth_source' => $source,
+        ]);
+        return [$header, $matches[1]];
+    }
+
+    /**
+     * Report where Authorization is available, without exposing its value.
+     *
+     * @return string Header source or none.
+     */
+    public static function authorization_source(): string {
+        return self::authorization_header()[1];
+    }
+
+    /**
+     * Look for Authorization in CGI/FastCGI variables and Apache headers.
+     *
+     * @return array Header value and the safe name of its source.
+     */
+    private static function authorization_header(): array {
+        foreach ([
+            'HTTP_AUTHORIZATION' => 'http_authorization',
+            'REDIRECT_HTTP_AUTHORIZATION' => 'redirect_http_authorization',
+        ] as $key => $source) {
+            if (!empty($_SERVER[$key]) && is_string($_SERVER[$key])) {
+                return [$_SERVER[$key], $source];
+            }
+        }
+        if (function_exists('getallheaders')) {
+            $headers = getallheaders();
+            if (is_array($headers)) {
+                foreach ($headers as $name => $value) {
+                    if (strcasecmp((string)$name, 'Authorization') === 0 &&
+                            is_string($value) && $value !== '') {
+                        return [$value, 'webserver_headers'];
+                    }
+                }
+            }
+        }
+        return ['', 'none'];
+    }
+
+    /**
+     * Log the bearer extraction failure without logging credentials.
+     *
+     * @param string $reason Safe, fixed diagnostic reason.
+     * @return never
+     */
+    private static function reject_bearer(string $reason): never {
+        diagnostics::event('auth_rejected', [
+            'phase' => 'bearer_extraction',
+            'auth_source' => self::authorization_source(),
+            'http_method' => (string)($_SERVER['REQUEST_METHOD'] ?? ''),
+            'reason' => $reason,
+        ], 'WARNING');
+        throw new api_exception('invalid_token', 401);
     }
 
     /**

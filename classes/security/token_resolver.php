@@ -24,6 +24,7 @@
 
 namespace local_mcp\security;
 
+use local_mcp\diagnostics;
 use local_mcp\exception\api_exception;
 
 /**
@@ -40,51 +41,65 @@ final class token_resolver {
     public static function from_bearer(?string $authorization, ?string $resource = null): authenticated_identity {
         global $DB;
         if (!$authorization || !preg_match('/^Bearer\s+(.+)$/i', trim($authorization), $m)) {
-            throw new api_exception('invalid_token', 401);
+            self::reject('missing_or_malformed_bearer');
         }
         $token = trim($m[1]);
+        if (!str_starts_with($token, 'mcp_at_')) {
+            self::reject('unsupported_access_token_format');
+        }
         $prefix = secret::prefix($token);
         $hash = secret::hash($token);
-
-        if (str_starts_with($token, 'mcp_at_')) {
-            $records = $DB->get_records('local_mcp_access_token', ['prefix' => $prefix]);
-            foreach ($records as $rec) {
-                if (!hash_equals($rec->tokenhash, $hash)) {
-                    continue;
-                }
-                if (!$resource || !hash_equals((string)$rec->resource, $resource)) {
-                    throw new api_exception('invalid_token_audience', 401);
-                }
-                if ($rec->revokedat || $rec->expiresat < time()) {
-                    throw new api_exception('expired_token', 401);
-                }
-                $connection = $DB->get_record('local_mcp_connection', ['id' => $rec->connectionid, 'enabled' => 1]);
-                if (!$connection || $connection->revokedat ||
-                    (int)$connection->userid !== (int)$rec->userid ||
-                    (int)$connection->clientid !== (int)$rec->clientid ||
-                    !$DB->record_exists('local_mcp_oauth_client', ['id' => $rec->clientid, 'enabled' => 1])) {
-                    throw new api_exception('invalid_token', 401);
-                }
-                // A connection can have its permissions reduced after an access token was issued.
-                // Do not let an older token restore the permissions that were removed.
-                $scopes = array_values(array_intersect(scope::parse($rec->scopes), scope::parse($connection->scopes)));
-                if (!$scopes) {
-                    throw new api_exception('invalid_token', 401);
-                }
-                self::touch('local_mcp_access_token', $rec->id);
-                return new authenticated_identity(
-                    (int)$rec->userid,
-                    'oauth',
-                    $scopes,
-                    (int)$rec->clientid,
-                    (int)$rec->connectionid,
-                    (int)$rec->id,
-                    $rec->family
-                );
+        $records = $DB->get_records('local_mcp_access_token', ['prefix' => $prefix]);
+        foreach ($records as $rec) {
+            if (!hash_equals($rec->tokenhash, $hash)) {
+                continue;
             }
+            if (!$resource || !hash_equals((string)$rec->resource, $resource)) {
+                self::reject('access_token_wrong_audience', 'invalid_token_audience');
+            }
+            if ($rec->revokedat || $rec->expiresat < time()) {
+                self::reject('access_token_revoked_or_expired', 'expired_token');
+            }
+            $connection = $DB->get_record('local_mcp_connection', ['id' => $rec->connectionid, 'enabled' => 1]);
+            if (!$connection || $connection->revokedat ||
+                (int)$connection->userid !== (int)$rec->userid ||
+                (int)$connection->clientid !== (int)$rec->clientid ||
+                !$DB->record_exists('local_mcp_oauth_client', ['id' => $rec->clientid, 'enabled' => 1])) {
+                self::reject('oauth_connection_or_client_invalid');
+            }
+            // A connection can have its permissions reduced after an access token was issued.
+            // Do not let an older token restore the permissions that were removed.
+            $scopes = array_values(array_intersect(scope::parse($rec->scopes), scope::parse($connection->scopes)));
+            if (!$scopes) {
+                self::reject('access_token_scopes_revoked');
+            }
+            self::touch('local_mcp_access_token', $rec->id);
+            return new authenticated_identity(
+                (int)$rec->userid,
+                'oauth',
+                $scopes,
+                (int)$rec->clientid,
+                (int)$rec->connectionid,
+                (int)$rec->id,
+                $rec->family
+            );
         }
+        self::reject('access_token_not_found');
+    }
 
-        throw new api_exception('invalid_token', 401);
+    /**
+     * Reject credentials with a safe internal reason and unchanged OAuth response.
+     *
+     * @param string $reason Stable, non-secret rejection reason.
+     * @param string $code Public OAuth error code.
+     * @return never
+     */
+    private static function reject(string $reason, string $code = 'invalid_token'): never {
+        diagnostics::event('auth_rejected', [
+            'phase' => 'token_validation',
+            'reason' => $reason,
+        ], 'WARNING');
+        throw new api_exception($code, 401);
     }
 
     /**

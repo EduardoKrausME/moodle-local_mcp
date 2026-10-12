@@ -8,6 +8,11 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # Preserve Authorization for OAuth MCP endpoints on Apache CGI/FastCGI.
+    # The rule does not expose credentials in URLs or diagnostic logs.
+    RewriteCond %{HTTP:Authorization} .+
+    RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
     # Clients may append discovery paths to the PHP entrypoint.
     # Preserve REQUEST_URI for the precise RFC 8414 issuer.
     RewriteRule ^(server|read|write)\.php/\.well-known/(oauth-authorization-server|openid-configuration)/?$ oauth-metadata.php [END,QSA]

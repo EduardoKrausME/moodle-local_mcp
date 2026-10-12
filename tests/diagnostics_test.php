@@ -112,6 +112,26 @@ final class diagnostics_test extends advanced_testcase {
     }
 
     /**
+     * Confirm stack frames and rejection reasons are emitted without credentials.
+     *
+     * @return void
+     */
+    public function test_stack_trace_is_bounded_and_scrubbed(): void {
+        $token = 'mcp_at_' . str_repeat('X', 32);
+        $log = diagnostics::format('WARNING', 'exception', [
+            'reason' => 'missing_authorization_header',
+            'trace' => array_merge(
+                ['http.php:97 local_mcp\\protocol\\http::bearer ' . $token],
+                array_fill(0, 12, 'mcp_server.php:88 local_mcp\\protocol\\mcp_server->handle')
+            ),
+        ]);
+        $record = json_decode(substr($log, strlen('[local_mcp] ')), true);
+        $this->assertSame('missing_authorization_header', $record['reason']);
+        $this->assertCount(8, $record['trace']);
+        $this->assertStringNotContainsString($token, $log);
+    }
+
+    /**
      * test_handles_exception_without_exposing_confirmation_details
      *
      * @return void

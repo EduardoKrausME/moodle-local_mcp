@@ -82,9 +82,7 @@ final class mcp_server {
             'side' => $this->side,
             'http_method' => (string)($_SERVER['REQUEST_METHOD'] ?? ''),
             'auth_source' => (isset($_GET['toke']) || isset($_GET['token']))
-                ? 'rejected_query_token'
-                : ((isset($_SERVER['HTTP_AUTHORIZATION']) || isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']))
-                    ? 'header' : 'none'),
+                ? 'rejected_query_token' : http::authorization_source(),
         ]);
         try {
             // Some MCP clients probe metadata appended to server.php. Serve only the

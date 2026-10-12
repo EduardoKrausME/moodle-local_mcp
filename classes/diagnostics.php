@@ -47,6 +47,7 @@ final class diagnostics {
         'provider', 'schema_path', 'expected', 'actual', 'resolution',
         'courseid', 'source', 'source_bytes', 'bytes', 'width', 'height', 'mime',
         'download_status', 'download_bytes', 'existing_images', 'replaced',
+        'reason', 'trace',
     ];
 
     /**
@@ -101,12 +102,13 @@ final class diagnostics {
                 if (is_string($value)) {
                     $record[$key] = self::clean($value);
                 } else {
-                    if ($key === 'args_keys' || $key === 'scopes') {
-                        // Log only short argument NAMES or known scope names, never values.
+                    if ($key === 'args_keys' || $key === 'scopes' || $key === 'trace') {
+                        // Only safe names and sanitized stack frames, never argument values.
                         if (is_array($value)) {
+                            $limit = $key === 'trace' ? 8 : 60;
                             $record[$key] = array_map(
                                 static fn($item): string => self::clean((string)$item),
-                                array_slice(array_values($value), 0, 60)
+                                array_slice(array_values($value), 0, $limit)
                             );
                         }
                     }
@@ -147,8 +149,27 @@ final class diagnostics {
             'message' => $e->getMessage(),
             'file' => basename($e->getFile()),
             'line' => $e->getLine(),
+            'trace' => self::safe_trace($e),
         ];
         self::event('exception', array_merge($fields, $details), $level);
+    }
+
+    /**
+     * Create a bounded stack trace with names and locations, never arguments.
+     *
+     * @param Throwable $e The exception.
+     * @return array Safe stack frames.
+     */
+    private static function safe_trace(Throwable $e): array {
+        $frames = [basename($e->getFile()) . ':' . $e->getLine() . ' (throw)'];
+        foreach (array_slice($e->getTrace(), 0, 7) as $frame) {
+            $location = basename((string)($frame['file'] ?? 'internal')) .
+                ':' . (int)($frame['line'] ?? 0);
+            $function = (string)($frame['class'] ?? '') . (string)($frame['type'] ?? '') .
+                (string)($frame['function'] ?? '');
+            $frames[] = $location . ' ' . $function;
+        }
+        return $frames;
     }
 
     /**
