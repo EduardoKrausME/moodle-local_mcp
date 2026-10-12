@@ -45,7 +45,9 @@ $data = [
     'discoveryurl' => new moodle_url('/.well-known/oauth-authorization-server/local/mcp'),
     'registrationdisabled' => !get_config('local_mcp', 'dynamicregistration'),
     'httpsdisabled' => stripos($CFG->wwwroot, 'https://') !== 0,
-    'connectionguidenameexample' => "Moodle-{$SITE->shortname}"
+    'connectionguidenameexample' => "Moodle-{$SITE->shortname}",
+    'connectiondocumentationurl' => 'https://eduardokrausme.github.io/moodle-local_mcp/' .
+        (strpos(current_language(), 'pt') === 0 ? 'pt_br' : 'en') . '/recursos/conexao-chatgpt.html'
 ];
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('local_mcp/connections', $data);

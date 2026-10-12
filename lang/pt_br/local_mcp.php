@@ -61,6 +61,7 @@ $string['connectionguideadvancedhelp'] = 'Normalmente mantenha a descoberta auto
 $string['connectionguideadvancedpreview'] = 'Mantenha a descoberta automática OAuth e o registro dinâmico de clientes.';
 $string['connectionguideauthentication'] = 'Autenticação';
 $string['connectionguideconnected'] = 'Já existe uma conexão OAuth ativa do ChatGPT. Este guia continua disponível para configurar outra conexão.';
+$string['connectionguidedocumentation'] = 'Ver guia completo de conexão';
 $string['connectionguideconnection'] = 'Conexão';
 $string['connectionguidecreate'] = 'Criar como plugin';
 $string['connectionguidecreatehelp'] = 'Clique em Criar como plugin no ChatGPT, conclua a instalação, entre no Moodle e autorize as permissões READ/WRITE solicitadas.';

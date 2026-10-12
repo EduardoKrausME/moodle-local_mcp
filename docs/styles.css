@@ -537,3 +537,6 @@ html[data-theme="dark"] .language-notice-close:hover{
         justify-content:space-between;
     }
 }
+
+/* ChatGPT connection documentation steps. */
+.connection-steps{padding-left:24px}.connection-steps li{margin:18px 0;line-height:1.75}.connection-code{padding:14px 16px;max-width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--soft);line-height:1.6}.connection-code code{font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere}html[data-theme="dark"] .connection-steps{color:var(--ink)}

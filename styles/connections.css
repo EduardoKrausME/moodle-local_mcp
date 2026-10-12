@@ -312,3 +312,6 @@
     .local-mcp-connection-guide__urlfield { display: flex; }
     .local-mcp-connection-guide__urlfield .form-control { flex: 1 1 auto; }
 }
+
+/* External documentation link on the connections page. */
+.local-mcp-connection-guide__docs{margin-left:10px;color:#fff!important;border-color:rgba(255,255,255,.7)}.local-mcp-connection-guide__docs:hover,.local-mcp-connection-guide__docs:focus{color:#142d50!important;background:#fff}@media(max-width:600px){.local-mcp-connection-guide__docs{margin:12px 0 0}}

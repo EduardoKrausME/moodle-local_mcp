@@ -26,7 +26,8 @@
         "discoveryurl": "https://moodle.example.org/.well-known/oauth-authorization-server/local/mcp",
         "registrationdisabled": false,
         "httpsdisabled": false,
-        "showchatgptsetup": true
+        "showchatgptsetup": true,
+        "connectiondocumentationurl": "https://eduardokrausme.github.io/moodle-local_mcp/en/recursos/conexao-chatgpt.html"
     }
 }}
 <div class="local-mcp-connection-guide"
@@ -42,6 +43,12 @@
         <a class="btn btn-light local-mcp-connection-guide__open" href="https://chatgpt.com/"
            target="_blank" rel="noopener noreferrer">
             {{#str}}chatgptsetupopenchatgpt, local_mcp{{/str}}
+            <span aria-hidden="true">&nearr;</span>
+            <span class="sr-only">({{#str}}chatgptsetupnewtab, local_mcp{{/str}})</span>
+        </a>
+        <a class="btn btn-outline-light local-mcp-connection-guide__open local-mcp-connection-guide__docs"
+           href="{{connectiondocumentationurl}}" target="_blank" rel="noopener noreferrer">
+            {{#str}}connectionguidedocumentation, local_mcp{{/str}}
             <span aria-hidden="true">&nearr;</span>
             <span class="sr-only">({{#str}}chatgptsetupnewtab, local_mcp{{/str}})</span>
         </a>
