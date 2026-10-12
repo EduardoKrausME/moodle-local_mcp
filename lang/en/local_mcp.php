@@ -91,6 +91,7 @@ $string['connectionguidetunnelmode'] = 'Tunnel';
 $string['connectionguideurlhelp'] = 'Select Server URL (not Tunnel). Copy the address from the sample and paste it in ChatGPT. Use the HTTPS URL ending in /local/mcp/server.php, without additional parameters.';
 $string['connectionguideurlmode'] = 'Server URL';
 $string['connections'] = 'Connections';
+$string['backtodashboard'] = 'Back to Dashboard';
 $string['dashboard'] = 'Dashboard';
 $string['mcp:manage'] = 'Manage Moodle MCP';
 $string['newconnection'] = 'New connection';

@@ -165,6 +165,8 @@ if ($export === 'csv') {
 }
 
 echo $OUTPUT->header();
+echo html_writer::link(new moodle_url('/local/mcp/admin/dashboard.php'),
+    get_string('backtodashboard', 'local_mcp'), ['class' => 'btn btn-secondary mb-3']);
 echo html_writer::start_tag('form', ['method' => 'get',
     'action' => (new moodle_url('/local/mcp/admin/audit.php'))->out(false),
     'class' => 'mb-3']);

@@ -87,6 +87,8 @@ foreach ($readgroups as $component => $group) {
 }
 
 echo $OUTPUT->header();
+echo html_writer::link(new moodle_url('/local/mcp/admin/dashboard.php'),
+    get_string('backtodashboard', 'local_mcp'), ['class' => 'btn btn-secondary mb-3']);
 echo $OUTPUT->render_from_template('local_mcp/writeapis', [
     'tables' => $tables,
     'columns' => [

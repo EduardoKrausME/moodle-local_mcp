@@ -37,5 +37,7 @@ foreach ($DB->get_records('local_mcp_oauth_client', null, 'timecreated DESC') as
         'enabled' => $r->enabled ? 'Yes' : 'No', 'created' => userdate($r->timecreated), 'lastused' => $r->lastused ? userdate($r->lastused) : '-'];
 }
 echo $OUTPUT->header();
+echo html_writer::link(new moodle_url('/local/mcp/admin/dashboard.php'),
+    get_string('backtodashboard', 'local_mcp'), ['class' => 'btn btn-secondary mb-3']);
 echo $OUTPUT->render_from_template('local_mcp/clients', ['rows' => $rows]);
 echo $OUTPUT->footer();

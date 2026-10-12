@@ -50,5 +50,7 @@ $data = [
         (strpos(current_language(), 'pt') === 0 ? 'pt_br' : 'en') . '/recursos/conexao-chatgpt.html'
 ];
 echo $OUTPUT->header();
+echo html_writer::link(new moodle_url('/local/mcp/admin/dashboard.php'),
+    get_string('backtodashboard', 'local_mcp'), ['class' => 'btn btn-secondary mb-3']);
 echo $OUTPUT->render_from_template('local_mcp/connections', $data);
 echo $OUTPUT->footer();
