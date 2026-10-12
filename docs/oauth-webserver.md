@@ -27,6 +27,6 @@ For Moodle installed under a subdirectory, adjust **both** URLs, including the s
 
 After applying the configuration, verify that the discovery URL returns valid authorization-server metadata. Then enable **Dynamic client registration** in the plugin settings and connect the MCP client to `https://YOUR-MOODLE/local/mcp/server.php` over HTTPS. Complete the normal Moodle sign-in and administrator consent.
 
-**Security:** OAuth uses Authorization Code with PKCE S256; the client must supply the endpoint-bound `resource` parameter. Do not put OAuth tokens in URL query parameters. Manual tokens and URL query-string credentials are not supported.
+**Security:** OAuth uses Authorization Code with PKCE S256; the client must supply the endpoint-bound `resource` parameter. Do not put OAuth tokens in URL query parameters.
 
 For illustrated setup instructions, see [Português](pt_br/recursos/oauth.html) or [English](en/recursos/oauth.html).
