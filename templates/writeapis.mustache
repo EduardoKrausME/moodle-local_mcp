@@ -19,29 +19,64 @@
 
     Example context (json):
     {
-        Aqui tem que criar o context em inglês
+        "tables": [
+            {
+                "pluginname": "Moodle MCP",
+                "component": "local_mcp",
+                "countlabel": "WRITE tools: 1",
+                "rows": [
+                    {
+                        "name": "create_course",
+                        "description": "Create a Moodle course.",
+                        "capability": "moodle/course:create",
+                        "dryrun": "Yes",
+                        "confirmation": "Yes",
+                        "destructive": "No"
+                    }
+                ]
+            }
+        ],
+        "columns": {
+            "name": "Name",
+            "description": "Description",
+            "capability": "Capability",
+            "dryrun": "Dry-run",
+            "confirmation": "Confirmation",
+            "destructive": "Destructive"
+        },
+        "empty": "No WRITE tools available."
     }
 }}
-<table class="generaltable">
-    <thead>
-    <tr>
-        <th>Name</th>
-        <th>Description</th>
-        <th>Capability</th>
-        <th>Dry-run</th>
-        <th>Confirmation</th>
-        <th>Destructive</th>
-    </tr>
-    </thead>
-    <tbody>
-    {{#rows}}
-        <tr>
-            <td><code>{{name}}</code></td>
-            <td>{{description}}</td>
-            <td><code>{{capability}}</code></td>
-            <td>{{dryrun}}</td>
-            <td>{{confirmation}}</td>
-            <td>{{destructive}}</td>
-        </tr>{{/rows}}
-    </tbody>
-</table>
+{{#tables}}
+    <section class="mb-4">
+        <h3>{{pluginname}} <small class="text-muted"><code>{{component}}</code></small></h3>
+        <p class="text-muted">{{countlabel}}</p>
+        <table class="generaltable">
+            <thead>
+                <tr>
+                    <th scope="col">{{columns.name}}</th>
+                    <th scope="col">{{columns.description}}</th>
+                    <th scope="col">{{columns.capability}}</th>
+                    <th scope="col">{{columns.dryrun}}</th>
+                    <th scope="col">{{columns.confirmation}}</th>
+                    <th scope="col">{{columns.destructive}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#rows}}
+                    <tr>
+                        <td><code>{{name}}</code></td>
+                        <td>{{description}}</td>
+                        <td><code>{{capability}}</code></td>
+                        <td>{{dryrun}}</td>
+                        <td>{{confirmation}}</td>
+                        <td>{{destructive}}</td>
+                    </tr>
+                {{/rows}}
+            </tbody>
+        </table>
+    </section>
+{{/tables}}
+{{^tables}}
+    <p>{{empty}}</p>
+{{/tables}}
