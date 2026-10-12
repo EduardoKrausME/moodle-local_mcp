@@ -77,6 +77,7 @@ final class mcp_server {
      * @return never Return value.
      */
     public function handle(): never {
+        http::trace_start($this->side);
         $startedrequest = microtime(true);
         diagnostics::event('request_received', [
             'side' => $this->side,

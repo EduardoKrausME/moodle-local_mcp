@@ -33,6 +33,23 @@ use Throwable;
  * Class http.
  */
 final class http {
+    /** @var bool Whether MCP JSON-RPC traffic logging is enabled. */
+    private static bool $tracemessages = false;
+
+    /** @var string Current MCP endpoint. */
+    private static string $traceside = 'server';
+
+    /**
+     * Enable tracing for this MCP endpoint (never for OAuth endpoints).
+     *
+     * @param string $side Endpoint side.
+     * @return void
+     */
+    public static function trace_start(string $side): void {
+        self::$traceside = $side;
+        self::$tracemessages = message_logger::enabled();
+    }
+
     /**
      * Method json.
      *
@@ -49,6 +66,9 @@ final class http {
             header($header);
         }
         $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (self::$tracemessages) {
+            message_logger::log('outgoing', self::$traceside, $data, $status);
+        }
         echo $json;
         exit;
     }
@@ -59,6 +79,9 @@ final class http {
      * @return never
      */
     public static function accepted(): never {
+        if (self::$tracemessages) {
+            message_logger::log('outgoing', self::$traceside, ['notice' => 'empty notification response'], 202);
+        }
         http_response_code(202);
         header('Cache-Control: no-store');
         exit;
@@ -73,7 +96,14 @@ final class http {
         $raw = file_get_contents('php://input');
         $data = json_decode($raw ?: '{}', true);
         if (!is_array($data)) {
+            if (self::$tracemessages) {
+                message_logger::log('incoming', self::$traceside,
+                    ['error' => 'invalid_json', 'body_bytes' => strlen((string)$raw)]);
+            }
             throw new api_exception('invalid_request', 400);
+        }
+        if (self::$tracemessages) {
+            message_logger::log('incoming', self::$traceside, $data);
         }
         return $data;
     }

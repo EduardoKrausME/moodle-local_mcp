@@ -52,6 +52,12 @@ if ($hassiteconfig) {
         'One-time WRITE confirmation token lifetime.', 300, 30));
     $settings->add(new admin_setting_configcheckbox('local_mcp/dynamicregistration', 'Dynamic client registration',
         'Allow standards-based public clients to register redirect URIs. Admin consent is still required.', 1));
+    $settings->add(new admin_setting_configcheckbox('local_mcp/logmessages',
+        'Log MCP JSON messages to PHP error_log',
+        'Log incoming and outgoing JSON-RPC bodies for server/read/write endpoints. '
+        . 'Known secrets and binaries are masked, and large payloads split into numbered fragments. '
+        . 'CAUTION: ordinary Moodle data can contain personal information. '
+        . 'Disable after debugging and restrict access to server logs.', 1));
     $settings->add(new admin_setting_configtext('local_mcp/rateread', 'READ requests/minute', '', rate_limiter::DEFAULT_READ_PER_MINUTE, PARAM_INT));
     $settings->add(new admin_setting_configtext('local_mcp/ratewrite', 'WRITE requests/minute', '', rate_limiter::DEFAULT_WRITE_PER_MINUTE, PARAM_INT));
     $settings->add(new admin_setting_configtext('local_mcp/rateoauth', 'OAuth requests/minute', '', rate_limiter::DEFAULT_OAUTH_PER_MINUTE, PARAM_INT));

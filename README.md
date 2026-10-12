@@ -45,6 +45,17 @@ confirmation token, and use Moodle's `set_config()` rather than SQL.
 An audit entry records the names of modified settings without logging values.
 When the Moodle server is updated, refresh the custom MCP connection to discover the new tools.
 
+## MCP JSON request/response diagnostics
+
+Incoming and outgoing JSON-RPC messages on server.php, read.php and write.php
+are logged to PHP error_log by default, with event protocol_message and
+direction incoming/outgoing. The request ID matches the existing diagnostics.
+Large JSON messages are split into numbered payload_fragment records (part/parts).
+Known secret fields, bearer tokens, long Base64 values and URL queries are masked.
+OAuth token endpoints are not traced. Logs can still contain personal Moodle
+records, so disable "Log MCP JSON messages to PHP error_log" in plugin settings
+after diagnosing the integration and restrict access to the PHP log.
+
 ## Architecture
 
 ```
