@@ -40,13 +40,14 @@ final class create_activity extends activity_create_base {
     protected function extra_properties(): array {
         return [
             'filename' => ['type' => 'string', 'minLength' => 1],
+            'file_upload_id' => ['type' => 'string', 'description' => 'Opaque upload_id returned by authenticated POST /local/mcp/upload.php.'],
             'file_base64' => ['type' => 'string', 'minLength' => 1,
                 'description' => 'Base64 file bytes or a Base64 data URI; up to 40 MiB decoded.'],
         ];
     }
 
     protected function extra_required(): array {
-        return ['filename', 'file_base64'];
+        return [];
     }
 
     protected function configure(stdClass $info, array $a, authenticated_identity $identity): void {
@@ -55,6 +56,6 @@ final class create_activity extends activity_create_base {
         $info->display = RESOURCELIB_DISPLAY_AUTO;
         $info->printintro = 0;
         $info->showsize = 1;
-        $info->files = activity_upload::create_draft($a['file_base64'], $a['filename'], $identity->userid);
+        $info->files = activity_upload::from_arguments($a, $identity);
     }
 }

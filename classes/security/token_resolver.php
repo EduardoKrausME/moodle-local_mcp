@@ -35,10 +35,10 @@ final class token_resolver {
      * Method from_bearer.
      *
      * @param ?string $authorization Parameter authorization.
-     * @param ?string $resource Expected audience for OAuth tokens.
+     * @param string|array|null $resource Expected audience or acceptable audience set.
      * @return authenticated_identity Return value.
      */
-    public static function from_bearer(?string $authorization, ?string $resource = null): authenticated_identity {
+    public static function from_bearer(?string $authorization, string|array|null $resource = null): authenticated_identity {
         global $DB;
         if (!$authorization || !preg_match('/^Bearer\s+(.+)$/i', trim($authorization), $m)) {
             self::reject('missing_or_malformed_bearer');
@@ -54,7 +54,16 @@ final class token_resolver {
             if (!hash_equals($rec->tokenhash, $hash)) {
                 continue;
             }
-            if (!$resource || !hash_equals((string)$rec->resource, $resource)) {
+            $audiences = is_array($resource) ? $resource : [$resource];
+            $audiencevalid = false;
+            foreach ($audiences as $audience) {
+                if (is_string($audience) && $audience !== ''
+                        && hash_equals((string)$rec->resource, $audience)) {
+                    $audiencevalid = true;
+                    break;
+                }
+            }
+            if (!$audiencevalid) {
                 self::reject('access_token_wrong_audience', 'invalid_token_audience');
             }
             if ($rec->revokedat || $rec->expiresat < time()) {

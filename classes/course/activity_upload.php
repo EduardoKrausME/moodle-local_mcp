@@ -27,6 +27,7 @@ namespace local_mcp\course;
 use context_user;
 use core_user;
 use local_mcp\exception\api_exception;
+use local_mcp\security\authenticated_identity;
 
 /**
  * Convert a single file payload into a Moodle draft item, for use by add_moduleinfo().
@@ -68,6 +69,34 @@ final class activity_upload {
             throw new api_exception('invalid_h5p_package', 400, 'H5P packages must be ZIP files.');
         }
         return [$cleanfilename, $binary];
+    }
+
+    /**
+     * Resolve either a private HTTP upload reference or a legacy Base64 argument.
+     *
+     * @param array $arguments Tool arguments.
+     * @param authenticated_identity $identity Acting OAuth user.
+     * @param bool $h5p Require .h5p ZIP format.
+     * @return int Moodle draft item ID.
+     */
+    public static function from_arguments(array $arguments, authenticated_identity $identity,
+                                          bool $h5p = false): int {
+        $uploadid = (string)($arguments['file_upload_id'] ?? '');
+        $encoded = (string)($arguments['file_base64'] ?? '');
+        $filename = (string)($arguments['filename'] ?? '');
+        if ($uploadid !== '') {
+            if ($encoded !== '') {
+                throw new api_exception('invalid_upload', 400,
+                    'Supply either file_upload_id or file_base64, never both.');
+            }
+            $stored = staged_upload::resolve($uploadid, $identity);
+            if ($filename !== '' && $filename !== $stored->get_filename()) {
+                throw new api_exception('invalid_filename', 400,
+                    'The optional filename must match the uploaded file.');
+            }
+            return staged_upload::create_draft($uploadid, $identity, $h5p);
+        }
+        return self::create_draft($encoded, $filename, $identity->userid, $h5p);
     }
 
     /**

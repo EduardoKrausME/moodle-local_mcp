@@ -46,20 +46,21 @@ final class create_activity extends activity_create_base {
     protected function extra_properties(): array {
         return [
             'filename' => ['type' => 'string', 'minLength' => 5, 'description' => 'H5P package filename.'],
+            'file_upload_id' => ['type' => 'string', 'description' => 'Opaque upload_id from authenticated POST /local/mcp/upload.php.'],
             'file_base64' => ['type' => 'string', 'minLength' => 1, 'description' => 'Base64 .h5p ZIP package, max 40 MiB.'],
         ];
     }
 
     protected function extra_required(): array {
-        return ['filename', 'file_base64'];
+        return [];
     }
 
     protected function configure(stdClass $info, array $a, authenticated_identity $identity): void {
         global $CFG;
-        $info->packagefile = activity_upload::create_draft(
-            $a['file_base64'], $a['filename'], $identity->userid, true
-        );
-        $info->reference = $a['filename'];
+        $info->packagefile = activity_upload::from_arguments($a, $identity, true);
+        $info->reference = !empty($a['file_upload_id'])
+            ? \local_mcp\course\staged_upload::resolve($a['file_upload_id'], $identity)->get_filename()
+            : $a['filename'];
         $factory = new factory();
         $core = $factory->get_core();
         $config = helper::decode_display_options($core);

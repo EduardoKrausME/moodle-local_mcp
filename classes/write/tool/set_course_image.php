@@ -27,6 +27,7 @@ namespace local_mcp\write\tool;
 use context;
 use context_course;
 use local_mcp\course\image_service;
+use local_mcp\course\staged_upload;
 use local_mcp\diagnostics;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
@@ -61,7 +62,7 @@ final class set_course_image extends base_tool {
      * @return string
      */
     public function get_description(): string {
-        return 'Replace the course cover image using a Base64 PNG/JPEG/WebP or a publicly downloadable HTTPS URL. '
+        return 'Replace the course cover image using an upload ID, Base64 PNG/JPEG/WebP or a public HTTPS URL. '
             . 'Requires confirmation, preserves non-image overview files and supports a content-hash concurrency check.';
     }
 
@@ -84,6 +85,7 @@ final class set_course_image extends base_tool {
             'courseid' => ['type' => 'integer', 'minimum' => 1],
             'image_base64' => ['type' => 'string', 'description' => 'Base64 PNG, JPEG or WebP (optionally a data URI), max 5 MiB decoded.'],
             'image_url' => ['type' => 'string', 'description' => 'Public HTTPS image download URL (never a private/internal URL).'],
+            'image_upload_id' => ['type' => 'string', 'description' => 'Opaque upload_id from POST /local/mcp/upload.php. PNG/JPEG/WebP up to 5 MiB.'],
             'expected_contenthash' => ['type' => 'string', 'description' => 'Optional current image hash from get_course_image to prevent overwriting a changed image.'],
         ], ['courseid']);
     }
@@ -114,6 +116,12 @@ final class set_course_image extends base_tool {
             'userid' => $identity->userid, 'phase' => 'preview',
             'source' => !empty($arguments['image_url']) ? 'https_url' : 'base64',
         ]);
+        if (!empty($arguments['image_upload_id'])) {
+            if (!empty($arguments['image_base64']) || !empty($arguments['image_url'])) {
+                throw new api_exception('image_source_required', 400);
+            }
+            staged_upload::resolve((string)$arguments['image_upload_id'], $identity, image_service::MAX_BYTES);
+        }
         $images = image_service::read($courseid, false);
         diagnostics::event('course_image_preview_ready', [
             'tool' => 'set_course_image', 'courseid' => $courseid,
@@ -123,7 +131,8 @@ final class set_course_image extends base_tool {
         return [
             'courseid' => (int)$arguments['courseid'],
             'current_image' => $images['image'],
-            'new_image_source' => !empty($arguments['image_url']) ? 'https_url' : 'base64',
+            'new_image_source' => !empty($arguments['image_upload_id']) ? 'uploaded_file'
+                : (!empty($arguments['image_url']) ? 'https_url' : 'base64'),
             'new_image_size_estimate' => isset($arguments['image_base64'])
                 ? (int)(strlen((string)$arguments['image_base64']) * 3 / 4) : null,
             'replaces_image_count' => count($images['images']),
@@ -142,6 +151,14 @@ final class set_course_image extends base_tool {
     public function execute(array $arguments, authenticated_identity $identity): array {
         $context = $this->resolve_context($arguments);
         capability_guard::check('moodle/course:changesummary', $context, $identity->userid);
+        if (!empty($arguments['image_upload_id'])) {
+            if (!empty($arguments['image_base64']) || !empty($arguments['image_url'])) {
+                throw new api_exception('image_source_required', 400);
+            }
+            $arguments['image_binary'] = staged_upload::bytes(
+                (string)$arguments['image_upload_id'], $identity, image_service::MAX_BYTES);
+            unset($arguments['image_upload_id']);
+        }
         return image_service::replace((int)$arguments['courseid'], $arguments, $identity->userid);
     }
 }

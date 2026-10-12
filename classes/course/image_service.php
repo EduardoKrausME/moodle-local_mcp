@@ -138,15 +138,18 @@ final class image_service {
     public static function decode(array $arguments): array {
         $hasbase64 = !empty($arguments['image_base64']);
         $hasurl = !empty($arguments['image_url']);
-        if ($hasbase64 === $hasurl) {
-            throw new api_exception('image_source_required', 400, 'Supply exactly one of image_base64 or image_url.');
+        $hasbinary = array_key_exists('image_binary', $arguments);
+        if ((int)$hasbase64 + (int)$hasurl + (int)$hasbinary !== 1) {
+            throw new api_exception('image_source_required', 400, 'Supply exactly one image source.');
         }
         diagnostics::event('course_image_source_received', [
             'courseid' => $arguments['courseid'] ?? null,
-            'source' => $hasbase64 ? 'base64' : 'https_url',
+            'source' => $hasbase64 ? 'base64' : ($hasbinary ? 'uploaded_file' : 'https_url'),
             'source_bytes' => $hasbase64 ? strlen((string)$arguments['image_base64']) : null,
         ]);
-        if ($hasbase64) {
+        if ($hasbinary) {
+            $binary = (string)$arguments['image_binary'];
+        } elseif ($hasbase64) {
             $encoded = (string)$arguments['image_base64'];
             if (preg_match('~^data:image/(?:png|jpeg|webp);base64,~i', $encoded, $match)) {
                 $encoded = substr($encoded, strlen($match[0]));
@@ -212,7 +215,7 @@ final class image_service {
         }
         diagnostics::event('course_image_decoded', [
             'courseid' => $arguments['courseid'] ?? null, 'phase' => 'decode',
-            'source' => $hasbase64 ? 'base64' : 'https_url',
+            'source' => $hasbase64 ? 'base64' : ($hasbinary ? 'uploaded_file' : 'https_url'),
             'bytes' => strlen($binary), 'mime' => $info['mime'],
             'width' => $width, 'height' => $height,
         ]);
@@ -232,7 +235,8 @@ final class image_service {
         diagnostics::event('course_image_replace_started', [
             'tool' => 'set_course_image', 'courseid' => $courseid,
             'userid' => $userid, 'phase' => 'start',
-            'source' => !empty($arguments['image_url']) ? 'https_url' : 'base64',
+            'source' => !empty($arguments['image_binary']) ? 'uploaded_file'
+                : (!empty($arguments['image_url']) ? 'https_url' : 'base64'),
         ]);
         $context = context_course::instance($courseid, MUST_EXIST);
         $oldfiles = self::images($courseid);

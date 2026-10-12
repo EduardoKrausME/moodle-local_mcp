@@ -47,6 +47,7 @@ final class cleanup extends scheduled_task {
     public function execute(): void {
         global $DB;
         $now = time();
+        \local_mcp\course\staged_upload::cleanup();
         $DB->delete_records_select('local_mcp_auth_code', 'expires < ? OR used = 1', [$now]);
         $DB->delete_records_select('local_mcp_confirm', 'expires < ? OR used = 1', [$now]);
         $DB->delete_records_select('local_mcp_access_token', 'expiresat < ? AND (revokedat IS NOT NULL OR expiresat < ?)', [$now, $now - DAYSECS]);

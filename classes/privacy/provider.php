@@ -57,6 +57,12 @@ final class provider implements
             'ip' => 'privacy:metadata:local_mcp_audit',
             'timecreated' => 'privacy:metadata:local_mcp_audit',
         ], 'privacy:metadata:local_mcp_audit');
+        $collection->add_database_table('local_mcp_upload', [
+            'userid' => 'privacy:metadata:local_mcp_uploads',
+            'filename' => 'privacy:metadata:local_mcp_uploads',
+            'timecreated' => 'privacy:metadata:local_mcp_uploads',
+            'expiresat' => 'privacy:metadata:local_mcp_uploads',
+        ], 'privacy:metadata:local_mcp_uploads');
         return $collection;
     }
 
@@ -70,7 +76,8 @@ final class provider implements
         $list = new contextlist();
         global $DB;
         if ($DB->record_exists('local_mcp_connection', ['userid' => $userid])
-            || $DB->record_exists('local_mcp_audit', ['userid' => $userid])) {
+            || $DB->record_exists('local_mcp_audit', ['userid' => $userid])
+            || $DB->record_exists('local_mcp_upload', ['userid' => $userid])) {
             $list->add_system_context();
         }
         return $list;
@@ -92,6 +99,8 @@ final class provider implements
         $data = (object)[
             'connections' => array_values($DB->get_records('local_mcp_connection', ['userid' => $userid])),
             'audit' => array_values($DB->get_records('local_mcp_audit', ['userid' => $userid])),
+            'uploads' => array_values($DB->get_records('local_mcp_upload', ['userid' => $userid],
+                '', 'id, userid, filename, filesize, timecreated, expiresat')),
         ];
         writer::with_context($context)->export_data([], $data);
     }
@@ -108,6 +117,9 @@ final class provider implements
             return;
         }
         $DB->delete_records('local_mcp_audit');
+        foreach ($DB->get_fieldset_sql('SELECT DISTINCT userid FROM {local_mcp_upload}') as $userid) {
+            \local_mcp\course\staged_upload::delete_user((int)$userid);
+        }
     }
 
     /**
@@ -120,5 +132,6 @@ final class provider implements
         global $DB;
         $userid = $contextlist->get_user()->id;
         $DB->delete_records('local_mcp_audit', ['userid' => $userid]);
+        \local_mcp\course\staged_upload::delete_user((int)$userid);
     }
 }

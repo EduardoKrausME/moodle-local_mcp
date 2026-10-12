@@ -28,6 +28,7 @@ use context;
 use context_coursecat;
 use local_mcp\security\authenticated_identity;
 use local_mcp\course\image_service;
+use local_mcp\course\staged_upload;
 use local_mcp\exception\api_exception;
 
 /**
@@ -90,6 +91,8 @@ final class create_course extends base_tool {
                 'description' => 'Optional Base64 PNG/JPEG/WebP or data URI of a local image, max 5 MiB decoded.'],
             'image_url' => ['type' => 'string',
                 'description' => 'Optional publicly downloadable HTTPS image URL. Use exactly one image source.'],
+            'image_upload_id' => ['type' => 'string',
+                'description' => 'Optional OAuth-bound upload_id for a PNG/JPEG/WebP course image.'],
         ], ['fullname', 'shortname', 'categoryid']);
     }
 
@@ -128,8 +131,9 @@ final class create_course extends base_tool {
             'summary_html_bytes' => isset($arguments['summary']) ? strlen((string)$arguments['summary']) : 0,
             'summaryformat' => (int)($arguments['summaryformat'] ?? FORMAT_HTML),
             'visible' => (bool)($arguments['visible'] ?? true),
-            'image_source' => !empty($arguments['image_base64']) ? 'base64'
-                : (!empty($arguments['image_url']) ? 'https_url' : null),
+            'image_source' => !empty($arguments['image_upload_id']) ? 'uploaded_file'
+                : (!empty($arguments['image_base64']) ? 'base64'
+                : (!empty($arguments['image_url']) ? 'https_url' : null)),
         ];
     }
 
@@ -152,13 +156,11 @@ final class create_course extends base_tool {
      * @return void
      */
     private function validate_image_source(array $arguments): void {
-        if (array_key_exists('image_base64', $arguments) || array_key_exists('image_url', $arguments)) {
-            if (empty($arguments['image_base64']) && empty($arguments['image_url'])) {
-                return;
-            }
-            if (!empty($arguments['image_base64']) && !empty($arguments['image_url'])) {
-                throw new api_exception('image_source_required', 400);
-            }
+        $sources = (int)!empty($arguments['image_base64'])
+            + (int)!empty($arguments['image_url'])
+            + (int)!empty($arguments['image_upload_id']);
+        if ($sources > 1) {
+            throw new api_exception('image_source_required', 400);
         }
     }
 
@@ -176,12 +178,13 @@ final class create_course extends base_tool {
         $this->validate_image_source($arguments);
         $this->validate_summary_format($arguments);
         $imagedata = [];
-        if (!empty($arguments['image_base64'])) {
+        if (!empty($arguments['image_upload_id'])) {
+            $imagedata['image_binary'] = staged_upload::bytes(
+                (string)$arguments['image_upload_id'], $identity, image_service::MAX_BYTES);
+        } elseif (!empty($arguments['image_base64'])) {
             $imagedata['image_base64'] = $arguments['image_base64'];
-        } else {
-            if (!empty($arguments['image_url'])) {
-                $imagedata['image_url'] = $arguments['image_url'];
-            }
+        } elseif (!empty($arguments['image_url'])) {
+            $imagedata['image_url'] = $arguments['image_url'];
         }
         // Verify the supplied bytes or URL before creating a new course.
         if ($imagedata) {

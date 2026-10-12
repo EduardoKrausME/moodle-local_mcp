@@ -177,3 +177,5 @@ $string['readapisempty'] = 'No READ tools available.';
 $string['readapisviewall'] = 'View all READ tools in this plugin';
 $string['writeapisonlyread'] = 'Installed plugins with READ-only APIs';
 $string['writeapisonlyreadhelp'] = 'These integrations are available through MCP READ, not WRITE. Open their READ API lists to see every tool. Installation order does not change the API type.';
+
+$string['privacy:metadata:local_mcp_uploads'] = 'Stores the filename, uploader and expiration time of temporary files uploaded by MCP clients.';

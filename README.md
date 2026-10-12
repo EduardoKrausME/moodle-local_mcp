@@ -810,3 +810,8 @@ fastcgi_param HTTP_AUTHORIZATION $http_authorization;
 
 For reverse proxies, ensure that `Authorization` is passed unmodified to the
 origin. The plugin never accepts OAuth access tokens in URL query parameters.
+
+
+### Authenticated binary file uploads
+
+Compatible clients can use `POST /local/mcp/upload.php` with an OAuth bearer token and multipart file data. The response contains a one-hour `upload_id`, accepted by `resource_create_activity`, `h5p_create_activity`, `set_course_image` and `create_course`. No binary contents need to appear in MCP JSON arguments. See [Binary uploads](docs/binary-uploads.md) for security limits, examples and ChatGPT client compatibility notes.

@@ -173,3 +173,5 @@ $string['readapisempty'] = 'Nenhuma ferramenta READ disponível.';
 $string['readapisviewall'] = 'Ver todas as ferramentas READ deste plugin';
 $string['writeapisonlyread'] = 'Plugins instalados com APIs somente READ';
 $string['writeapisonlyreadhelp'] = 'Essas integrações estão disponíveis pelo MCP READ, não pelo WRITE. Acesse a lista READ para consultar todas as ferramentas. A ordem de instalação não altera o tipo das APIs.';
+
+$string['privacy:metadata:local_mcp_uploads'] = 'Armazena o nome, o usuário e a expiração dos arquivos temporários enviados por clientes MCP.';
