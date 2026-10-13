@@ -64,11 +64,19 @@ final class assign_create_activity extends activity_create_base {
     }
 
     private function check_options(array $arguments): void {
+        $this->check_submission_options($arguments);
+        $this->check_dates($arguments);
+    }
+
+    private function check_submission_options(array $arguments): void {
         $files = (bool)($arguments['file_enabled'] ?? true);
         $online = (bool)($arguments['onlinetext_enabled'] ?? false);
         if (!$files && !$online) {
             throw new api_exception('assignment_submission_required', 400);
         }
+    }
+
+    private function check_dates(array $arguments): void {
         $start = (int)($arguments['allowsubmissionsfromdate'] ?? 0);
         $due = (int)($arguments['duedate'] ?? 0);
         $cutoff = (int)($arguments['cutoffdate'] ?? 0);
