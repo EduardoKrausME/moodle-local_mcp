@@ -31,6 +31,8 @@ use ReflectionMethod;
 
 /**
  * Test the two-phase MCP WRITE flow with a real course category tool.
+ *
+ * @covers \local_mcp\protocol\mcp_server
  */
 final class confirmation_flow_test extends advanced_testcase {
     /**
