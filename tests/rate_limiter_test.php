@@ -30,6 +30,8 @@ use local_mcp\security\rate_limiter;
 
 /**
  * Test independent counters and requests sharing one token.
+ *
+ * @covers \local_mcp\security\rate_limiter
  */
 final class rate_limiter_test extends advanced_testcase {
     /**
