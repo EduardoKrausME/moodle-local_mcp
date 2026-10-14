@@ -35,6 +35,10 @@ use local_mcp\write\registry as write_registry;
 
 /**
  * Question bank READ/WRITE integration tests.
+ *
+ * @covers \local_mcp\question\bank_service
+ * @covers \local_mcp\read\registry
+ * @covers \local_mcp\write\registry
  */
 final class question_bank_test extends advanced_testcase {
     /**
