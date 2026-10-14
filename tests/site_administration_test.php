@@ -38,6 +38,11 @@ use moodle_exception;
 
 /**
  * Site configuration and Check API integration.
+ *
+ * @covers \local_mcp\config\site_config
+ * @covers \local_mcp\read\tool\get_site_config
+ * @covers \local_mcp\read\tool\get_site_status
+ * @covers \local_mcp\write\tool\set_site_config
  */
 final class site_administration_test extends advanced_testcase {
     /**
