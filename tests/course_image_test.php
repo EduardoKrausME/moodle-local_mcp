@@ -38,6 +38,10 @@ use Throwable;
 
 /**
  * Course image integration tests.
+ *
+ * @covers \local_mcp\course\image_service
+ * @covers \local_mcp\read\tool\get_course_image
+ * @covers \local_mcp\write\tool\set_course_image
  */
 final class course_image_test extends advanced_testcase {
     /**
