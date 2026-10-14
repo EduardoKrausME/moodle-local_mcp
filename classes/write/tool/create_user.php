@@ -107,7 +107,11 @@ final class create_user extends base_tool {
             'auth' => clean_param($arguments['auth'] ?? 'manual', PARAM_PLUGIN),
             'confirmed' => 1, 'mnethostid' => $CFG->mnet_localhost_id
         ];
-        $id = user_create_user($user, true, false);
+        if (method_exists(\core\user::class, 'create_user')) {
+            $id = \core\user::create_user($user, true, false);
+        } else {
+            $id = user_create_user($user, true, false);
+        }
         return ['id' => (int)$id, 'username' => $user->username, 'email' => $user->email];
     }
 }
