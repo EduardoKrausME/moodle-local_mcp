@@ -35,6 +35,9 @@ use local_mcp\write\tool_interface;
 
 /**
  * Subplugins are visible to Moodle and exposed without core activity switches.
+ *
+ * @covers \local_mcp\extension\manager
+ * @covers \local_mcp\write\registry
  */
 final class subplugin_test extends advanced_testcase {
     /**
