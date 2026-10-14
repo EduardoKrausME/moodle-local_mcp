@@ -29,6 +29,8 @@ use local_mcp\protocol\message_logger;
 
 /**
  * Test request/response logging without exposing credentials.
+ *
+ * @covers \local_mcp\protocol\message_logger
  */
 final class message_logger_test extends advanced_testcase {
     /**
