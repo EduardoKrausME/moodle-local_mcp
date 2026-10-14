@@ -62,10 +62,10 @@
         <p class="text-muted mb-2">{{#str}}dashboardtodaydescription, local_mcp{{/str}}</p>
     </div>
     <nav class="d-flex flex-wrap mb-2" aria-label="{{#str}}dashboardquicklinks, local_mcp{{/str}}">
-        <a class="btn btn-primary btn-sm mr-2 mb-2" href="{{newconnectionurl}}">{{#str}}newconnection, local_mcp{{/str}}</a>
-        <a class="btn btn-outline-secondary btn-sm mr-2 mb-2" href="{{readapisurl}}">{{#str}}readapis, local_mcp{{/str}}</a>
-        <a class="btn btn-outline-secondary btn-sm mr-2 mb-2" href="{{writeapisurl}}">{{#str}}writeapis, local_mcp{{/str}}</a>
-        <a class="btn btn-outline-secondary btn-sm mb-2" href="{{auditurl}}">{{#str}}audit, local_mcp{{/str}}</a>
+        <a class="btn btn-primary btn-sm mr-2 mb-2" href="{{{newconnectionurl}}}">{{#str}}newconnection, local_mcp{{/str}}</a>
+        <a class="btn btn-outline-secondary btn-sm mr-2 mb-2" href="{{{readapisurl}}}">{{#str}}readapis, local_mcp{{/str}}</a>
+        <a class="btn btn-outline-secondary btn-sm mr-2 mb-2" href="{{{writeapisurl}}}">{{#str}}writeapis, local_mcp{{/str}}</a>
+        <a class="btn btn-outline-secondary btn-sm mb-2" href="{{{auditurl}}}">{{#str}}audit, local_mcp{{/str}}</a>
     </nav>
 </div>
 
@@ -73,7 +73,9 @@
     <div class="col-sm-6 col-xl-4">
         <div class="card mb-3 h-auto">
             <div class="card-body">
-                <div class="text-muted"><a href="{{connectionsurl}}">{{#str}}dashboardconnections, local_mcp{{/str}}</a></div>
+                <div class="text-muted">
+                    <a href="{{{connectionsurl}}}">{{#str}}dashboardconnections, local_mcp{{/str}}</a>
+                </div>
                 <div class="h2 mb-0">{{connections}}</div>
             </div>
         </div>
@@ -81,7 +83,9 @@
     <div class="col-sm-6 col-xl-4">
         <div class="card mb-3">
             <div class="card-body">
-                <div class="text-muted"><a href="{{clientsurl}}">{{#str}}dashboardclients, local_mcp{{/str}}</a></div>
+                <div class="text-muted">
+                    <a href="{{{clientsurl}}}">{{#str}}dashboardclients, local_mcp{{/str}}</a>
+                </div>
                 <div class="h2 mb-0">{{clients}}</div>
             </div>
         </div>
@@ -89,7 +93,7 @@
     <div class="col-sm-6 col-xl-4">
         <div class="card mb-3">
             <div class="card-body">
-                <div class="text-muted"><a href="{{writeapisurl}}">{{#str}}dashboardtotaltools, local_mcp{{/str}}</a></div>
+                <div class="text-muted"><a href="{{{writeapisurl}}}">{{#str}}dashboardtotaltools, local_mcp{{/str}}</a></div>
                 <div class="h2 mb-0">{{totaltools}}</div>
             </div>
         </div>
@@ -97,7 +101,7 @@
     <div class="col-sm-6 col-xl-3">
         <div class="card mb-3">
             <div class="card-body">
-                <div class="text-muted"><a href="{{readauditurl}}">{{#str}}dashboardreadtoday, local_mcp{{/str}}</a></div>
+                <div class="text-muted"><a href="{{{readauditurl}}}">{{#str}}dashboardreadtoday, local_mcp{{/str}}</a></div>
                 <div class="h2 mb-0">{{readtoday}}</div>
             </div>
         </div>
@@ -105,7 +109,7 @@
     <div class="col-sm-6 col-xl-3">
         <div class="card mb-3">
             <div class="card-body">
-                <div class="text-muted"><a href="{{writeauditurl}}">{{#str}}dashboardwritetoday, local_mcp{{/str}}</a></div>
+                <div class="text-muted"><a href="{{{writeauditurl}}}">{{#str}}dashboardwritetoday, local_mcp{{/str}}</a></div>
                 <div class="h2 mb-0">{{writetoday}}</div>
             </div>
         </div>
@@ -113,7 +117,7 @@
     <div class="col-sm-6 col-xl-3">
         <div class="card mb-3">
             <div class="card-body">
-                <div class="text-muted"><a href="{{completedwriteauditurl}}">{{#str}}dashboardwritecompletedtoday, local_mcp{{/str}}</a></div>
+                <div class="text-muted"><a href="{{{completedwriteauditurl}}}">{{#str}}dashboardwritecompletedtoday, local_mcp{{/str}}</a></div>
                 <div class="h2 mb-0">{{writecompletedtoday}}</div>
             </div>
         </div>
@@ -121,7 +125,9 @@
     <div class="col-sm-6 col-xl-3">
         <div class="card mb-3">
             <div class="card-body">
-                <div class="text-muted"><a href="{{writeauditurl}}">{{#str}}dashboarddestructivetoday, local_mcp{{/str}}</a></div>
+                <div class="text-muted">
+                    <a href="{{{writeauditurl}}}">{{#str}}dashboarddestructivetoday, local_mcp{{/str}}</a>
+                </div>
                 <div class="h2 mb-0">{{destructivetoday}}</div>
             </div>
         </div>
@@ -159,7 +165,8 @@
         <h3 class="h4 mb-1">{{#str}}dashboardwritesummary, local_mcp{{/str}}</h3>
         <p class="text-muted mb-0">{{#str}}dashboardwritesummaryhelp, local_mcp{{/str}}</p>
     </div>
-    <a href="{{writeapisurl}}" class="btn btn-outline-secondary btn-sm mb-2">{{#str}}dashboardviewall, local_mcp{{/str}}</a>
+    <a href="{{{writeapisurl}}}" class="btn btn-outline-secondary btn-sm mb-2"
+    >{{#str}}dashboardviewall, local_mcp{{/str}}</a>
 </div>
 {{#hasplugins}}
     <div class="row">
@@ -182,7 +189,7 @@
                                 {{#plugins}}
                                     <tr>
                                         <td>
-                                            <a href="{{detailsurl}}">{{pluginname}}</a>
+                                            <a href="{{{detailsurl}}}">{{pluginname}}</a>
                                             <div class="small text-muted"><code>{{component}}</code></div>
                                         </td>
                                         <td>{{tools}}</td>
