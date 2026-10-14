@@ -31,6 +31,9 @@ use local_mcp\security\authenticated_identity;
 
 /**
  * Audit metadata tests.
+ *
+ * @covers \local_mcp\audit\logger
+ * @covers \local_mcp\audit\summary
  */
 final class audit_test extends advanced_testcase {
     /**
