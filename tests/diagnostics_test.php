@@ -31,6 +31,8 @@ use stdClass;
 
 /**
  * Test safe and useful PHP error_log diagnostic formats.
+ *
+ * @covers \local_mcp\diagnostics
  */
 final class diagnostics_test extends advanced_testcase {
 
