@@ -36,6 +36,10 @@ use local_mcp\write\tool\update_course;
 
 /**
  * Validate safe administration queries and course metadata changes.
+ *
+ * @covers \local_mcp\read\tool\get_course
+ * @covers \local_mcp\read\tool\search_courses
+ * @covers \local_mcp\write\tool\update_course
  */
 final class course_read_test extends advanced_testcase {
     /**
