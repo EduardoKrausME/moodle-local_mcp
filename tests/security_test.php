@@ -31,6 +31,9 @@ use local_mcp\security\secret;
 
 /**
  * Class security_test.
+ *
+ * @covers \local_mcp\security\secret
+ * @covers \local_mcp\security\confirmation_service
  */
 final class security_test extends advanced_testcase {
     /**
