@@ -30,6 +30,9 @@ use local_mcp\oauth\resource;
 
 /**
  * Tests RFC 8414 discovery and compatibility with path-aware MCP clients.
+ *
+ * @covers \local_mcp\oauth\metadata
+ * @covers \local_mcp\oauth\resource
  */
 final class oauth_metadata_test extends advanced_testcase {
     /**
