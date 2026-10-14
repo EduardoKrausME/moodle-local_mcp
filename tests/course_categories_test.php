@@ -38,6 +38,13 @@ use local_mcp\write\tool\create_course;
 
 /**
  * Exercising course/category tool operations on test Moodle data.
+ *
+ * @covers \local_mcp\read\registry
+ * @covers \local_mcp\write\registry
+ * @covers \local_mcp\read\tool\list_categories
+ * @covers \local_mcp\write\tool\create_category
+ * @covers \local_mcp\write\tool\update_category
+ * @covers \local_mcp\write\tool\create_course
  */
 final class course_categories_test extends advanced_testcase {
     /**
