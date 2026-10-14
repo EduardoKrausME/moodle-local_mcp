@@ -29,6 +29,8 @@ use local_mcp\protocol\tool_schema;
 
 /**
  * Verify invalid schemas are normalized or diagnosed before response delivery.
+ *
+ * @covers \local_mcp\protocol\tool_schema
  */
 final class tool_schema_test extends advanced_testcase {
 
