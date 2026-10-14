@@ -34,6 +34,9 @@ use local_mcp\write\registry;
 
 /**
  * The six activity integrations must be installable and discoverable.
+ *
+ * @covers \local_mcp\write\registry
+ * @covers \local_mcp\course\activity_upload
  */
 final class activity_integrations_test extends advanced_testcase {
     /**
