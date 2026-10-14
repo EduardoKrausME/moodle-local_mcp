@@ -35,6 +35,10 @@ use local_mcp\write\tool\purge_css_cache;
 
 /**
  * Validate permissions and previews without purging the PHPUnit environment.
+ *
+ * @covers \local_mcp\write\registry
+ * @covers \local_mcp\write\tool\purge_all_caches
+ * @covers \local_mcp\write\tool\purge_css_cache
  */
 final class cache_purge_test extends advanced_testcase {
 
