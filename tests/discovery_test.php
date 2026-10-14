@@ -29,6 +29,8 @@ use local_mcp\protocol\discovery;
 
 /**
  * Validate the new MCP handshake without needing an HTTP session.
+ *
+ * @covers \local_mcp\protocol\discovery
  */
 final class discovery_test extends advanced_testcase {
     /**
