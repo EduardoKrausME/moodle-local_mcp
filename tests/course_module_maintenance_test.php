@@ -29,6 +29,13 @@ use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\write\registry;
 
+/**
+ * course module maintenance tests.
+ *
+ * @covers \local_mcp\write\registry
+ * @covers \local_mcp\write\tool\assign_create_activity
+ * @covers \local_mcp\write\tool\delete_course_module
+ */
 final class course_module_maintenance_test extends advanced_testcase {
     public function test_tools_are_registered_with_safe_schemas(): void {
         $tools = registry::get_tools();
