@@ -37,6 +37,9 @@ use local_mcp\write\tool\bulk_create_courses;
 
 /**
  * Batch creation must be safe to retry and avoid modifying existing courses.
+ *
+ * @covers \local_mcp\write\registry
+ * @covers \local_mcp\write\tool\bulk_create_courses
  */
 final class bulk_create_courses_test extends advanced_testcase {
     /**
