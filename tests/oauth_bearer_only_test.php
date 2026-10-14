@@ -28,8 +28,6 @@ use advanced_testcase;
 use local_mcp\exception\api_exception;
 use local_mcp\protocol\http;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Verify that OAuth access tokens must be sent in request headers.
  *
