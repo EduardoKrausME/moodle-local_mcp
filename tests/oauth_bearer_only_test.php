@@ -32,6 +32,8 @@ defined('MOODLE_INTERNAL') || die;
 
 /**
  * Verify that OAuth access tokens must be sent in request headers.
+ *
+ * @covers \local_mcp\protocol\http
  */
 final class oauth_bearer_only_test extends advanced_testcase {
     /**
