@@ -31,6 +31,10 @@ use local_mcp\write\registry;
 
 /**
  * Class registry_test.
+ *
+ * @covers \local_mcp\read\registry
+ * @covers \local_mcp\write\registry
+ * @covers \local_mcp\security\authenticated_identity
  */
 final class registry_test extends advanced_testcase {
     /**
