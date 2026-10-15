@@ -29,4 +29,4 @@ $plugin->version = 2026101000;
 $plugin->component = 'mcptool_glossary';
 $plugin->requires = 2024100700;
 $plugin->dependencies = ['local_mcp' => 2026100801];
-$plugin->maturity = MATURITY_BETA;
+$plugin->maturity = MATURITY_STABLE;
