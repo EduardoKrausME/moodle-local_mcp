@@ -56,9 +56,10 @@ require_login(null, false);
 
 $PAGE->set_context(context_system::instance());
 $PAGE->set_url($returnurl);
-$PAGE->requires->css(new moodle_url('/local/mcp/styles/consent.css'));
 $PAGE->set_title(get_string('pluginname', 'local_mcp'));
 $PAGE->set_heading(get_string('pluginname', 'local_mcp'));
+
+$PAGE->add_body_class("mcp-consent-page");
 
 $context = context_system::instance();
 if (!has_capability('moodle/site:config', $context)) {

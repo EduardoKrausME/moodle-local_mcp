@@ -1,0 +1,794 @@
+.mcp-connections-page {
+  /* Moodle MCP - Connections guide. All selectors are scoped to this admin screen. */
+}
+.mcp-connections-page .local-mcp-connection-guide {
+  --mcp-cg-ink: #182b49;
+  --mcp-cg-muted: #65738a;
+  --mcp-cg-border: #e1e8f1;
+  --mcp-cg-blue: #2563eb;
+  max-width: 1240px;
+  margin: 0 auto 40px;
+  color: var(--mcp-cg-ink);
+}
+.mcp-connections-page .local-mcp-connection-guide *,
+.mcp-connections-page .local-mcp-connection-guide *::before,
+.mcp-connections-page .local-mcp-connection-guide *::after {
+  box-sizing: border-box;
+}
+.mcp-connections-page .local-mcp-connection-guide__hero {
+  position: relative;
+  overflow: hidden;
+  padding: 32px clamp(24px, 5vw, 46px);
+  border-radius: 20px;
+  color: #fff;
+  background: linear-gradient(120deg, #102746, #1d467c 65%, #2969bb);
+}
+.mcp-connections-page .local-mcp-connection-guide__hero::after {
+  position: absolute;
+  top: -140px;
+  right: -70px;
+  width: 330px;
+  height: 330px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(132, 198, 255, 0.24), transparent 70%);
+  content: "";
+  pointer-events: none;
+}
+.mcp-connections-page .local-mcp-connection-guide__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  color: #d1e7ff;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+.mcp-connections-page .local-mcp-connection-guide__hero-mark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 11px;
+  color: white;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 16px;
+  font-weight: 800;
+}
+.mcp-connections-page .local-mcp-connection-guide__hero h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(24px, 3vw, 33px);
+  font-weight: 780;
+  line-height: 1.2;
+}
+.mcp-connections-page .local-mcp-connection-guide__hero p {
+  max-width: 700px;
+  margin: 12px 0 19px;
+  color: #e0ecfa;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.mcp-connections-page .local-mcp-connection-guide__open {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 10px;
+  font-weight: 740;
+  color: #000 !important;
+}
+.mcp-connections-page .local-mcp-connection-guide__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.94fr);
+  gap: 23px;
+  align-items: start;
+  margin-top: 24px;
+}
+.mcp-connections-page .local-mcp-connection-guide__preview,
+.mcp-connections-page .local-mcp-connection-guide__instructions {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--mcp-cg-border);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 12px 40px rgba(23, 47, 81, 0.045);
+}
+.mcp-connections-page .local-mcp-connection-guide__window-header {
+  padding: 22px 26px 14px;
+  border-bottom: 1px solid #edf1f7;
+}
+.mcp-connections-page .local-mcp-connection-guide__window-label {
+  display: inline-block;
+  margin-bottom: 5px;
+  color: var(--mcp-cg-blue);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+.mcp-connections-page .local-mcp-connection-guide__window-header h3 {
+  margin: 0 0 6px;
+  color: var(--mcp-cg-ink) !important;
+  font-size: 21px;
+  font-weight: 800;
+}
+.mcp-connections-page .local-mcp-connection-guide__window-header p {
+  margin: 0;
+  color: var(--mcp-cg-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.mcp-connections-page .local-mcp-connection-guide__window-body {
+  padding: 9px 26px 24px;
+}
+.mcp-connections-page .local-mcp-connection-guide__field {
+  margin: 18px 0;
+}
+.mcp-connections-page .local-mcp-connection-guide__fieldlabel,
+.mcp-connections-page .local-mcp-connection-guide__field label:not(.local-mcp-connection-guide__checkbox) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+  color: #263850;
+  font-size: 13px;
+  font-weight: 730;
+}
+.mcp-connections-page .local-mcp-connection-guide__fieldnum {
+  display: inline-grid;
+  flex: 0 0 23px;
+  width: 23px;
+  height: 23px;
+  place-items: center;
+  border-radius: 8px;
+  color: #285fb4;
+  background: #e9f1ff;
+  font-size: 11px;
+  font-weight: 800;
+}
+.mcp-connections-page .local-mcp-connection-guide__iconarea {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  color: var(--mcp-cg-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.mcp-connections-page .local-mcp-connection-guide__iconplaceholder {
+  display: grid;
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 2px solid #478aff;
+  border-radius: 11px;
+  color: #2469dc;
+  background: #f3f7ff;
+  font-size: 30px;
+  line-height: 1;
+}
+.mcp-connections-page .local-mcp-connection-guide__field .form-control {
+  border-radius: 9px;
+  background: #fcfdff;
+  font-size: 13px;
+}
+.mcp-connections-page .local-mcp-connection-guide__choice {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 13px;
+  border: 1px solid #d9e2ee;
+  border-radius: 10px;
+  background: #f7faff;
+  font-size: 13px;
+}
+.mcp-connections-page .local-mcp-connection-guide__choice span {
+  color: #a3aec0;
+}
+.mcp-connections-page .local-mcp-connection-guide__oauth {
+  color: #1e5dbf;
+  background: #eef5ff;
+}
+.mcp-connections-page .local-mcp-connection-guide__oauth span {
+  color: #2e6bc8;
+}
+.mcp-connections-page .local-mcp-connection-guide__urlfield {
+  margin: 9px 0 4px;
+}
+.mcp-connections-page .local-mcp-connection-guide__urlfield input {
+  min-width: 0;
+}
+.mcp-connections-page .local-mcp-connection-guide__urlfield .btn {
+  border-radius: 0 9px 9px 0;
+  font-size: 12px;
+}
+.mcp-connections-page .local-mcp-connection-guide__advanced {
+  padding: 16px;
+  border: 1px solid #e3e9f1;
+  border-radius: 13px;
+  background: #fafcff;
+}
+.mcp-connections-page .local-mcp-connection-guide__advanced p,
+.mcp-connections-page .local-mcp-connection-guide__risk p {
+  margin: 0 0 7px;
+  color: var(--mcp-cg-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.mcp-connections-page .local-mcp-connection-guide__advanced details {
+  margin-top: 10px;
+  font-size: 12px;
+}
+.mcp-connections-page .local-mcp-connection-guide__advanced details code {
+  display: block;
+  margin-top: 5px;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.mcp-connections-page .local-mcp-connection-guide__risk {
+  margin-top: 17px;
+  padding: 15px;
+  border: 1px solid #f2dfcf;
+  border-radius: 12px;
+  background: #fffaf5;
+}
+.mcp-connections-page .local-mcp-connection-guide__checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: #4b5970;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.mcp-connections-page .local-mcp-connection-guide__checkbox input {
+  margin-top: 3px;
+}
+.mcp-connections-page .local-mcp-connection-guide__mockfooter {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+  color: #55647a;
+  font-size: 12px;
+}
+.mcp-connections-page .local-mcp-connection-guide__mockbutton {
+  padding: 10px 16px;
+  border-radius: 10px;
+  color: #fff;
+  background: #6f7f95;
+  font-weight: 700;
+}
+.mcp-connections-page .local-mcp-connection-guide__instructions-head {
+  padding: 23px 25px 16px;
+  border-bottom: 1px solid #edf1f7;
+}
+.mcp-connections-page .local-mcp-connection-guide__instructions-head h3 {
+  margin: 0 0 5px;
+  color: var(--mcp-cg-ink) !important;
+  font-size: 19px;
+  font-weight: 800;
+}
+.mcp-connections-page .local-mcp-connection-guide__instructions-head p {
+  margin: 0;
+  color: var(--mcp-cg-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.mcp-connections-page .local-mcp-connection-guide__steps {
+  margin: 0;
+  padding: 21px 28px 4px 48px;
+  list-style: decimal;
+}
+.mcp-connections-page .local-mcp-connection-guide__steps li {
+  padding: 0 0 15px 6px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eef2f7;
+}
+.mcp-connections-page .local-mcp-connection-guide__steps li::marker {
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 800;
+}
+.mcp-connections-page .local-mcp-connection-guide__steps li:last-child {
+  border-bottom: 0;
+  margin-bottom: 0;
+}
+.mcp-connections-page .local-mcp-connection-guide__steps strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 14px;
+  font-weight: 760;
+}
+.mcp-connections-page .local-mcp-connection-guide__steps p {
+  margin: 0;
+  color: #617087;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.mcp-connections-page .local-mcp-connection-guide__finalnote {
+  margin: 7px 24px 24px;
+  padding: 15px 17px;
+  border: 1px solid #dce8f8;
+  border-radius: 12px;
+  background: #f1f7ff;
+}
+.mcp-connections-page .local-mcp-connection-guide__finalnote strong {
+  color: #2255a2;
+  font-size: 13px;
+}
+.mcp-connections-page .local-mcp-connection-guide__finalnote p {
+  margin: 6px 0 0;
+  color: #526b8f;
+  font-size: 12px;
+  line-height: 1.65;
+}
+@media (max-width: 1050px) {
+  .mcp-connections-page .local-mcp-connection-guide__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .mcp-connections-page .local-mcp-connection-guide__hero {
+    padding: 25px 22px;
+  }
+  .mcp-connections-page .local-mcp-connection-guide__window-header,
+  .mcp-connections-page .local-mcp-connection-guide__window-body {
+    padding-left: 17px;
+    padding-right: 17px;
+  }
+  .mcp-connections-page .local-mcp-connection-guide__instructions-head {
+    padding: 20px;
+  }
+  .mcp-connections-page .local-mcp-connection-guide__steps {
+    padding-left: 41px;
+    padding-right: 19px;
+  }
+  .mcp-connections-page .local-mcp-connection-guide__urlfield {
+    display: flex;
+  }
+  .mcp-connections-page .local-mcp-connection-guide__urlfield .form-control {
+    flex: 1 1 auto;
+  }
+}
+.mcp-connections-page {
+  /* External documentation link on the connections page. */
+}
+.mcp-connections-page .local-mcp-connection-guide__docs {
+  margin-left: 10px;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.7);
+}
+.mcp-connections-page .local-mcp-connection-guide__docs:hover, .mcp-connections-page .local-mcp-connection-guide__docs:focus {
+  color: #142d50 !important;
+  background: #fff;
+}
+@media (max-width: 600px) {
+  .mcp-connections-page .local-mcp-connection-guide__docs {
+    margin: 12px 0 0;
+  }
+}
+
+.mcp-consent-page {
+  /*
+   * Moodle MCP OAuth consent screen.
+   * All styles are scoped to this one page; other Moodle screens are unaffected.
+   */
+}
+.mcp-consent-page .local-mcp-consent {
+  --mcp-ink: #12233f;
+  --mcp-muted: #65738b;
+  --mcp-line: #e4eaf3;
+  --mcp-primary: #2563eb;
+  box-sizing: border-box;
+  max-width: 910px;
+  margin: clamp(16px, 5vh, 56px) auto 64px;
+  padding: 0 16px;
+  color: var(--mcp-ink);
+  font-family: inherit;
+}
+.mcp-consent-page .local-mcp-consent *,
+.mcp-consent-page .local-mcp-consent *::before,
+.mcp-consent-page .local-mcp-consent *::after {
+  box-sizing: border-box;
+}
+.mcp-consent-page .local-mcp-consent__panel {
+  overflow: hidden;
+  border: 1px solid #e3eaf4;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 24px 75px rgba(21, 44, 81, 0.1), 0 3px 12px rgba(21, 44, 81, 0.04);
+}
+.mcp-consent-page .local-mcp-consent__hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 35px clamp(24px, 5vw, 52px) 37px;
+  color: #fff;
+  background: linear-gradient(115deg, #0b1d41 0%, #143d76 59%, #215caa 100%);
+}
+.mcp-consent-page .local-mcp-consent__hero::before,
+.mcp-consent-page .local-mcp-consent__hero::after {
+  position: absolute;
+  z-index: -1;
+  content: "";
+  pointer-events: none;
+  border-radius: 50%;
+}
+.mcp-consent-page .local-mcp-consent__hero::before {
+  top: -175px;
+  right: -55px;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(115, 192, 255, 0.28), transparent 70%);
+}
+.mcp-consent-page .local-mcp-consent__hero::after {
+  right: 120px;
+  bottom: -180px;
+  width: 360px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(40, 112, 232, 0.28), transparent 72%);
+}
+.mcp-consent-page .local-mcp-consent__hero-top {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 22px;
+}
+.mcp-consent-page .local-mcp-consent__symbol {
+  display: grid;
+  width: 39px;
+  height: 39px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.mcp-consent-page .local-mcp-consent__symbol svg {
+  width: 22px;
+  height: 22px;
+}
+.mcp-consent-page .local-mcp-consent__overline {
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.5;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #d5eaff;
+}
+.mcp-consent-page .local-mcp-consent__protocol {
+  margin-left: auto;
+  padding: 6px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.mcp-consent-page .local-mcp-consent .local-mcp-consent__title {
+  max-width: 660px;
+  margin: 0;
+  color: #fff;
+  font-size: clamp(26px, 3.6vw, 38px);
+  font-weight: 780;
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+}
+.mcp-consent-page .local-mcp-consent__subtitle {
+  max-width: 635px;
+  margin: 13px 0 0;
+  color: #dce9fc;
+  font-size: 15px;
+  line-height: 1.7;
+}
+.mcp-consent-page .local-mcp-consent__content {
+  padding: 33px clamp(24px, 5vw, 52px) 36px;
+}
+.mcp-consent-page .local-mcp-consent__connection {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--mcp-line);
+  border-radius: 17px;
+  background: #f8faff;
+}
+.mcp-consent-page .local-mcp-consent__identity {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 12px;
+}
+.mcp-consent-page .local-mcp-consent__identity-icon {
+  display: grid;
+  flex: 0 0 43px;
+  width: 43px;
+  height: 43px;
+  place-items: center;
+  border-radius: 13px;
+}
+.mcp-consent-page .local-mcp-consent__identity-icon svg {
+  width: 23px;
+  height: 23px;
+}
+.mcp-consent-page .local-mcp-consent__identity-icon--app {
+  color: #235cc6;
+  background: #e6eeff;
+}
+.mcp-consent-page .local-mcp-consent__identity-icon--moodle {
+  color: #a95e13;
+  background: #fff0dc;
+}
+.mcp-consent-page .local-mcp-consent__identity-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 3px;
+  overflow-wrap: anywhere;
+}
+.mcp-consent-page .local-mcp-consent__identity-caption {
+  color: var(--mcp-muted);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+.mcp-consent-page .local-mcp-consent__identity-name {
+  color: var(--mcp-ink);
+  font-size: 15px;
+  font-weight: 760;
+  line-height: 1.4;
+}
+.mcp-consent-page .local-mcp-consent__identity-meta {
+  color: var(--mcp-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.mcp-consent-page .local-mcp-consent__connection-arrow {
+  display: grid;
+  width: 35px;
+  height: 35px;
+  place-items: center;
+  border: 1px solid #d9e5f8;
+  border-radius: 50%;
+  color: var(--mcp-primary);
+  background: #fff;
+}
+.mcp-consent-page .local-mcp-consent__connection-arrow svg {
+  width: 17px;
+  height: 17px;
+}
+.mcp-consent-page .local-mcp-consent__permissions-heading {
+  margin: 32px 0 17px;
+}
+.mcp-consent-page .local-mcp-consent .local-mcp-consent__permissions-heading h3 {
+  margin: 0;
+  color: var(--mcp-ink) !important;
+  font-size: 19px;
+  font-weight: 780;
+  letter-spacing: -0.015em;
+}
+.mcp-consent-page .local-mcp-consent__permissions-heading p {
+  margin: 6px 0 0;
+  color: var(--mcp-muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.mcp-consent-page .local-mcp-consent__permissions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 265px), 1fr));
+  gap: 14px;
+}
+.mcp-consent-page .local-mcp-consent__permission {
+  display: flex;
+  min-width: 0;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--mcp-line);
+  border-radius: 16px;
+  background: #fff;
+}
+.mcp-consent-page .local-mcp-consent__permission--read {
+  border-color: #d7e7ff;
+  background: linear-gradient(155deg, #f6faff 0%, #fff 80%);
+}
+.mcp-consent-page .local-mcp-consent__permission--write {
+  border-color: #f0ddc2;
+  background: linear-gradient(155deg, #fffbf4 0%, #fff 80%);
+}
+.mcp-consent-page .local-mcp-consent__permission-icon {
+  display: grid;
+  flex: 0 0 41px;
+  width: 41px;
+  height: 41px;
+  place-items: center;
+  border-radius: 12px;
+  color: #2563eb;
+  background: #e7efff;
+}
+.mcp-consent-page .local-mcp-consent__permission--write .local-mcp-consent__permission-icon {
+  color: #9c5d0d;
+  background: #fff0d8;
+}
+.mcp-consent-page .local-mcp-consent__permission-icon svg {
+  width: 21px;
+  height: 21px;
+}
+.mcp-consent-page .local-mcp-consent__permission-details {
+  min-width: 0;
+}
+.mcp-consent-page .local-mcp-consent__permission-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+}
+.mcp-consent-page .local-mcp-consent .local-mcp-consent__permission-head h4 {
+  margin: 0;
+  color: var(--mcp-ink) !important;
+  font-size: 15px;
+  font-weight: 760;
+  line-height: 1.4;
+}
+.mcp-consent-page .local-mcp-consent__tag {
+  padding: 3px 7px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.045em;
+}
+.mcp-consent-page .local-mcp-consent__tag--read {
+  color: #1b57b1;
+  background: #e4efff;
+}
+.mcp-consent-page .local-mcp-consent__tag--write {
+  color: #97520b;
+  background: #ffeed3;
+}
+.mcp-consent-page .local-mcp-consent__permission-details p {
+  margin: 9px 0 0;
+  color: #576781;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.mcp-consent-page .local-mcp-consent__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 22px;
+  padding: 17px 18px;
+  border: 1px solid #dce5f3;
+  border-radius: 14px;
+  background: #f8fbff;
+}
+.mcp-consent-page .local-mcp-consent__notice-icon {
+  flex: 0 0 20px;
+  color: #426dba;
+}
+.mcp-consent-page .local-mcp-consent__notice-icon svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+.mcp-consent-page .local-mcp-consent__notice strong {
+  color: #253b5e;
+  font-size: 13px;
+  font-weight: 760;
+}
+.mcp-consent-page .local-mcp-consent__notice p {
+  margin: 4px 0 0;
+  color: #5b6d87;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.mcp-consent-page .local-mcp-consent__footer {
+  padding: 23px clamp(24px, 5vw, 52px) 26px;
+  border-top: 1px solid var(--mcp-line);
+  background: #fafcff;
+}
+.mcp-consent-page .local-mcp-consent__form {
+  margin: 0;
+}
+.mcp-consent-page .local-mcp-consent__actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.mcp-consent-page .local-mcp-consent .local-mcp-consent__button {
+  display: inline-flex;
+  min-height: 47px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 11px 20px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.mcp-consent-page .local-mcp-consent__button--cancel {
+  border-color: #d9e1ec !important;
+  color: #3e506b !important;
+  background: #fff !important;
+}
+.mcp-consent-page .local-mcp-consent__button--cancel:hover {
+  background: #f1f5fa !important;
+}
+.mcp-consent-page .local-mcp-consent__button--approve {
+  color: #fff !important;
+  background: #2563eb !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.19);
+}
+.mcp-consent-page .local-mcp-consent__button--approve:hover {
+  background: #174cbd !important;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.27);
+  transform: translateY(-1px);
+}
+.mcp-consent-page .local-mcp-consent__button svg {
+  width: 17px;
+  height: 17px;
+}
+.mcp-consent-page .local-mcp-consent .local-mcp-consent__button:focus-visible {
+  outline: 3px solid #9ec3ff;
+  outline-offset: 3px;
+}
+.mcp-consent-page .local-mcp-consent__footer-note {
+  margin: 13px 0 0;
+  color: var(--mcp-muted);
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: right;
+}
+@media (max-width: 620px) {
+  .mcp-consent-page .local-mcp-consent {
+    margin: 18px auto 35px;
+    padding: 0 8px;
+  }
+  .mcp-consent-page .local-mcp-consent__panel {
+    border-radius: 18px;
+  }
+  .mcp-consent-page .local-mcp-consent__hero {
+    padding-top: 27px;
+    padding-bottom: 29px;
+  }
+  .mcp-consent-page .local-mcp-consent__connection {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+  .mcp-consent-page .local-mcp-consent__connection-arrow {
+    justify-self: center;
+    transform: rotate(90deg);
+  }
+  .mcp-consent-page .local-mcp-consent__permission {
+    padding: 17px;
+  }
+  .mcp-consent-page .local-mcp-consent__actions {
+    flex-direction: column-reverse;
+  }
+  .mcp-consent-page .local-mcp-consent__actions .local-mcp-consent__button {
+    width: 100%;
+  }
+  .mcp-consent-page .local-mcp-consent__footer-note {
+    text-align: center;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mcp-consent-page .local-mcp-consent .local-mcp-consent__button {
+    transition: none;
+  }
+  .mcp-consent-page .local-mcp-consent__button--approve:hover {
+    transform: none;
+  }
+}
+
+/*# sourceMappingURL=styles.css.map */
