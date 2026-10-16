@@ -83,6 +83,8 @@ final class gift_import_service {
         }
 
         require_once($CFG->libdir . "/questionlib.php");
+        require_once($CFG->dirroot . "/question/format.php");
+        require_once($CFG->dirroot . "/question/format/gift/format.php");
         $format = new gift_format();
         $previouslevel = ob_get_level();
         ob_start();

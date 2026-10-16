@@ -24,12 +24,6 @@
 
 namespace local_mcp\question;
 
-defined("MOODLE_INTERNAL") || die();
-
-global $CFG;
-require_once($CFG->dirroot . "/question/format.php");
-require_once($CFG->dirroot . "/question/format/gift/format.php");
-
 /**
  * Expose a read-only parsing pass for previewing the native GIFT importer.
  */
