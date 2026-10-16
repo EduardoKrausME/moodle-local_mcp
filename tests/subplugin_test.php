@@ -263,8 +263,10 @@ final class subplugin_test extends advanced_testcase {
             }
         };
 
-        $provider = new class($readtool, $writetool) implements
-                read_provider_interface, write_provider_interface {
+        $provider = new class ($readtool, $writetool) implements
+            read_provider_interface,
+            write_provider_interface
+        {
             /**
              * Set up the class-based provider.
              *
