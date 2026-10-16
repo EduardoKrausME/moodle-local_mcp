@@ -701,27 +701,65 @@ for the selected context, and own-question access does not grant access to other
 answers. All WRITE operations have preview and confirmation and do not log full
 question text or answer payloads.
 
+### Import a complete GIFT question bank in one operation
+
+WRITE `import_gift_question_bank` receives a **complete UTF-8 GIFT text** payload,
+creates a **new question category** in the selected existing bank context, then
+imports all questions via Moodle's native GIFT format importer. This is one
+batch rather than repeated calls to `create_question`; the standard MCP
+preview/explicit confirmation flow still applies (a confirmation token is
+required for the final write). No changes are made during preview.
+
+Discover the bank `contextid` using `list_question_banks`. The connected
+user must have both `moodle/question:managecategory` and
+`moodle/question:add` for that context. Optional `parentid` (default 0),
+`info` and unique category `idnumber` use Moodle's category manager.
+On success the response contains `categoryid`, `question_count`,
+`question_ids`, `question_types` and a SHA-256 content fingerprint.
+
+```json
+{
+  "contextid": 123,
+  "parentid": 0,
+  "name": "Geography – October 2026",
+  "idnumber": "GEO-OCT-2026",
+  "gift": "::Capital::What is the capital of France? {=Paris ~Rome ~Berlin}\n\n::Earth::The Earth is round. {TRUE}"
+}
+```
+
+The preview parses the GIFT with Moodle's own parser, reports question totals,
+types and the first ten names, and never returns the full question text.
+The final write revalidates and imports all questions within a database
+transaction; failures roll back the new category and its questions. The
+source is limited to 2 MiB and 500 questions per batch. `$CATEGORY:`
+directives are rejected to keep the import inside the explicitly approved
+category and context; split a multi-category GIFT export into separate
+batches. GIFT supports the question formats enabled in Moodle, not only the
+four types supported by the single-question WRITE tool. Reusing an
+existing category name under the same parent is rejected to avoid
+silently duplicating a retry.
+
 ## Additional course activity integrations (mcptool subplugins)
 
-The \`tool/\` directory also contains independent WRITE providers for File, H5P, URL,
+The `tool/` directory also contains independent WRITE providers for File, H5P, URL,
 Text and media area (Label), Quiz and Glossary. Every activity is created using
-Moodle's \`prepare_new_moduleinfo_data()\` / \`add_moduleinfo()\` lifecycle,
-with both \`moodle/course:manageactivities\` and the module's
-\`mod/<module>:addinstance\` capability checked for the connected user.
+Moodle's `prepare_new_moduleinfo_data()` / `add_moduleinfo()` lifecycle,
+with both `moodle/course:manageactivities` and the module's
+`mod/<module>:addinstance` capability checked for the connected user.
 All mutations use the existing MCP preview/confirmation flow.
 
 | MCP WRITE tool               | Moodle module       | Required input                                                        | Additional operations                                   |
 |------------------------------|---------------------|-----------------------------------------------------------------------|---------------------------------------------------------|
-| \`resource_create_activity\` | \`mod_resource\`    | \`courseid\`, \`sectionnum\`, \`name\`, \`filename\`, \`file_base64\` | Uploads one file                                        |
-| \`h5p_create_activity\`      | \`mod_h5pactivity\` | \`courseid\`, \`sectionnum\`, \`name\`, \`filename\`, \`file_base64\` | Uploads one .h5p package                                |
-| \`url_create_activity\`      | \`mod_url\`         | \`courseid\`, \`sectionnum\`, \`name\`, \`externalurl\`               | HTTP/HTTPS links                                        |
-| \`label_create_activity\`    | \`mod_label\`       | \`courseid\`, \`sectionnum\`, \`content\`                             | Inline HTML                                             |
-| \`quiz_create_activity\`     | \`mod_quiz\`        | \`courseid\`, \`sectionnum\`, \`name\`                                | \`quiz_add_question\` (existing question IDs)           |
-| \`glossary_create_activity\` | \`mod_glossary\`    | \`courseid\`, \`sectionnum\`, \`name\`                                | \`glossary_create_entry\` (concept and HTML definition) |
+| `resource_create_activity` | `mod_resource`    | `courseid`, `sectionnum`, `name`, `filename`, `file_base64` | Uploads one file                                        |
+| `h5p_create_activity`      | `mod_h5pactivity` | `courseid`, `sectionnum`, `name`, `filename`, `file_base64` | Uploads one .h5p package                                |
+| `url_create_activity`      | `mod_url`         | `courseid`, `sectionnum`, `name`, `externalurl`               | HTTP/HTTPS links                                        |
+| `label_create_activity`    | `mod_label`       | `courseid`, `sectionnum`, `content`                             | Inline HTML                                             |
+| `quiz_create_activity`     | `mod_quiz`        | `courseid`, `sectionnum`, `name`                                | `quiz_add_question` (existing question IDs)           |
+| `glossary_create_activity` | `mod_glossary`    | `courseid`, `sectionnum`, `name`                                | `glossary_create_entry` (concept and HTML definition) |
 
 An example file creation payload:
 
-\`\`\`json
+```json
 {
 "courseid": 12,
 "sectionnum": 1,
@@ -729,14 +767,14 @@ An example file creation payload:
 "filename": "handout.pdf",
 "file_base64": "<base64 of the PDF file>"
 }
-\`\`\`
+```
 
 Uploads use the Moodle File API with a temporary draft owned by the authenticated
 user, then the activity module moves the draft to its proper storage area.
-\`file_base64\` can contain raw Base64 or a data URI, with a 40 MiB decoded limit;
+`file_base64` can contain raw Base64 or a data URI, with a 40 MiB decoded limit;
 neither the data nor HTML bodies are included in the activity-create preview.
-H5P packages must be valid ZIP-based \`.h5p\` files and are created with the
-built-in Moodle \`mod_h5pactivity\` module (not the third-party \`mod_hvp\`).
+H5P packages must be valid ZIP-based `.h5p` files and are created with the
+built-in Moodle `mod_h5pactivity` module (not the third-party `mod_hvp`).
 The MCP endpoint does not fetch arbitrary remote URLs for file uploads.
 
 After installing the new subplugins, run Moodle's upgrade process and refresh
