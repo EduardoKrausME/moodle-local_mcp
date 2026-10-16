@@ -92,7 +92,7 @@ final class confirmation_flow_test extends advanced_testcase {
                 $args + ["confirmation_token" => "mcp_confirm_nonexistent"],
                 [], $identity, $access);
             $this->fail("An unknown confirmation token must be rejected.");
-        } catch (\local_mcp\\exception\\api_exception $e) {
+        } catch (\local_mcp\exception\api_exception $e) {
             $this->assertSame("confirmation_expired", $e->machinecode);
             $this->assertSame(409, $e->httpstatus);
         }
