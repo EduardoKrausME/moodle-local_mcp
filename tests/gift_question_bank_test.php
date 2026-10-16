@@ -26,6 +26,7 @@ namespace local_mcp;
 
 use advanced_testcase;
 use context_course;
+use context_module;
 use local_mcp\exception\api_exception;
 use local_mcp\question\gift_import_service;
 use local_mcp\security\authenticated_identity;
@@ -48,7 +49,14 @@ final class gift_question_bank_test extends advanced_testcase {
         $this->resetAfterTest();
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course();
+        global $CFG;
+
         $context = context_course::instance($course->id);
+        if ((int)$CFG->version >= 2025041400) {
+            // Moodle 5+ question importers only accept module-backed banks.
+            $bank = $this->getDataGenerator()->create_module("qbank", ["course" => $course->id]);
+            $context = context_module::instance((int)$bank->cmid);
+        }
         $identity = new authenticated_identity((int)get_admin()->id, "test", ["mcp:write"]);
         return [$context, $identity];
     }

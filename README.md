@@ -710,7 +710,10 @@ batch rather than repeated calls to `create_question`; the standard MCP
 preview/explicit confirmation flow still applies (a confirmation token is
 required for the final write). No changes are made during preview.
 
-Discover the bank `contextid` using `list_question_banks`. The connected
+Discover the bank `contextid` using `list_question_banks`. In Moodle 5.x
+use the module (`qbank` or `quiz`) context, not the legacy course context;
+the native GIFT importer requires `CONTEXT_MODULE`. Moodle 4.5 still
+accepts a course context. The connected
 user must have both `moodle/question:managecategory` and
 `moodle/question:add` for that context. Optional `parentid` (default 0),
 `info` and unique category `idnumber` use Moodle's category manager.

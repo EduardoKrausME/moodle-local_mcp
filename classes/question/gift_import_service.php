@@ -60,6 +60,12 @@ final class gift_import_service {
         }
         [$contextid, $name, $parentid, $idnumber] = bank_service::validate_category($arguments, $identity);
         $ctx = context::instance_by_id($contextid, MUST_EXIST);
+        // Moodle 5+ stores question banks in module contexts. Reject legacy
+        // course contexts during preview rather than creating an unusable category.
+        if ((int)$CFG->version >= 2025041400 && $ctx->contextlevel !== CONTEXT_MODULE) {
+            throw new api_exception("gift_requires_module_context", 400,
+                "Use a module question bank contextid from list_question_banks.");
+        }
         capability_guard::check("moodle/question:add", $ctx, $identity->userid);
 
         // An identical name in the same parent is most often a retried import.
@@ -94,7 +100,7 @@ final class gift_import_service {
         $types = [];
         $names = [];
         foreach ($questions as $question) {
-            // $CATEGORY directives would redirect questions to other categories.
+            // Embedded category directives could redirect questions to other categories.
             // This tool deliberately imports only into its explicitly approved new category.
             if (!is_object($question) || empty($question->qtype) ||
                 $question->qtype === "category" || trim((string)($question->name ?? "")) === "") {
