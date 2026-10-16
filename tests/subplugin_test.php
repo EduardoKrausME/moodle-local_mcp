@@ -300,7 +300,7 @@ final class subplugin_test extends advanced_testcase {
         // Supply a class-discovered fixture without installing a dummy Moodle plugin.
         $property = new \ReflectionProperty(manager::class, "classproviders");
         $previous = $property->getValue();
-        $property->setValue(["test_external_provider" => $provider]);
+        $property->setValue(null, ["test_external_provider" => $provider]);
         try {
             $readtools = read\registry::get_tools();
             $writetools = registry::get_tools();
@@ -333,7 +333,7 @@ final class subplugin_test extends advanced_testcase {
             $this->assertSame(1, $confirmed["writes"]);
             $this->assertSame(1, $writetool->writes);
         } finally {
-            $property->setValue($previous);
+            $property->setValue(null, $previous);
         }
     }
 
