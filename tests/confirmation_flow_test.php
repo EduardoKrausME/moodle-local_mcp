@@ -67,4 +67,43 @@ final class confirmation_flow_test extends advanced_testcase {
         $this->assertSame('MCP Pending Approval Test', $created['name']);
         $this->assertTrue($DB->record_exists('course_categories', ['id' => $created['id']]));
     }
+    /**
+     * Invalid confirmation tokens must be reported as approval conflicts, not database errors.
+     *
+     * @return void
+     */
+    public function test_unknown_token_is_rejected_without_consuming_real_approval(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $identity = new authenticated_identity((int)get_admin()->id, "test", ["mcp:write"]);
+        $server = new mcp_server("write");
+        $method = new ReflectionMethod(mcp_server::class, "call_tool");
+        $args = ["name" => "MCP Unknown Token Regression", "parentid" => 0];
+        $access = "test-token-approval";
+
+        $pending = $method->invoke($server, "create_category", $args, [], $identity, $access);
+        $this->assertTrue($pending["confirmation_required"]);
+        $this->assertFalse($DB->record_exists("course_categories", ["name" => $args["name"]]));
+
+        try {
+            $method->invoke($server, "create_category",
+                $args + ["confirmation_token" => "mcp_confirm_nonexistent"],
+                [], $identity, $access);
+            $this->fail("An unknown confirmation token must be rejected.");
+        } catch (\local_mcp\\exception\\api_exception $e) {
+            $this->assertSame("confirmation_expired", $e->machinecode);
+            $this->assertSame(409, $e->httpstatus);
+        }
+        $this->assertFalse($DB->record_exists("course_categories", ["name" => $args["name"]]));
+
+        // A rejected token must not consume a separate, valid pending approval.
+        $created = $method->invoke($server, "create_category",
+            $args + ["confirmation_token" => $pending["confirmation_token"]],
+            [], $identity, $access);
+        $this->assertSame($args["name"], $created["name"]);
+    }
+
+
 }

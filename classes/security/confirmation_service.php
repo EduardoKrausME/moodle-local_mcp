@@ -88,8 +88,9 @@ final class confirmation_service {
     public static function consume(string $token, authenticated_identity $identity, string $rawaccess,
                                    string $tool, array $arguments, context $context): void {
         global $DB;
-        $rec = $DB->get_record('local_mcp_confirm', ['tokenhash' => secret::hash($token)], '*', MUST_EXIST);
-        $valid = !$rec->used && $rec->expires >= time()
+        $rec = $DB->get_record("local_mcp_confirm", ["tokenhash" => secret::hash($token)]);
+        // Unknown tokens are invalid confirmations, not internal database errors.
+        $valid = $rec && !$rec->used && $rec->expires >= time()
             && (int)$rec->userid === $identity->userid
             && $rec->tool === $tool
             && hash_equals($rec->argshash, self::args_hash($arguments))
