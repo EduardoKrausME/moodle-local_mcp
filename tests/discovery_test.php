@@ -26,6 +26,9 @@ namespace local_mcp;
 
 use advanced_testcase;
 use local_mcp\protocol\discovery;
+use local_mcp\protocol\mcp_server;
+use local_mcp\security\authenticated_identity;
+use ReflectionMethod;
 
 /**
  * Validate the new MCP handshake without needing an HTTP session.
@@ -65,6 +68,50 @@ final class discovery_test extends advanced_testcase {
         $this->assertSame('Moodle MCP WRITE',
             $write['_meta']['io.modelcontextprotocol/serverInfo']['name']);
         $this->assertEquals($read['capabilities'], $write['capabilities']);
+    }
+
+    /**
+     * The Moodle URL must be available in all discovery variants and tool payloads.
+     *
+     * @return void
+     */
+    public function test_wwwroot_identifies_the_moodle_instance(): void {
+        global $CFG;
+        $wwwroot = rtrim((string)$CFG->wwwroot, "/");
+
+        $modern = discovery::result("server", "1.3.1");
+        $this->assertSame($wwwroot, $modern["_meta"]["moodle_wwwroot"]);
+        $this->assertSame($wwwroot, $modern["_meta"]["io.modelcontextprotocol/serverInfo"]["websiteUrl"]);
+        $this->assertStringContainsString($wwwroot, $modern["instructions"]);
+
+        $legacy = discovery::initialize_result("read", "1.3.1");
+        $this->assertSame($wwwroot, $legacy["serverInfo"]["websiteUrl"]);
+        $this->assertStringContainsString($wwwroot, $legacy["instructions"]);
+
+        $data = discovery::with_site_identity([
+            "confirmation_required" => true,
+            "moodle_wwwroot" => "https://wrong.example",
+        ]);
+        $this->assertSame($wwwroot, $data["moodle_wwwroot"]);
+        $this->assertTrue($data["confirmation_required"]);
+        $this->assertSame(["moodle_wwwroot" => $wwwroot], discovery::site_meta());
+    }
+
+    /**
+     * Tool descriptions must identify the Moodle site, even with multiple connections.
+     *
+     * @return void
+     */
+    public function test_tools_list_descriptions_include_wwwroot(): void {
+        global $CFG;
+        $identity = new authenticated_identity(2, "test", ["mcp:read"]);
+        $method = new ReflectionMethod(mcp_server::class, "tool_definitions");
+        $tools = $method->invoke(new mcp_server("read"), $identity);
+        $this->assertNotEmpty($tools);
+        foreach ($tools as $tool) {
+            $this->assertStringContainsString("Moodle wwwroot: " . rtrim((string)$CFG->wwwroot, "/"),
+                $tool["description"]);
+        }
     }
 
     /**

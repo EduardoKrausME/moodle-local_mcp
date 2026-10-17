@@ -170,7 +170,7 @@ final class mcp_server {
                     'protocol' => $modern ? '2026-07-28' : 'legacy',
                 ]);
                 http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => discovery::decorate_result(
-                    ['tools' => $definitions], $modern, true)]);
+                    ['tools' => $definitions, "_meta" => discovery::site_meta()], $modern, true)]);
             }
             if ($method === 'tools/call') {
                 $toolname = (string)($params['name'] ?? '');
@@ -193,6 +193,7 @@ final class mcp_server {
                     // Images are sent as visual MCP content, not embedded into textual JSON.
                     $additionalcontent = $result['_mcp_content'] ?? [];
                     unset($result['_mcp_content']);
+                    $result = discovery::with_site_identity($result);
                     $content = [[
                         'type' => 'text',
                         'text' => json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
@@ -215,6 +216,7 @@ final class mcp_server {
                     http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => [
                             'content' => $content,
                             'structuredContent' => $result,
+                            "_meta" => discovery::site_meta(),
                             'isError' => false,
                         ] + ($modern ? ['resultType' => 'complete'] : [])]);
                 } catch (api_exception $e) {
@@ -245,12 +247,14 @@ final class mcp_server {
                         'message' => $e->getMessage(),
                         'details' => $e->details,
                     ];
+                    $error = discovery::with_site_identity($error);
                     http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => [
                             'content' => [[
                                 'type' => 'text',
                                 'text' => json_encode($error, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
                             ]],
                             'structuredContent' => $error,
+                            "_meta" => discovery::site_meta(),
                             'isError' => true,
                         ] + ($modern ? ['resultType' => 'complete'] : [])]);
                 } catch (Throwable $e) {
@@ -285,12 +289,14 @@ final class mcp_server {
                             . 'for reference ' . $reference . '.',
                         'reference' => $reference,
                     ];
+                    $error = discovery::with_site_identity($error);
                     http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => [
                             'content' => [[
                                 'type' => 'text',
                                 'text' => json_encode($error, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
                             ]],
                             'structuredContent' => $error,
+                            "_meta" => discovery::site_meta(),
                             'isError' => true,
                         ] + ($modern ? ['resultType' => 'complete'] : [])]);
                 }
@@ -365,6 +371,7 @@ final class mcp_server {
                 'name' => $tool->get_name(),
                 'title' => $tool->get_title(),
                 'description' => $tool->get_description()
+                    . " Moodle wwwroot: " . discovery::wwwroot() . "."
                     . ($iswrite && ($tool->requires_confirmation() || $tool->is_destructive())
                         ? ' The first call returns a preview and confirmation_required=true without changes. '
                         . 'Show the preview and obtain explicit user approval before retrying with confirmation_token.'

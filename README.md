@@ -216,6 +216,17 @@ endpoints (`server.php`, `read.php`, `write.php`) accept `server/discover`
 and return `resultType: complete`, supported protocol versions, accurate tools
 capabilities and server identity using the installed plugin's release.
 
+The effective `$CFG->wwwroot` is now included repeatedly so connected AI clients can
+distinguish separate Moodle installations. It appears as `websiteUrl` in
+`serverInfo`, in the instructions for both `server/discover` and `initialize`,
+and as `moodle_wwwroot` in discovery metadata and the public discovery JSON.
+Every `tools/list` response also includes it in `_meta` and in each tool
+description. Each `tools/call` result, including READ results, WRITE previews,
+successful writes and tool errors, includes `moodle_wwwroot` in both textual
+and structured data, as well as response `_meta`. The server takes this value
+from the current request's Moodle configuration and never trusts a client-supplied
+URL. This does not alter operation permissions or confirmation requirements.
+
 The discovery response uses `cacheScope: private` and `ttlMs: 60000` (one minute).
 This prevents `server/discover` and `tools/list` from being treated as stale
 immediately while isolating cached tool metadata to the same authorization

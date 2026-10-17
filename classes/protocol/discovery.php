@@ -40,6 +40,51 @@ final class discovery {
     public const CACHE_TTL_MS = 60000;
 
     /**
+     * Return the effective Moodle URL configured for this instance.
+     *
+     * @return string Moodle wwwroot.
+     */
+    public static function wwwroot(): string {
+        global $CFG;
+        return rtrim((string)$CFG->wwwroot, "/");
+    }
+
+    /**
+     * Include the current Moodle instance identity in MCP metadata.
+     *
+     * @return array
+     */
+    public static function site_meta(): array {
+        return ["moodle_wwwroot" => self::wwwroot()];
+    }
+
+    /**
+     * Attach the site identity to any MCP tool data, including errors and previews.
+     *
+     * @param array $data Tool data.
+     * @return array
+     */
+    public static function with_site_identity(array $data): array {
+        $data["moodle_wwwroot"] = self::wwwroot();
+        return $data;
+    }
+
+    /**
+     * Keep the site URL visible in both modern and legacy handshakes.
+     *
+     * @return string
+     */
+    private static function instructions(): string {
+        return "This connector operates on Moodle at " . self::wwwroot() . ". "
+            . "Always identify this Moodle instance by its wwwroot, especially before "
+            . "previewing or confirming WRITE actions. Use tools/list to discover tools "
+            . "for this instance. For requests about live Moodle courses, categories, "
+            . "users, enrolments or images, invoke tools/call instead of inventing data. "
+            . "READ and WRITE permissions are independent; Moodle capabilities are "
+            . "checked for each operation. WRITE tools can require confirmation.";
+    }
+
+    /**
      * Metadata common to discovery and legacy initialize.
      *
      * @param string $side Endpoint side.
@@ -50,6 +95,7 @@ final class discovery {
         return [
             'name' => 'Moodle MCP ' . strtoupper($side),
             'version' => $release,
+            "websiteUrl" => self::wwwroot(),
         ];
     }
 
@@ -76,12 +122,9 @@ final class discovery {
             'capabilities' => self::capabilities(),
             '_meta' => [
                 'io.modelcontextprotocol/serverInfo' => self::server_info($side, $release),
+                "moodle_wwwroot" => self::wwwroot(),
             ],
-            'instructions' => 'Use tools/list to discover tools for this Moodle instance. '
-                . 'For requests about live Moodle courses, categories, users, enrolments or images, '
-                . 'invoke the appropriate tool with tools/call, rather than inventing Moodle data. '
-                . 'READ and WRITE permissions are independent; Moodle capabilities are checked '
-                . 'for each operation. WRITE tools can require confirmation before execution.',
+            'instructions' => self::instructions(),
             // Keep metadata scoped to the authenticated client and refresh it regularly.
             // Revoking a token is still enforced on every HTTP request.
             'ttlMs' => self::CACHE_TTL_MS,
@@ -101,6 +144,7 @@ final class discovery {
             'protocolVersion' => self::LEGACY_VERSION,
             'capabilities' => self::capabilities(),
             'serverInfo' => self::server_info($side, $release),
+            "instructions" => self::instructions(),
         ];
     }
 

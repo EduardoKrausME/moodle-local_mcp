@@ -30,6 +30,7 @@ require_once(__DIR__ . '/../../config.php');
 $base = $CFG->wwwroot . '/local/mcp';
 http::json([
     'name' => 'Moodle MCP',
+    "moodle_wwwroot" => rtrim((string)$CFG->wwwroot, "/"),
     'mcp' => [
         'server' => $base . '/server.php',
         'read' => $base . '/read.php',
