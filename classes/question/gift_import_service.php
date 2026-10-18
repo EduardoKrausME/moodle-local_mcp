@@ -128,7 +128,7 @@ final class gift_import_service {
         $allnames = [];
         foreach ($questions as $question) {
             // Embedded category directives could redirect questions to other categories.
-            // This tool deliberately imports only into its explicitly approved new category.
+            // Always keep questions inside the explicitly approved target category.
             if (!is_object($question) || empty($question->qtype) ||
                 $question->qtype === "category" || trim((string)($question->name ?? "")) === "") {
                 throw new api_exception("invalid_gift_questions", 400);
