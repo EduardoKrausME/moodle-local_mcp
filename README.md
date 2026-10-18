@@ -714,22 +714,34 @@ question text or answer payloads.
 
 ### Import a complete GIFT question bank in one operation
 
-WRITE `import_gift_question_bank` receives a **complete UTF-8 GIFT text** payload,
-creates a **new question category** in the selected existing bank context, then
-imports all questions via Moodle's native GIFT format importer. This is one
-batch rather than repeated calls to `create_question`; the standard MCP
-preview/explicit confirmation flow still applies (a confirmation token is
-required for the final write). No changes are made during preview.
+WRITE `import_gift_question_bank` receives UTF-8 GIFT text and imports up to
+500 questions into **an existing category** or **a newly created category**.
+Moodle's native GIFT parser and importer handle the content. Each batch requires
+the usual MCP preview and one-time confirmation token; preview never writes.
 
-Discover the bank `contextid` using `list_question_banks`. In Moodle 5.x
-use the module (`qbank` or `quiz`) context, not the legacy course context;
-the native GIFT importer requires `CONTEXT_MODULE`. Moodle 4.5 still
-accepts a course context. The connected
-user must have both `moodle/question:managecategory` and
-`moodle/question:add` for that context. Optional `parentid` (default 0),
-`info` and unique category `idnumber` use Moodle's category manager.
-On success the response contains `categoryid`, `question_count`,
-`question_ids`, `question_types` and a SHA-256 content fingerprint.
+Use `list_question_banks` to discover `contextid`. Choose one of these two modes:
+
+- **Existing category:** pass `contextid`, `categoryid` and `gift`. The category must
+  belong to that context. Do not pass `name`, `parentid`, `info` or `idnumber`.
+  This mode supports already-existing course-context categories on Moodle 5.x
+  as well as module-context banks, and requires `moodle/question:add`.
+- **New category:** pass `contextid`, `name` and `gift` (optionally `parentid`,
+  `info` and `idnumber`). This mode requires both
+  `moodle/question:managecategory` and `moodle/question:add`. On Moodle 5.x,
+  newly created banks require a module (`qbank` or `quiz`) context;
+  Moodle 4.5 supports a course context.
+
+Existing-category example:
+
+```json
+{
+  "contextid": 496,
+  "categoryid": 44,
+  "gift": "::Capital::What is the capital of France? {=Paris ~Rome ~Berlin}\n\n::Earth::The Earth is round. {TRUE}"
+}
+```
+
+New-category example:
 
 ```json
 {
@@ -741,17 +753,15 @@ On success the response contains `categoryid`, `question_count`,
 }
 ```
 
-The preview parses the GIFT with Moodle's own parser, reports question totals,
-types and the first ten names, and never returns the full question text.
-The final write revalidates and imports all questions within a database
-transaction; failures roll back the new category and its questions. The
-source is limited to 2 MiB and 500 questions per batch. `$CATEGORY:`
-directives are rejected to keep the import inside the explicitly approved
-category and context; split a multi-category GIFT export into separate
-batches. GIFT supports the question formats enabled in Moodle, not only the
-four types supported by the single-question WRITE tool. Reusing an
-existing category name under the same parent is rejected to avoid
-silently duplicating a retry.
+Preview includes import mode, target category ID where applicable,
+question totals, types, sample names and a SHA-256 fingerprint of the GIFT content.
+Imports revalidate permissions and destinations, reject duplicate question names
+(including names already present in the target category, even in draft/hidden
+versions), and commit atomically or roll back the batch. Import into an existing
+category never edits or replaces existing questions. Duplicate new category names
+are also rejected. Embedded `$CATEGORY:` directives are rejected to keep
+questions inside the expressly approved destination. Maximum payload size: 2 MiB.
+The import response contains category ID, question IDs, types and content SHA-256.
 
 ## Additional course activity integrations (mcptool subplugins)
 
