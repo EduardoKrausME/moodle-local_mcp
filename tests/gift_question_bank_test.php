@@ -28,6 +28,7 @@ use advanced_testcase;
 use context_course;
 use context_module;
 use local_mcp\exception\api_exception;
+use local_mcp\question\bank_service;
 use local_mcp\question\gift_import_service;
 use local_mcp\security\authenticated_identity;
 use local_mcp\write\registry;
@@ -162,4 +163,158 @@ final class gift_question_bank_test extends advanced_testcase {
         $tool->preview(["contextid" => $ctx->id, "name" => "Empty",
             "gift" => ""], $identity);
     }
+    /**
+     * Reuse the selected category without creating any new category.
+     */
+    public function test_import_into_existing_category_is_atomic_and_preserves_metadata(): void {
+        global $DB;
+
+        [$ctx, $identity] = $this->setup_import();
+        $category = bank_service::create_category([
+            "contextid" => $ctx->id,
+            "name" => "Existing QA category",
+            "idnumber" => "EXISTING-QA-001",
+        ], $identity);
+        $categoryid = (int)$category["id"];
+        $before = $DB->count_records("question_categories", ["contextid" => $ctx->id]);
+        $args = ["contextid" => $ctx->id, "categoryid" => $categoryid, "gift" => $this->gift()];
+        $tool = registry::get_tools()["import_gift_question_bank"];
+
+        $preview = $tool->preview($args, $identity);
+        $this->assertSame("existing", $preview["mode"]);
+        $this->assertSame($categoryid, $preview["categoryid"]);
+        $this->assertSame(3, $preview["question_count"]);
+        $this->assertEquals($before, $DB->count_records("question_categories",
+            ["contextid" => $ctx->id]));
+
+        $result = $tool->execute($args, $identity);
+        $this->assertSame("existing", $result["mode"]);
+        $this->assertSame($categoryid, $result["categoryid"]);
+        $this->assertSame(3, $result["question_count"]);
+        $this->assertEquals($before, $DB->count_records("question_categories",
+            ["contextid" => $ctx->id]));
+        $this->assertSame("EXISTING-QA-001", $DB->get_field("question_categories",
+            "idnumber", ["id" => $categoryid]));
+        $this->assertCount(3, $DB->get_records("question_bank_entries",
+            ["questioncategoryid" => $categoryid]));
+
+        // Check every version, including drafts and hidden questions.
+        $this->expectException(api_exception::class);
+        gift_import_service::inspect($args, $identity);
+    }
+
+    /**
+     * An existing category must belong to the explicitly selected bank context.
+     */
+    public function test_import_rejects_wrong_context_for_existing_category(): void {
+        [$ctx, $identity] = $this->setup_import();
+        $category = bank_service::create_category([
+            "contextid" => $ctx->id,
+            "name" => "Context-restricted QA",
+        ], $identity);
+        $args = [
+            "contextid" => \context_system::instance()->id,
+            "categoryid" => (int)$category["id"],
+            "gift" => $this->gift(),
+        ];
+        $this->expectException(api_exception::class);
+        gift_import_service::inspect($args, $identity);
+    }
+
+    /**
+     * Metadata for an existing category cannot be rewritten during GIFT import.
+     */
+    public function test_existing_category_rejects_new_category_parameters(): void {
+        [$ctx, $identity] = $this->setup_import();
+        $category = bank_service::create_category([
+            "contextid" => $ctx->id,
+            "name" => "Immutable QA",
+        ], $identity);
+        $args = [
+            "contextid" => $ctx->id,
+            "categoryid" => (int)$category["id"],
+            "name" => "Unexpected replacement name",
+            "gift" => $this->gift(),
+        ];
+        $this->expectException(api_exception::class);
+        gift_import_service::inspect($args, $identity);
+    }
+
+    /**
+     * Duplicate GIFT question names must be rejected before touching the database.
+     */
+    public function test_duplicate_names_in_gift_are_rejected(): void {
+        [$ctx, $identity] = $this->setup_import();
+        $args = [
+            "contextid" => $ctx->id,
+            "name" => "No duplicated questions",
+            "gift" => "::Same name::First question? {=Yes ~No}\n\n"
+                . "::Same name::Second question? {=Yes ~No}\n",
+        ];
+        $this->expectException(api_exception::class);
+        gift_import_service::inspect($args, $identity);
+    }
+
+    /**
+     * The existing-category path must also pass through MCP confirmation.
+     */
+    public function test_mcp_confirms_existing_category_import_as_one_batch(): void {
+        global $DB;
+
+        [$ctx, $identity] = $this->setup_import();
+        $category = bank_service::create_category([
+            "contextid" => $ctx->id,
+            "name" => "Confirmed QA",
+        ], $identity);
+        $args = [
+            "contextid" => $ctx->id,
+            "categoryid" => (int)$category["id"],
+            "gift" => $this->gift(),
+        ];
+        $tool = registry::get_tools()["import_gift_question_bank"];
+        $schema = $tool->get_input_schema();
+        $this->assertContains("contextid", $schema["required"]);
+        $this->assertContains("gift", $schema["required"]);
+        $this->assertNotContains("name", $schema["required"]);
+        $this->assertArrayHasKey("categoryid", $schema["properties"]);
+
+        $server = new mcp_server("write");
+        $method = new ReflectionMethod(mcp_server::class, "call_tool");
+        $pending = $method->invoke($server, "import_gift_question_bank",
+            $args, [], $identity, "test-access-token");
+        $this->assertSame("confirmation_pending", $pending["status"]);
+        $this->assertSame("existing", $pending["preview"]["mode"]);
+        $this->assertFalse($DB->record_exists("question_bank_entries",
+            ["questioncategoryid" => (int)$category["id"]]));
+
+        $confirmed = $method->invoke($server, "import_gift_question_bank",
+            $args + ["confirmation_token" => $pending["confirmation_token"]],
+            [], $identity, "test-access-token");
+        $this->assertSame(3, $confirmed["question_count"]);
+        $this->assertSame((int)$category["id"], $confirmed["categoryid"]);
+    }
+
+    /**
+     * A legacy course category can be selected for import even on Moodle 5+.
+     */
+    public function test_existing_course_category_can_be_preflighted(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $course = $this->getDataGenerator()->create_course();
+        $ctx = context_course::instance($course->id);
+        $identity = new authenticated_identity((int)get_admin()->id, "test", ["mcp:write"]);
+        $category = bank_service::create_category([
+            "contextid" => $ctx->id,
+            "name" => "Legacy course QA",
+        ], $identity);
+        $args = [
+            "contextid" => $ctx->id,
+            "categoryid" => (int)$category["id"],
+            "gift" => $this->gift(),
+        ];
+        $result = gift_import_service::inspect($args, $identity);
+        $this->assertSame("existing", $result["mode"]);
+        $this->assertSame((int)$category["id"], $result["categoryid"]);
+    }
+
 }
