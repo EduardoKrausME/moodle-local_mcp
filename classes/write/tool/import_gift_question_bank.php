@@ -29,7 +29,7 @@ use local_mcp\question\gift_import_service;
 use local_mcp\security\authenticated_identity;
 
 /**
- * MCP WRITE: create a question category and import a complete GIFT bank.
+ * MCP WRITE: import a GIFT bank into a new or an existing question category.
  */
 final class import_gift_question_bank extends base_tool {
     /**
@@ -67,8 +67,10 @@ final class import_gift_question_bank extends base_tool {
         return $this->object_schema([
             "contextid" => ["type" => "integer", "minimum" => 1,
                 "description" => "Existing question bank context from list_question_banks."],
+            "categoryid" => ["type" => "integer", "minimum" => 1,
+                "description" => "Existing destination category ID. When set, omit name, parentid, info and idnumber."],
             "name" => ["type" => "string", "minLength" => 1,
-                "description" => "New question category name."],
+                "description" => "New category name, required only when categoryid is omitted."],
             "parentid" => ["type" => "integer", "minimum" => 0,
                 "description" => "Parent category in the same context; 0 for root."],
             "info" => ["type" => "string", "description" => "Category description as HTML."],
@@ -76,7 +78,7 @@ final class import_gift_question_bank extends base_tool {
             "gift" => ["type" => "string", "minLength" => 1, "maxLength" => 2097152,
                 "description" => "Entire UTF-8 GIFT file as plain text, up to 2 MiB and 500 questions. "
                     . "Use blank lines between questions. Embedded category directives are not supported."],
-        ], ["contextid", "name", "gift"]);
+        ], ["contextid", "gift"]);
     }
 
     /**
