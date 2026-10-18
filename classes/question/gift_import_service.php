@@ -32,10 +32,10 @@ use local_mcp\security\capability_guard;
 use Throwable;
 
 /**
- * Validate, preview and atomically import a GIFT file into a new question category.
+ * Validate, preview and atomically import a GIFT file into a selected question category.
  *
- * The question bank is identified by its existing Moodle context; this service
- * creates one child question category and imports every question into that category.
+ * A target category can already exist or be created within the selected context.
+ * The confirmed target and complete GIFT payload are checked before any writes.
  */
 final class gift_import_service {
     /** Maximum UTF-8 payload size (2 MiB). */
@@ -54,23 +54,47 @@ final class gift_import_service {
     public static function inspect(array $arguments, authenticated_identity $identity): array {
         global $CFG, $DB;
 
-        if (!isset($arguments["contextid"], $arguments["name"]) ||
-            !is_string($arguments["name"]) || !is_string($arguments["gift"] ?? null)) {
+        if (!isset($arguments["contextid"]) || !is_string($arguments["gift"] ?? null)) {
             throw new api_exception("invalid_gift_import", 400);
         }
-        [$contextid, $name, $parentid, $idnumber] = bank_service::validate_category($arguments, $identity);
+        $existingcategory = null;
+        if (array_key_exists("categoryid", $arguments)) {
+            // Existing targets cannot also request category creation or metadata updates.
+            if (!is_int($arguments["categoryid"]) || $arguments["categoryid"] < 1 ||
+                isset($arguments["name"]) || isset($arguments["parentid"]) ||
+                isset($arguments["info"]) || isset($arguments["idnumber"])) {
+                throw new api_exception("invalid_gift_import", 400);
+            }
+            $existingcategory = $DB->get_record("question_categories",
+                ["id" => $arguments["categoryid"]], "id, contextid, parent, name, idnumber");
+            if (!$existingcategory ||
+                (int)$existingcategory->contextid !== (int)$arguments["contextid"]) {
+                throw new api_exception("invalid_gift_category_context", 400);
+            }
+            $contextid = (int)$existingcategory->contextid;
+            $name = (string)$existingcategory->name;
+            $parentid = (int)$existingcategory->parent;
+            $idnumber = (string)$existingcategory->idnumber;
+        } else {
+            if (!isset($arguments["name"]) || !is_string($arguments["name"])) {
+                throw new api_exception("invalid_gift_import", 400);
+            }
+            [$contextid, $name, $parentid, $idnumber] =
+                bank_service::validate_category($arguments, $identity);
+        }
+
         $ctx = context::instance_by_id($contextid, MUST_EXIST);
-        // Moodle 5+ stores question banks in module contexts. Reject legacy
-        // course contexts during preview rather than creating an unusable category.
-        if ((int)$CFG->version >= 2025041400 && $ctx->contextlevel !== CONTEXT_MODULE) {
+        // Keep the legacy restriction for NEW categories on Moodle 5+.
+        // An existing category is valid even when its context is course-backed.
+        if ($existingcategory === null && (int)$CFG->version >= 2025041400 &&
+            $ctx->contextlevel !== CONTEXT_MODULE) {
             throw new api_exception("gift_requires_module_context", 400,
                 "Use a module question bank contextid from list_question_banks.");
         }
         capability_guard::check("moodle/question:add", $ctx, $identity->userid);
 
-        // An identical name in the same parent is most often a retried import.
-        // Never append another batch silently to a newly duplicated category.
-        if ($DB->record_exists("question_categories", [
+        // Creating the same category twice is almost always a retried import.
+        if ($existingcategory === null && $DB->record_exists("question_categories", [
             "contextid" => $contextid, "parent" => $parentid, "name" => $name,
         ])) {
             throw new api_exception("duplicate_question_category", 409);
@@ -101,6 +125,7 @@ final class gift_import_service {
 
         $types = [];
         $names = [];
+        $allnames = [];
         foreach ($questions as $question) {
             // Embedded category directives could redirect questions to other categories.
             // This tool deliberately imports only into its explicitly approved new category.
@@ -119,14 +144,32 @@ final class gift_import_service {
                     }
                 }
             }
+            $questionname = trim(clean_param((string)$question->name, PARAM_TEXT));
+            if ($questionname === "" || isset($allnames[$questionname])) {
+                throw new api_exception("duplicate_gift_question_name", 409);
+            }
+            $allnames[$questionname] = true;
+            if ($existingcategory !== null && $DB->record_exists_sql(
+                "SELECT 1
+                   FROM {question} q
+                   JOIN {question_versions} v ON v.questionid = q.id
+                   JOIN {question_bank_entries} e ON e.id = v.questionbankentryid
+                  WHERE e.questioncategoryid = :categoryid AND q.name = :name",
+                ["categoryid" => (int)$existingcategory->id, "name" => $questionname]
+            )) {
+                // Check all versions and statuses, including hidden and draft entries.
+                throw new api_exception("duplicate_gift_question_name", 409);
+            }
             $types[$question->qtype] = ($types[$question->qtype] ?? 0) + 1;
             if (count($names) < 10) {
-                $names[] = (string)$question->name;
+                $names[] = $questionname;
             }
         }
         ksort($types);
 
         return [
+            "mode" => $existingcategory === null ? "create" : "existing",
+            "categoryid" => $existingcategory === null ? null : (int)$existingcategory->id,
             "contextid" => $contextid,
             "name" => $name,
             "parentid" => $parentid,
@@ -140,7 +183,7 @@ final class gift_import_service {
     }
 
     /**
-     * Create one category and import all questions inside a single DB transaction.
+     * Reuse or create a category and import all questions inside one DB transaction.
      *
      * @param array $arguments Confirmed MCP arguments.
      * @param authenticated_identity $identity Connected Moodle user.
@@ -164,9 +207,21 @@ final class gift_import_service {
 
             $transaction = $DB->start_delegated_transaction();
             try {
-                $category = bank_service::create_category($arguments, $identity);
-                $categoryrecord = $DB->get_record("question_categories",
-                    ["id" => $category["id"]], "*", MUST_EXIST);
+                if ($plan["mode"] === "existing") {
+                    $categoryrecord = $DB->get_record("question_categories",
+                        ["id" => $plan["categoryid"], "contextid" => $plan["contextid"]],
+                        "*", MUST_EXIST);
+                    $category = [
+                        "id" => (int)$categoryrecord->id,
+                        "contextid" => (int)$categoryrecord->contextid,
+                        "parentid" => (int)$categoryrecord->parent,
+                        "name" => $categoryrecord->name,
+                    ];
+                } else {
+                    $category = bank_service::create_category($arguments, $identity);
+                    $categoryrecord = $DB->get_record("question_categories",
+                        ["id" => $category["id"]], "*", MUST_EXIST);
+                }
                 $ctx = context::instance_by_id($plan["contextid"], MUST_EXIST);
                 $format = new gift_format();
                 $format->setCategory($categoryrecord);
@@ -204,6 +259,7 @@ final class gift_import_service {
                 $ids = array_map("intval", $format->questionids);
                 $transaction->allow_commit();
                 return [
+                    "mode" => $plan["mode"],
                     "categoryid" => (int)$category["id"],
                     "contextid" => (int)$category["contextid"],
                     "parentid" => (int)$category["parentid"],
