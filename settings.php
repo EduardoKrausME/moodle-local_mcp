@@ -49,7 +49,7 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configduration('local_mcp/codettl', 'Authorization code lifetime',
         'Authorization codes are short lived and single use.', 300, 60));
     $settings->add(new admin_setting_configduration('local_mcp/confirmationttl', 'Confirmation lifetime',
-        'One-time WRITE confirmation token lifetime.', 300, 30));
+        "One-time WRITE confirmation token lifetime.", 1800, 30));
     $settings->add(new admin_setting_configcheckbox('local_mcp/dynamicregistration', 'Dynamic client registration',
         'Allow standards-based public clients to register redirect URIs. Admin consent is still required.', 1));
     $settings->add(new admin_setting_configcheckbox('local_mcp/logmessages',
