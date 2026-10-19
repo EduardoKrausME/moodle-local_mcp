@@ -56,7 +56,7 @@ final class confirmation_service {
                                  array                  $arguments, context $context): string {
         global $DB;
         $token = secret::generate('mcp_confirm_', 32);
-        $ttl = (int)get_config('local_mcp', 'confirmationttl') ?: 300;
+        $ttl = (int)get_config("local_mcp", "confirmationttl") ?: 1800;
         $DB->insert_record('local_mcp_confirm', (object)[
             'prefix' => secret::prefix($token),
             'tokenhash' => secret::hash($token),
