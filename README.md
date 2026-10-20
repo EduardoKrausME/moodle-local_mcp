@@ -15,7 +15,7 @@ Moodle MCP automatically discovers MCP providers from compatible plugins install
 
 | Kopere BI | Helpdesk | Kopere Proctoring |
 | --- | --- | --- |
-| [<img src="docs/print/02-local_kopere_bi.png" alt="Kopere BI integrated with ChatGPT using Moodle MCP" width="280">](https://eduardokrausme.github.io/moodle-local_mcp/pt_br/recursos/kopere-bi.html) | [<img src="docs/print/03-local_helpdesk.png" alt="Moodle Helpdesk integrated with ChatGPT using Moodle MCP" width="280">](https://eduardokrausme.github.io/moodle-local_mcp/pt_br/recursos/helpdesk.html) | [<img src="docs/print/04-local_kopere_proctoring.png" alt="Kopere Proctoring integrated with ChatGPT using Moodle MCP" width="280">](https://eduardokrausme.github.io/moodle-local_mcp/pt_br/recursos/kopere-proctoring.html) |
+| [<img src="https://raw.githubusercontent.com/EduardoKrausME/moodle-local_mcp/docs/print/02-local_kopere_bi.png" alt="Kopere BI integrated with ChatGPT using Moodle MCP" width="280">](https://eduardokrausme.github.io/moodle-local_mcp/pt_br/recursos/kopere-bi.html) | [<img src="https://raw.githubusercontent.com/EduardoKrausME/moodle-local_mcp/docs/print/03-local_helpdesk.png" alt="Moodle Helpdesk integrated with ChatGPT using Moodle MCP" width="280">](https://eduardokrausme.github.io/moodle-local_mcp/pt_br/recursos/helpdesk.html) | [<img src="https://raw.githubusercontent.com/EduardoKrausME/moodle-local_mcp/docs/print/04-local_kopere_proctoring.png" alt="Kopere Proctoring integrated with ChatGPT using Moodle MCP" width="280">](https://eduardokrausme.github.io/moodle-local_mcp/pt_br/recursos/kopere-proctoring.html) |
 | [How to use / Como usar](https://eduardokrausme.github.io/moodle-local_mcp/pt_br/recursos/kopere-bi.html) · [Moodle Marketplace](https://marketplace.moodle.com/plugins/local_kopere_bi) | [How to use / Como usar](https://eduardokrausme.github.io/moodle-local_mcp/pt_br/recursos/helpdesk.html) · [Moodle Marketplace](https://marketplace.moodle.com/plugins/local_helpdesk) | [How to use / Como usar](https://eduardokrausme.github.io/moodle-local_mcp/pt_br/recursos/kopere-proctoring.html) · [Moodle Marketplace](https://marketplace.moodle.com/plugins/local_kopere_proctoring) |
 
 **Kopere BI** publishes `kopere_bi_list_reports` plus one READ tool per accessible report, named `kopere_bi_report_<refkey>`. Ask ChatGPT which reports are available, then analyze their structured data by course, user or cohort as permissions allow. [Documentation (English)](https://eduardokrausme.github.io/moodle-local_mcp/en/recursos/kopere-bi.html).
@@ -808,7 +808,7 @@ and/or WRITE scopes, and authorize the requested access. Existing connection
 scopes continue to limit issued access tokens.
 
 **Deployment:** OAuth discovery needs server-side rewriting for site-root
-`/.well-known/` URLs. See [OAuth discovery setup](docs/oauth-webserver.md).
+`/.well-known/` URLs. See [OAuth discovery setup](https://github.com/EduardoKrausME/moodle-local_mcp/blob/docs/oauth-webserver.md).
 
 ## Auditing ChatGPT actions in Moodle
 
