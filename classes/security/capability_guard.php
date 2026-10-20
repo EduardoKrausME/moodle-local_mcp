@@ -41,7 +41,21 @@ final class capability_guard {
      * @return void Return value.
      */
     public static function check(string $capability, context $context, int $userid): void {
-        if (!has_capability($capability, $context, $userid)) {
+        $allowed = has_capability($capability, $context, $userid);
+
+        // moodle/course:view permits privileged observers, but active enrolment is
+        // the ordinary way students and teachers access their own courses.
+        if (!$allowed && $capability === "moodle/course:view" && $context instanceof \context_course) {
+            $allowed = can_access_course(get_course((int)$context->instanceid), $userid, "", true);
+        }
+
+        // Reading one's own profile and enrolments is not the same as viewing
+        // another user's profile, which continues to require Moodle permission.
+        if (!$allowed && $capability === "moodle/user:viewdetails" && $context instanceof \context_user) {
+            $allowed = (int)$context->instanceid === $userid;
+        }
+
+        if (!$allowed) {
             diagnostics::event('capability_denied', [
                 'userid' => $userid, 'capability' => $capability,
                 'contextid' => (int)$context->id,
