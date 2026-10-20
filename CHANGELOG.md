@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased - 2026-10-20
+
+- Reverted PR #2: removed the `assign_create_activity` and `delete_course_module` MCP WRITE tools and their dedicated tests. Other plugin features and the current version remain unchanged.
+
 ## 1.3.22 - 2026-10-13
 
 - Added `assign_create_activity` for Moodle Assignment activities, supporting file submissions, online text, grading and optional deadlines.
