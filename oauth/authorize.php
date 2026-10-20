@@ -61,8 +61,10 @@ $PAGE->set_heading(get_string('pluginname', 'local_mcp'));
 
 $PAGE->add_body_class("mcp-consent-page");
 
-$context = context_system::instance();
-if (!has_capability('moodle/site:config', $context)) {
+// Any authenticated, non-guest Moodle user may authorize an MCP client.
+// Individual tools still enforce scopes and Moodle capabilities in their own contexts.
+if (!isloggedin() || isguestuser() || !empty($USER->suspended)
+        || !empty($USER->deleted) || empty($USER->confirmed)) {
     echo $OUTPUT->header();
     echo $OUTPUT->render_from_template('local_mcp/authorization_denied', [
         'title' => get_string('authorizationdeniedtitle', 'local_mcp'),
