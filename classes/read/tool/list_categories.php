@@ -98,6 +98,17 @@ final class list_categories extends base_tool {
      * @throws dml_exception
      */
     public function resolve_context(array $arguments): context {
+        global $DB, $USER;
+
+        // A category manager can administer just one branch of the tree.
+        // Resolve one authorized category, then filter every result separately.
+        $categories = $DB->get_records("course_categories", [], "sortorder ASC", "id");
+        foreach ($categories as $category) {
+            $context = context_coursecat::instance((int)$category->id, IGNORE_MISSING);
+            if ($context && has_capability("moodle/category:manage", $context, (int)$USER->id)) {
+                return $context;
+            }
+        }
         return context_system::instance();
     }
 
