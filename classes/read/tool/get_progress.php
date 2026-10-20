@@ -103,7 +103,10 @@ final class get_progress extends base_tool {
         require_once($CFG->libdir . '/completionlib.php');
         $course = get_course((int)$arguments['courseid']);
         $ctx = context_course::instance($course->id);
-        if ((int)$arguments['userid'] !== $identity->userid && !has_capability('moodle/course:viewparticipants', $ctx, $identity->userid)) {
+        // Participants may see their own completion. Reviewing another user's
+        // completion requires grade-report access, not just permission to list participants.
+        if ((int)$arguments["userid"] !== $identity->userid
+                && !has_capability("moodle/grade:viewall", $ctx, $identity->userid)) {
             throw new api_exception('permission_denied', 403);
         }
         $completion = new completion_info($course);
