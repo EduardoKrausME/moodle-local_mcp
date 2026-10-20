@@ -32,10 +32,20 @@ use stdClass;
  * Uses the Moodle module API, not direct database writes.
  */
 final class assign_create_activity extends activity_create_base {
+    /**
+     * Method module_name.
+     *
+     * @return string Return value.
+     */
     protected function module_name(): string {
         return 'assign';
     }
 
+    /**
+     * Method extra_properties.
+     *
+     * @return array Return value.
+     */
     protected function extra_properties(): array {
         return [
             'grade' => ['type' => 'number', 'minimum' => 0, 'maximum' => 100],
@@ -48,11 +58,23 @@ final class assign_create_activity extends activity_create_base {
         ];
     }
 
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return 'Create a functional Moodle Assignment with file and/or online text submission, teacher grading, '
             . 'and optional dates. Checks permissions and rejects duplicate names in the same section.';
     }
 
+    /**
+     * Method preview.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function preview(array $arguments, authenticated_identity $identity): array {
         $preview = parent::preview($arguments, $identity);
         $this->check_options($arguments);
@@ -63,11 +85,23 @@ final class assign_create_activity extends activity_create_base {
         return $preview;
     }
 
+    /**
+     * Method check_options.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return void Return value.
+     */
     private function check_options(array $arguments): void {
         $this->check_submission_options($arguments);
         $this->check_dates($arguments);
     }
 
+    /**
+     * Method check_submission_options.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return void Return value.
+     */
     private function check_submission_options(array $arguments): void {
         $files = (bool)($arguments['file_enabled'] ?? true);
         $online = (bool)($arguments['onlinetext_enabled'] ?? false);
@@ -76,6 +110,12 @@ final class assign_create_activity extends activity_create_base {
         }
     }
 
+    /**
+     * Method check_dates.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return void Return value.
+     */
     private function check_dates(array $arguments): void {
         $start = (int)($arguments['allowsubmissionsfromdate'] ?? 0);
         $due = (int)($arguments['duedate'] ?? 0);
@@ -86,6 +126,14 @@ final class assign_create_activity extends activity_create_base {
         }
     }
 
+    /**
+     * Method configure.
+     *
+     * @param stdClass $info Parameter info.
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return void Return value.
+     */
     protected function configure(stdClass $info, array $arguments, authenticated_identity $identity): void {
         global $CFG;
         require_once($CFG->dirroot . '/mod/assign/lib.php');

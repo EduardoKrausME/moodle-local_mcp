@@ -31,6 +31,11 @@ use mcptool_resource\write\create_activity;
  * Register writable activity tools.
  */
 final class provider implements write_provider_interface {
+    /**
+     * Method get_write_tools.
+     *
+     * @return array Return value.
+     */
     public function get_write_tools(): array {
         return [
             new create_activity(),

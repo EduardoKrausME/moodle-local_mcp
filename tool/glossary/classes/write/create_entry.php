@@ -34,22 +34,47 @@ use mod_glossary\external;
  * Delegate to the existing Moodle glossary external API, including its validation and events.
  */
 final class create_entry extends base_tool {
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return 'glossary_create_entry';
     }
 
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return 'Glossary: create entry';
     }
 
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return 'Add a concept and HTML definition to a glossary.';
     }
 
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return 'mod/glossary:write';
     }
 
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema([
             'cmid' => ['type' => 'integer', 'minimum' => 1],
@@ -58,10 +83,23 @@ final class create_entry extends base_tool {
         ], ['cmid', 'concept', 'definition']);
     }
 
+    /**
+     * Method resolve_context.
+     *
+     * @param array $a Parameter a.
+     * @return context Return value.
+     */
     public function resolve_context(array $a): context {
         return context_module::instance((int)$a['cmid'], MUST_EXIST);
     }
 
+    /**
+     * Method execute.
+     *
+     * @param array $a Parameter a.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $a, authenticated_identity $identity): array {
         global $DB;
         $cm = get_coursemodule_from_id('glossary', (int)$a['cmid'], 0, false, MUST_EXIST);

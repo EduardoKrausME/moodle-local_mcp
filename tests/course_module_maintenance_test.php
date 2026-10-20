@@ -37,6 +37,11 @@ use local_mcp\write\registry;
  * @covers \local_mcp\write\tool\delete_course_module
  */
 final class course_module_maintenance_test extends advanced_testcase {
+    /**
+     * Method test_tools_are_registered_with_safe_schemas.
+     *
+     * @return void Return value.
+     */
     public function test_tools_are_registered_with_safe_schemas(): void {
         $tools = registry::get_tools();
         $this->assertArrayHasKey('assign_create_activity', $tools);
@@ -53,6 +58,11 @@ final class course_module_maintenance_test extends advanced_testcase {
         $this->assertArrayHasKey('onlinetext_enabled', $assignschema['properties']);
     }
 
+    /**
+     * Method test_deletion_refuses_mismatched_name_or_course.
+     *
+     * @return void Return value.
+     */
     public function test_deletion_refuses_mismatched_name_or_course(): void {
         global $USER;
         $this->resetAfterTest();

@@ -32,10 +32,20 @@ use stdClass;
  * Moodle activity creation via standard module hooks.
  */
 final class create_activity extends activity_create_base {
+    /**
+     * Method module_name.
+     *
+     * @return string Return value.
+     */
     protected function module_name(): string {
         return 'glossary';
     }
 
+    /**
+     * Method extra_properties.
+     *
+     * @return array Return value.
+     */
     protected function extra_properties(): array {
         return [
             'allowduplicatedentries' => ['type' => 'boolean'],
@@ -44,6 +54,14 @@ final class create_activity extends activity_create_base {
         ];
     }
 
+    /**
+     * Method configure.
+     *
+     * @param stdClass $info Parameter info.
+     * @param array $a Parameter a.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return void Return value.
+     */
     protected function configure(stdClass $info, array $a, authenticated_identity $identity): void {
         $info->displayformat = 'dictionary';
         $info->mainglossary = 0;

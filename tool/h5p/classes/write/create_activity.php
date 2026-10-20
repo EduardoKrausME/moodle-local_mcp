@@ -35,14 +35,29 @@ use local_mcp\course\activity_upload;
  * Moodle activity creation via standard module hooks.
  */
 final class create_activity extends activity_create_base {
+    /**
+     * Method module_name.
+     *
+     * @return string Return value.
+     */
     protected function module_name(): string {
         return 'h5pactivity';
     }
 
+    /**
+     * Method tool_prefix.
+     *
+     * @return string Return value.
+     */
     protected function tool_prefix(): string {
         return 'h5p';
     }
 
+    /**
+     * Method extra_properties.
+     *
+     * @return array Return value.
+     */
     protected function extra_properties(): array {
         return [
             'filename' => ['type' => 'string', 'minLength' => 5, 'description' => 'H5P package filename.'],
@@ -50,10 +65,23 @@ final class create_activity extends activity_create_base {
         ];
     }
 
+    /**
+     * Method extra_required.
+     *
+     * @return array Return value.
+     */
     protected function extra_required(): array {
         return ['filename', 'file_base64'];
     }
 
+    /**
+     * Method configure.
+     *
+     * @param stdClass $info Parameter info.
+     * @param array $a Parameter a.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return void Return value.
+     */
     protected function configure(stdClass $info, array $a, authenticated_identity $identity): void {
         global $CFG;
         $info->packagefile = activity_upload::create_draft(

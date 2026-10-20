@@ -32,23 +32,51 @@ use stdClass;
  * Moodle activity creation via standard module hooks.
  */
 final class create_activity extends activity_create_base {
+    /**
+     * Method module_name.
+     *
+     * @return string Return value.
+     */
     protected function module_name(): string {
         return 'label';
     }
 
+    /**
+     * Method requires_name.
+     *
+     * @return bool Return value.
+     */
     protected function requires_name(): bool {
         return false;
     }
 
+    /**
+     * Method extra_properties.
+     *
+     * @return array Return value.
+     */
     protected function extra_properties(): array {
         return ['content' => ['type' => 'string', 'minLength' => 1,
             'description' => 'HTML content displayed in the course section.']];
     }
 
+    /**
+     * Method extra_required.
+     *
+     * @return array Return value.
+     */
     protected function extra_required(): array {
         return ['content'];
     }
 
+    /**
+     * Method configure.
+     *
+     * @param stdClass $info Parameter info.
+     * @param array $a Parameter a.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return void Return value.
+     */
     protected function configure(stdClass $info, array $a, authenticated_identity $identity): void {
         // Moodle mod_label derives its activity name from the HTML introduction.
         $info->intro = clean_text($a['content'], FORMAT_HTML);

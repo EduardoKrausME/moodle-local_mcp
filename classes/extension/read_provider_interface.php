@@ -30,5 +30,10 @@ use local_mcp\read\tool_interface;
  * Interface read_provider_interface.
  */
 interface read_provider_interface {
+    /**
+     * Method get_read_tools.
+     *
+     * @return array Return value.
+     */
     public function get_read_tools(): array;
 }
