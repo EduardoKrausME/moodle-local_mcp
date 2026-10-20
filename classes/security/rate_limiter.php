@@ -52,9 +52,8 @@ final class rate_limiter {
      * @return void Return value.
      */
     public static function check(string $bucket, string $subject, int $limit): void {
-        if ($limit <= 0) {
-            return;
-        }
+        // Invalid configuration must never disable request throttling.
+        $limit = max(1, $limit);
         $cache = cache::make('local_mcp', 'ratelimit');
         $window = (int)floor(time() / 60);
         $key = sha1($bucket . ':' . $subject . ':' . $window);

@@ -28,6 +28,7 @@ require_once(__DIR__ . '/../../../config.php');
 require_login();
 $context = context_system::instance();
 require_capability('moodle/site:config', $context);
+require_capability("local/mcp:manage", $context);
 $PAGE->set_url('/local/mcp/admin/readapis.php');
 $PAGE->set_context($context);
 $PAGE->set_title(get_string('readapis', 'local_mcp'));

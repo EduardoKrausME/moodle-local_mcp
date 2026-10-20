@@ -76,6 +76,7 @@ final class security_test extends advanced_testcase {
         $this->resetAfterTest();
         $user = $this->getDataGenerator()->create_user();
         $this->assertFalse(has_capability('moodle/site:config', context_system::instance(), $user->id));
+        $this->assertFalse(has_capability("local/mcp:manage", context_system::instance(), $user->id));
     }
 
     /**
@@ -87,5 +88,6 @@ final class security_test extends advanced_testcase {
         $this->resetAfterTest();
         $admin = get_admin();
         $this->assertTrue(has_capability('moodle/site:config', context_system::instance(), $admin->id));
+        $this->assertTrue(has_capability("local/mcp:manage", context_system::instance(), $admin->id));
     }
 }

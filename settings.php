@@ -38,10 +38,10 @@ if ($hassiteconfig) {
     ];
     foreach ($pages as $key => $url) {
         $ADMIN->add('local_mcp_category', new admin_externalpage('local_mcp_' . $key,
-            get_string($key, 'local_mcp'), new moodle_url($url), 'moodle/site:config'));
+            get_string($key, 'local_mcp'), new moodle_url($url), "local/mcp:manage"));
     }
 
-    $settings = new admin_settingpage('local_mcp_settings', get_string('settings', 'local_mcp'));
+    $settings = new admin_settingpage('local_mcp_settings', get_string('settings', 'local_mcp'), "local/mcp:manage");
     $settings->add(new admin_setting_configduration('local_mcp/accessttl', 'Access token lifetime',
         'Default lifetime for OAuth access tokens.', 3600, 60));
     $settings->add(new admin_setting_configduration('local_mcp/refreshttl', 'Refresh token lifetime',

@@ -25,6 +25,7 @@
 namespace local_mcp\oauth;
 
 use context_system;
+use core\lock\lock_config;
 use local_mcp\event\connection_authorized;
 use local_mcp\exception\api_exception;
 use local_mcp\security\scope;
@@ -53,16 +54,27 @@ final class token_service {
             throw new api_exception('invalid_grant', 400);
         }
         $hash = secret::hash($code);
-        $rec = $DB->get_record('local_mcp_auth_code', ['codehash' => $hash, 'clientid' => $client->id]);
-        if (!$rec || $rec->used || $rec->expires < time() || !hash_equals($rec->redirecturi, $redirecturi)
-            || !hash_equals((string)$rec->resource, $resource)) {
-            throw new api_exception('invalid_grant', 400);
+        // Serialize redemption across PHP workers before reading the single-use code.
+        $factory = lock_config::get_lock_factory("local_mcp_oauth_code");
+        $lock = $factory->get_lock("code_" . $hash, 10);
+        if (!$lock) {
+            throw new api_exception("temporarily_unavailable", 503);
         }
-        $challenge = secret::base64url(hash('sha256', $verifier, true));
-        if (!hash_equals($rec->codechallenge, $challenge)) {
-            throw new api_exception('invalid_grant', 400);
+        try {
+            $rec = $DB->get_record("local_mcp_auth_code", ["codehash" => $hash, "clientid" => $client->id]);
+            if (!$rec || $rec->used || $rec->expires < time() || !hash_equals($rec->redirecturi, $redirecturi)
+                || !hash_equals((string)$rec->resource, $resource)) {
+                throw new api_exception("invalid_grant", 400);
+            }
+            $challenge = secret::base64url(hash("sha256", $verifier, true));
+            if (!hash_equals($rec->codechallenge, $challenge)) {
+                throw new api_exception("invalid_grant", 400);
+            }
+            // Moodle DML returns a boolean, not the affected-row count. The lock prevents double redemption.
+            $DB->set_field_select("local_mcp_auth_code", "used", 1, "id = ? AND used = 0", [$rec->id]);
+        } finally {
+            $lock->release();
         }
-        $DB->set_field('local_mcp_auth_code', 'used', 1, ['id' => $rec->id]);
         $connectionid = self::connection($rec->userid, $client->id, $rec->scopes);
         return self::issue_pair($rec->userid, $client->id, $connectionid, $rec->scopes, $resource);
     }

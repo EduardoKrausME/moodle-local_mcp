@@ -61,6 +61,25 @@ final class rate_limiter_test extends advanced_testcase {
     }
 
     /**
+     * A zero or negative limit must not disable the limiter.
+     *
+     * @return void
+     */
+    public function test_nonpositive_limits_are_clamped(): void {
+        $this->resetAfterTest();
+        foreach ([0, -5] as $limit) {
+            $subject = "invalid-limit-" . random_string(16);
+            rate_limiter::check("mcp_read", $subject, $limit);
+            try {
+                rate_limiter::check("mcp_read", $subject, $limit);
+                $this->fail("The second request should be rate limited.");
+            } catch (api_exception $e) {
+                $this->assertSame("rate_limit_exceeded", $e->machinecode);
+            }
+        }
+    }
+
+    /**
      * test_connection_and_scope_isolation
      *
      * @return void
