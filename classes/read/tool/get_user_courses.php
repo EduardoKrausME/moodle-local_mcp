@@ -96,7 +96,7 @@ final class get_user_courses extends base_tool {
      */
     public function execute(array $arguments, authenticated_identity $identity): array {
         $out = [];
-        foreach (enrol_get_all_users_courses((int)$arguments['userid'], true, ['id', 'fullname', 'shortname', 'visible']) as $course) {
+        foreach (enrol_get_users_courses((int)$arguments["userid"], true, ["id", "fullname", "shortname", "visible"]) as $course) {
             $ctx = context_course::instance($course->id);
             if ((int)$arguments['userid'] === $identity->userid || has_capability('moodle/course:viewparticipants', $ctx, $identity->userid)) {
                 $out[] = ['id' => (int)$course->id, 'fullname' => $course->fullname, 'shortname' => $course->shortname, 'visible' => (bool)$course->visible];
