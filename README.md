@@ -83,7 +83,7 @@ MCP Client
       |                                   |
       |                            Moodle Login
       |                                   |
-      |                           Admin validation
+      |                    Authenticated, non-guest user
       |                                   |
       |                             Consent page
       |                                   |
@@ -273,18 +273,10 @@ introduced must be reauthorized.
 OAuth access tokens are short-lived opaque secrets. Refresh tokens rotate. Authorization codes are short-lived and
 single-use. Database records store SHA-256 hashes, never the complete secret.
 
-The consent page deliberately uses:
-
-```php
-$context = context_system::instance();
-
-if (!has_capability('moodle/site:config', $context)) {
-    // Render a normal Moodle denial page.
-}
-```
-
-It does **not** use `require_capability()` for the authorization experience, because a normal non-admin user must
-receive an understandable Moodle page rather than an uncaught authorization exception.
+The consent page accepts any active, authenticated Moodle user except guests. Connection authorization
+does not grant Moodle capabilities: each tool call checks its required capability in the resolved
+course, activity, category or system context, in addition to OAuth scopes. Site configuration
+and administration tools still require administrator permissions.
 
 ## Scopes and Moodle capabilities
 
@@ -519,14 +511,14 @@ plugin package.
 2. Make the Moodle site reachable over HTTPS and check the OAuth well-known configuration below.
 3. In ChatGPT on the web, use **Plugins → Add custom MCP server** and set the server URL to
    `https://YOUR-MOODLE/local/mcp/server.php`, with OAuth and DCR registration.
-4. Complete the normal Moodle sign-in and administrator consent.
+4. Sign in with an active, non-guest Moodle account and approve the OAuth consent.
 5. Use the connection with `mcp:read` and optionally `mcp:write`. The combined server
    lists only the tools allowed by the access token.
 
 ChatGPT can also connect to `read.php` and `write.php` independently.
-The Moodle consent screen currently restricts OAuth authorizations to site administrators
-(`moodle/site:config`), even when an individual tool has more granular capabilities.
-This is a deliberate access policy and is **not** an end-user permission system.
+OAuth connections are available to authenticated, non-guest Moodle users. Tool execution
+remains restricted by Moodle capabilities, checked against the context of each operation.
+A connection does not confer administrative permissions.
 
 ### Configure OAuth authorization-server discovery
 
