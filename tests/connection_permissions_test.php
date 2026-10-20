@@ -125,4 +125,68 @@ final class connection_permissions_test extends advanced_testcase {
             (new \mcptool_forum\write\create_activity())->get_required_capability()
         );
     }
+    /**
+     * Students may inspect only courses they can access through active enrolment.
+     *
+     * @return void
+     */
+    public function test_student_can_read_own_course_but_not_other_or_hidden_courses(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $student = $this->getDataGenerator()->create_user();
+        $accessible = $this->getDataGenerator()->create_course();
+        $unrelated = $this->getDataGenerator()->create_course();
+        $hidden = $this->getDataGenerator()->create_course(["visible" => 0]);
+
+        $studentrole = (int)$DB->get_field("role", "id", ["shortname" => "student"], MUST_EXIST);
+        $this->getDataGenerator()->enrol_user($student->id, $accessible->id, $studentrole);
+        $this->getDataGenerator()->enrol_user($student->id, $hidden->id, $studentrole);
+        $this->setUser($student);
+
+        capability_guard::check(
+            "moodle/course:view",
+            context_course::instance($accessible->id),
+            (int)$student->id
+        );
+
+        foreach ([$unrelated, $hidden] as $course) {
+            try {
+                capability_guard::check(
+                    "moodle/course:view",
+                    context_course::instance($course->id),
+                    (int)$student->id
+                );
+                $this->fail("A student must not read an inaccessible course.");
+            } catch (api_exception $e) {
+                $this->assertSame(403, $e->httpstatus);
+            }
+        }
+    }
+
+    /**
+     * Students may read their own profile and enrolments, not another user's.
+     *
+     * @return void
+     */
+    public function test_profile_permissions_allow_self_only(): void {
+        $this->resetAfterTest();
+        $student = $this->getDataGenerator()->create_user();
+        $other = $this->getDataGenerator()->create_user();
+        $this->setUser($student);
+
+        capability_guard::check(
+            "moodle/user:viewdetails",
+            \context_user::instance($student->id),
+            (int)$student->id
+        );
+
+        $this->expectException(api_exception::class);
+        capability_guard::check(
+            "moodle/user:viewdetails",
+            \context_user::instance($other->id),
+            (int)$student->id
+        );
+    }
+
 }
