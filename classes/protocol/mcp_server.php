@@ -40,6 +40,7 @@ use local_mcp\security\confirmation_service;
 use local_mcp\security\rate_limiter;
 use local_mcp\security\scope;
 use local_mcp\security\token_resolver;
+use local_mcp\security\user_access;
 use local_mcp\write\registry;
 use local_mcp\write\tool_interface;
 use stdClass;
@@ -107,7 +108,7 @@ final class mcp_server {
             $user = $DB->get_record('user', [
                 'id' => $identity->userid, 'deleted' => 0, 'suspended' => 0,
             ]);
-            if (!$user || empty($user->confirmed) || isguestuser($user)) {
+            if (!$user || !user_access::is_eligible($user)) {
                 throw new api_exception('invalid_user', 401);
             }
             manager::set_user($user);
