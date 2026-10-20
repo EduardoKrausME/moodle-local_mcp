@@ -24,6 +24,7 @@
 
 use local_mcp\oauth\authorization_service;
 use local_mcp\security\transport;
+use local_mcp\security\user_access;
 
 // phpcs:disable moodle.Files.RequireLogin.Missing
 require_once(__DIR__ . '/../../../config.php');
@@ -63,8 +64,7 @@ $PAGE->add_body_class("mcp-consent-page");
 
 // Any authenticated, non-guest Moodle user may authorize an MCP client.
 // Individual tools still enforce scopes and Moodle capabilities in their own contexts.
-if (!isloggedin() || isguestuser() || !empty($USER->suspended)
-        || !empty($USER->deleted) || empty($USER->confirmed)) {
+if (!isloggedin() || !user_access::is_eligible($USER)) {
     echo $OUTPUT->header();
     echo $OUTPUT->render_from_template('local_mcp/authorization_denied', [
         'title' => get_string('authorizationdeniedtitle', 'local_mcp'),
