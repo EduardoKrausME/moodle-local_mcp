@@ -72,7 +72,7 @@ final class search_courses extends base_tool {
      * @return string
      */
     public function get_required_capability(): string {
-        return 'moodle/course:view';
+        return "moodle/course:update";
     }
 
     /**
@@ -100,6 +100,19 @@ final class search_courses extends base_tool {
      * @throws dml_exception
      */
     public function resolve_context(array $arguments): context {
+        global $USER;
+
+        // Course-management roles may be granted at category or course level,
+        // without any matching permission at CONTEXT_SYSTEM.
+        $courses = get_user_capability_course("moodle/course:update", (int)$USER->id);
+        if ($courses) {
+            foreach ($courses as $course) {
+                $context = context_course::instance((int)$course->id, IGNORE_MISSING);
+                if ($context && has_capability("moodle/course:update", $context, (int)$USER->id)) {
+                    return $context;
+                }
+            }
+        }
         return context_system::instance();
     }
 
