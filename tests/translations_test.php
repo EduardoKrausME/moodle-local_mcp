@@ -36,7 +36,19 @@ final class translations_test extends advanced_testcase {
      * @return void
      */
     public function test_admin_strings_exist_in_both_languages(): void {
-        $keys = ["settingsaccessttl", "settingsaccessttl_desc", "settingsrefreshttl", "settingsrefreshttl_desc", "settingscodettl", "settingscodettl_desc", "settingsconfirmationttl", "settingsconfirmationttl_desc", "settingsdynamicregistration", "settingsdynamicregistration_desc", "settingslogmessages", "settingslogmessages_desc", "settingsrateread", "settingsratewrite", "settingsrateoauth", "settingsauditretention", "clientcolname", "clientcolclientid", "clientcoltype", "clientcoldynamic", "clientcolenabled", "clientcolcreated", "clientcollastused", "cachedef_ratelimit", "cachedef_tooldefinitions", "privacy:metadata:local_mcp_audit", "privacy:metadata:local_mcp_connections", "dashboardstatusok", "dashboardstatuspreview", "dashboardstatuspending", "dashboardstatuserror"];
+        $keys = [
+            "settingsaccessttl", "settingsaccessttl_desc", "settingsrefreshttl",
+            "settingsrefreshttl_desc", "settingscodettl", "settingscodettl_desc",
+            "settingsconfirmationttl", "settingsconfirmationttl_desc", "settingsdynamicregistration",
+            "settingsdynamicregistration_desc", "settingslogmessages", "settingslogmessages_desc",
+            "settingsrateread", "settingsratewrite", "settingsrateoauth",
+            "settingsauditretention", "clientcolname", "clientcolclientid",
+            "clientcoltype", "clientcoldynamic", "clientcolenabled",
+            "clientcolcreated", "clientcollastused", "cachedef_ratelimit",
+            "cachedef_tooldefinitions", "privacy:metadata:local_mcp_audit", "privacy:metadata:local_mcp_connections",
+            "dashboardstatusok", "dashboardstatuspreview", "dashboardstatuspending",
+            "dashboardstatuserror",
+        ];
 
         foreach (["en", "pt_br"] as $language) {
             $string = [];
