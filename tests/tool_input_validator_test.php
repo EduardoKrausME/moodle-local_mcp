@@ -87,24 +87,39 @@ final class tool_input_validator_test extends advanced_testcase {
         ];
         $valid = json_decode("{\"userid\":7,\"courses\":[{\"name\":\"Math\",\"status\":\"ready\"}]}");
         tool_input_validator::validate($schema, $valid);
-        $this->assert_invalid($schema, json_decode("{\"userid\":\"7\",\"courses\":[{\"name\":\"Hi\",\"status\":\"ready\"}]}"),
+        $this->assert_invalid($schema, json_decode(
+            "{\"userid\":\"7\",\"courses\":[{\"name\":\"Hi\",\"status\":\"read" .
+            "y\"}]}"),
             "arguments.userid");
         $this->assert_invalid($schema, json_decode("{\"courses\":[{\"name\":\"Hi\",\"status\":\"ready\"}]}"),
             "arguments.userid");
-        $this->assert_invalid($schema, json_decode("{\"userid\":0,\"courses\":[{\"name\":\"Hi\",\"status\":\"ready\"}]}"),
+        $this->assert_invalid($schema, json_decode(
+            "{\"userid\":0,\"courses\":[{\"name\":\"Hi\",\"status\":\"ready\"}" .
+            "]}"),
             "arguments.userid");
         $this->assert_invalid($schema, json_decode("{\"userid\":7,\"courses\":[]}"), "arguments.courses");
-        $this->assert_invalid($schema, json_decode("{\"userid\":7,\"courses\":[{\"name\":\"Hi\",\"status\":\"closed\"}]}"),
+        $this->assert_invalid($schema, json_decode(
+            "{\"userid\":7,\"courses\":[{\"name\":\"Hi\",\"status\":\"closed\"" .
+            "}]}"),
             "arguments.courses[0].status");
         $this->assert_invalid($schema, json_decode("{\"userid\":7,\"courses\":[{\"name\":\"\",\"status\":\"ready\"}]}"),
             "arguments.courses[0].name");
-        $this->assert_invalid($schema, json_decode("{\"userid\":7,\"courses\":[{\"name\":\"Too long\",\"status\":\"ready\"}]}"),
+        $this->assert_invalid($schema, json_decode(
+            "{\"userid\":7,\"courses\":[{\"name\":\"Too long\",\"status\":\"re" .
+            "ady\"}]}"),
             "arguments.courses[0].name");
-        $this->assert_invalid($schema, json_decode("{\"userid\":7,\"courses\":[{\"name\":\"Hi\",\"status\":\"ready\",\"extra\":true}]}"),
+        $this->assert_invalid($schema, json_decode(
+            "{\"userid\":7,\"courses\":[{\"name\":\"Hi\",\"status\":\"ready\"," .
+            "\"extra\":true}]}"),
             "arguments.courses[0].extra");
-        $this->assert_invalid($schema, json_decode("{\"userid\":7,\"courses\":[{\"name\":\"Hi\",\"status\":\"ready\"}],\"extra\":true}"),
+        $this->assert_invalid($schema, json_decode(
+            "{\"userid\":7,\"courses\":[{\"name\":\"Hi\",\"status\":\"ready\"}" .
+            "],\"extra\":true}"),
             "arguments.extra");
-        $this->assert_invalid($schema, json_decode("{\"userid\":7,\"courses\":[{\"name\":\"Hi\",\"status\":\"ready\"},{\"name\":\"Hi\",\"status\":\"draft\"},{\"name\":\"Hi\",\"status\":\"ready\"}]}"),
+        $this->assert_invalid($schema, json_decode(
+            "{\"userid\":7,\"courses\":[{\"name\":\"Hi\",\"status\":\"ready\"}" .
+            ",{\"name\":\"Hi\",\"status\":\"draft\"},{\"name\":\"Hi\",\"status" .
+            "\":\"ready\"}]}"),
             "arguments.courses");
     }
 
