@@ -165,9 +165,17 @@ final class tool_input_validator {
                 if (isset($schema["propertyNames"])) {
                     self::check($schema["propertyNames"], (string)$key, $childpath, $depth + 1);
                 }
+                $matchedpattern = false;
+                foreach ((array)($schema["patternProperties"] ?? []) as $pattern => $childschema) {
+                    $expression = "~" . str_replace("~", "\\~", $pattern) . "~u";
+                    if (@preg_match($expression, (string)$key) === 1) {
+                        self::check($childschema, $item, $childpath, $depth + 1);
+                        $matchedpattern = true;
+                    }
+                }
                 if (array_key_exists($key, $defined)) {
                     self::check($defined[$key], $item, $childpath, $depth + 1);
-                } else if (array_key_exists("additionalProperties", $schema)) {
+                } else if (!$matchedpattern && array_key_exists("additionalProperties", $schema)) {
                     self::check($schema["additionalProperties"], $item, $childpath, $depth + 1);
                 }
             }
