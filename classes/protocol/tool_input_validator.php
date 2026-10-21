@@ -175,7 +175,7 @@ final class tool_input_validator {
                 }
                 if (array_key_exists($key, $defined)) {
                     self::check($defined[$key], $item, $childpath, $depth + 1);
-                } elseif (!$matchedpattern && array_key_exists("additionalProperties", $schema)) {
+                } else if (!$matchedpattern && array_key_exists("additionalProperties", $schema)) {
                     self::check($schema["additionalProperties"], $item, $childpath, $depth + 1);
                 }
             }
