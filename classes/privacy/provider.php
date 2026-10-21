@@ -95,7 +95,10 @@ final class provider implements
             $key = match ($table) {
                 "local_mcp_connection" => "privacy:metadata:local_mcp_connections",
                 "local_mcp_audit" => "privacy:metadata:local_mcp_audit",
-                default => "privacy:metadata:" . $table,
+                "local_mcp_auth_code" => "privacy:metadata:local_mcp_auth_code",
+                "local_mcp_access_token" => "privacy:metadata:local_mcp_access_token",
+                "local_mcp_refresh_token" => "privacy:metadata:local_mcp_refresh_token",
+                "local_mcp_confirm" => "privacy:metadata:local_mcp_confirm",
             };
             $collection->add_database_table($table, array_fill_keys($columns, $key), $key);
         }

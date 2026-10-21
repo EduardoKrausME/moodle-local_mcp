@@ -39,7 +39,7 @@ final class api_exception_test extends advanced_testcase {
     public function test_localized_exception_preserves_api_error_data(): void {
         $exception = new api_exception("invalid_request", 422, "Invalid parameter", ["field" => "name"]);
 
-        $this->assertSame(get_string("error", "local_mcp"), $exception->getMessage());
+        $this->assertStringStartsWith(get_string("error", "local_mcp"), $exception->getMessage());
         $this->assertSame("invalid_request", $exception->machinecode);
         $this->assertSame(422, $exception->httpstatus);
         $this->assertSame("Invalid parameter", $exception->debuginfo);

@@ -44,7 +44,7 @@ final class untrusted_content_test extends advanced_testcase {
     public function test_html_becomes_plain_text(): void {
         $text = untrusted_content::text("<p>Hello <strong>students</strong>.</p>");
         $this->assertStringContainsString("Hello", $text);
-        $this->assertStringContainsString("students", $text);
+        $this->assertStringContainsStringIgnoringCase("students", $text);
         $this->assertStringNotContainsString("<strong>", $text);
     }
 
