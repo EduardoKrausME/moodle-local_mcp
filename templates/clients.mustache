@@ -19,19 +19,21 @@
 
     Example context (json):
     {
-        Aqui tem que criar o context em inglês
+        "rows": [{"name": "Example", "clientid": "client-1", "type": "public",
+            "dynamic": "Yes", "enabled": "Yes", "created": "2026-10-20",
+            "lastused": "2026-10-20"}]
     }
 }}
 <table class="generaltable">
     <thead>
     <tr>
-        <th>Name</th>
-        <th>Client ID</th>
-        <th>Type</th>
-        <th>Dynamic</th>
-        <th>Enabled</th>
-        <th>Created</th>
-        <th>Last used</th>
+        <th>{{#str}}clientcolname, local_mcp{{/str}}</th>
+        <th>{{#str}}clientcolclientid, local_mcp{{/str}}</th>
+        <th>{{#str}}clientcoltype, local_mcp{{/str}}</th>
+        <th>{{#str}}clientcoldynamic, local_mcp{{/str}}</th>
+        <th>{{#str}}clientcolenabled, local_mcp{{/str}}</th>
+        <th>{{#str}}clientcolcreated, local_mcp{{/str}}</th>
+        <th>{{#str}}clientcollastused, local_mcp{{/str}}</th>
     </tr>
     </thead>
     <tbody>

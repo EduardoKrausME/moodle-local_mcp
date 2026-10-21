@@ -41,26 +41,32 @@ if ($hassiteconfig) {
             get_string($key, 'local_mcp'), new moodle_url($url), "local/mcp:manage"));
     }
 
-    $settings = new admin_settingpage('local_mcp_settings', get_string('settings', 'local_mcp'), "local/mcp:manage");
-    $settings->add(new admin_setting_configduration('local_mcp/accessttl', 'Access token lifetime',
-        'Default lifetime for OAuth access tokens.', 3600, 60));
-    $settings->add(new admin_setting_configduration('local_mcp/refreshttl', 'Refresh token lifetime',
-        'Default lifetime for OAuth refresh tokens.', 90 * DAYSECS, HOURSECS));
-    $settings->add(new admin_setting_configduration('local_mcp/codettl', 'Authorization code lifetime',
-        'Authorization codes are short lived and single use.', 300, 60));
-    $settings->add(new admin_setting_configduration('local_mcp/confirmationttl', 'Confirmation lifetime',
-        "One-time WRITE confirmation token lifetime.", 1800, 30));
-    $settings->add(new admin_setting_configcheckbox('local_mcp/dynamicregistration', 'Dynamic client registration',
-        'Allow standards-based public clients to register redirect URIs. Admin consent is still required.', 1));
-    $settings->add(new admin_setting_configcheckbox('local_mcp/logmessages',
-        'Log MCP JSON messages to PHP error_log',
-        'Log incoming and outgoing JSON-RPC bodies for server/read/write endpoints. '
-        . 'Known secrets and binaries are masked, and large payloads split into numbered fragments. '
-        . 'CAUTION: ordinary Moodle data can contain personal information. '
-        . 'Disable after debugging and restrict access to server logs.', 1));
-    $settings->add(new admin_setting_configtext('local_mcp/rateread', 'READ requests/minute', '', rate_limiter::DEFAULT_READ_PER_MINUTE, PARAM_INT));
-    $settings->add(new admin_setting_configtext('local_mcp/ratewrite', 'WRITE requests/minute', '', rate_limiter::DEFAULT_WRITE_PER_MINUTE, PARAM_INT));
-    $settings->add(new admin_setting_configtext('local_mcp/rateoauth', 'OAuth requests/minute', '', rate_limiter::DEFAULT_OAUTH_PER_MINUTE, PARAM_INT));
-    $settings->add(new admin_setting_configtext('local_mcp/auditretention', 'Audit retention days', '', 180, PARAM_INT));
+    $settings = new admin_settingpage("local_mcp_settings", get_string("settings", "local_mcp"));
+    $settings->add(new admin_setting_configduration("local_mcp/accessttl",
+        get_string("settingsaccessttl", "local_mcp"),
+        get_string("settingsaccessttl_desc", "local_mcp"), 3600, 60));
+    $settings->add(new admin_setting_configduration("local_mcp/refreshttl",
+        get_string("settingsrefreshttl", "local_mcp"),
+        get_string("settingsrefreshttl_desc", "local_mcp"), 90 * DAYSECS, HOURSECS));
+    $settings->add(new admin_setting_configduration("local_mcp/codettl",
+        get_string("settingscodettl", "local_mcp"),
+        get_string("settingscodettl_desc", "local_mcp"), 300, 60));
+    $settings->add(new admin_setting_configduration("local_mcp/confirmationttl",
+        get_string("settingsconfirmationttl", "local_mcp"),
+        get_string("settingsconfirmationttl_desc", "local_mcp"), 1800, 30));
+    $settings->add(new admin_setting_configcheckbox("local_mcp/dynamicregistration",
+        get_string("settingsdynamicregistration", "local_mcp"),
+        get_string("settingsdynamicregistration_desc", "local_mcp"), 1));
+    $settings->add(new admin_setting_configcheckbox("local_mcp/logmessages",
+        get_string("settingslogmessages", "local_mcp"),
+        get_string("settingslogmessages_desc", "local_mcp"), 1));
+    $settings->add(new admin_setting_configtext("local_mcp/rateread",
+        get_string("settingsrateread", "local_mcp"), "", rate_limiter::DEFAULT_READ_PER_MINUTE, PARAM_INT));
+    $settings->add(new admin_setting_configtext("local_mcp/ratewrite",
+        get_string("settingsratewrite", "local_mcp"), "", rate_limiter::DEFAULT_WRITE_PER_MINUTE, PARAM_INT));
+    $settings->add(new admin_setting_configtext("local_mcp/rateoauth",
+        get_string("settingsrateoauth", "local_mcp"), "", rate_limiter::DEFAULT_OAUTH_PER_MINUTE, PARAM_INT));
+    $settings->add(new admin_setting_configtext("local_mcp/auditretention",
+        get_string("settingsauditretention", "local_mcp"), "", 180, PARAM_INT));
     $ADMIN->add('local_mcp_category', $settings);
 }

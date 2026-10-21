@@ -32,10 +32,19 @@ $PAGE->set_context($context);
 $PAGE->set_title(get_string('oauthclients', 'local_mcp'));
 $PAGE->set_heading(get_string('oauthclients', 'local_mcp'));
 global $DB;
+$yes = get_string("yes");
+$no = get_string("no");
 $rows = [];
-foreach ($DB->get_records('local_mcp_oauth_client', null, 'timecreated DESC') as $r) {
-    $rows[] = ['clientid' => s($r->clientid), 'name' => s($r->name), 'type' => s($r->clienttype), 'dynamic' => $r->dynamic ? 'Yes' : 'No',
-        'enabled' => $r->enabled ? 'Yes' : 'No', 'created' => userdate($r->timecreated), 'lastused' => $r->lastused ? userdate($r->lastused) : '-'];
+foreach ($DB->get_records("local_mcp_oauth_client", null, "timecreated DESC") as $client) {
+    $rows[] = [
+        "clientid" => s($client->clientid),
+        "name" => s($client->name),
+        "type" => s($client->clienttype),
+        "dynamic" => $client->dynamic ? $yes : $no,
+        "enabled" => $client->enabled ? $yes : $no,
+        "created" => userdate($client->timecreated),
+        "lastused" => $client->lastused ? userdate($client->lastused) : "-",
+    ];
 }
 echo $OUTPUT->header();
 echo html_writer::link(new moodle_url('/local/mcp/admin/dashboard.php'),

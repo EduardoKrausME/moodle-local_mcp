@@ -44,6 +44,12 @@ if (!in_array($side, ['', 'read', 'write'], true)) {
 if (!in_array($status, ['', 'ok', 'preview', 'confirmation_pending', 'error'], true)) {
     $status = '';
 }
+$statuslabels = [
+    "ok" => get_string("dashboardstatusok", "local_mcp"),
+    "preview" => get_string("dashboardstatuspreview", "local_mcp"),
+    "confirmation_pending" => get_string("dashboardstatuspending", "local_mcp"),
+    "error" => get_string("dashboardstatuserror", "local_mcp"),
+];
 $filterparams = ['filtering' => 1, 'side' => $side, 'status' => $status,
     'tool' => $tool, 'userid' => $userid, 'onlychatgpt' => $onlychatgpt];
 $url = new moodle_url('/local/mcp/admin/audit.php', $filterparams);
@@ -117,6 +123,7 @@ foreach ($records as $record) {
         'client' => $clientname,
         'connection' => $record->connectionid ?: '-',
         'status' => $record->status ?? '-',
+        "displaystatus" => $statuslabels[$record->status ?? ""] ?? ($record->status ?? "-"),
         'objects' => $metadata ? json_encode($metadata,
             JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE) : '-',
         'requestid' => $requestid ?: '-',
@@ -162,9 +169,8 @@ echo html_writer::label(get_string('auditside', 'local_mcp'), 'audit-side');
 echo html_writer::select(['' => get_string('all'), 'read' => 'READ', 'write' => 'WRITE'],
     'side', $side, false, ['id' => 'audit-side', 'class' => 'mr-2']);
 echo html_writer::label(get_string('auditstatus', 'local_mcp'), 'audit-status');
-echo html_writer::select(['' => get_string('all'), 'ok' => 'OK', 'preview' => 'Preview',
-    'confirmation_pending' => 'Confirmation pending', 'error' => 'Error'],
-    'status', $status, false, ['id' => 'audit-status', 'class' => 'mr-2']);
+echo html_writer::select(["" => get_string("all")] + $statuslabels,
+    "status", $status, false, ["id" => "audit-status", "class" => "mr-2"]);
 echo html_writer::label(get_string('audittool', 'local_mcp'), 'audit-tool');
 echo html_writer::empty_tag('input', ['id' => 'audit-tool', 'name' => 'tool',
     'value' => $tool, 'type' => 'text', 'maxlength' => 128, 'class' => 'mr-2']);
