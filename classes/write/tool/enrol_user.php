@@ -28,6 +28,7 @@ use context;
 use context_course;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
+use local_mcp\security\capability_guard;
 
 /**
  * Class enrol_user.
@@ -107,8 +108,9 @@ final class enrol_user extends base_tool {
      * @return array Return value.
      */
     public function preview(array $arguments, authenticated_identity $identity): array {
+        $this->validate_role($arguments, $identity);
         $ctx = $this->resolve_context($arguments);
-        return ['courseid' => (int)$arguments['courseid'], 'userid' => (int)$arguments['userid'],
+        return ['roleid' => (int)$arguments["roleid"], 'courseid' => (int)$arguments['courseid'], 'userid' => (int)$arguments['userid'],
             'already_enrolled' => is_enrolled($ctx, (int)$arguments['userid'])];
     }
 
@@ -120,6 +122,7 @@ final class enrol_user extends base_tool {
      * @return array Return value.
      */
     public function execute(array $arguments, authenticated_identity $identity): array {
+        $this->validate_role($arguments, $identity);
         $instances = enrol_get_instances((int)$arguments['courseid'], true);
         $instance = null;
         foreach ($instances as $candidate) {
@@ -134,5 +137,23 @@ final class enrol_user extends base_tool {
         $plugin = enrol_get_plugin('manual');
         $plugin->enrol_user($instance, (int)$arguments['userid'], (int)$arguments['roleid']);
         return ['enrolled' => true, 'courseid' => (int)$arguments['courseid'], 'userid' => (int)$arguments['userid']];
+    }
+
+    /**
+     * Check both enrolment permission and assignability of the requested role.
+     *
+     * @param array $arguments Validated tool arguments.
+     * @param authenticated_identity $identity OAuth user performing the action.
+     * @return void
+     */
+    private function validate_role(array $arguments, authenticated_identity $identity): void {
+        $context = $this->resolve_context($arguments);
+        capability_guard::check("enrol/manual:enrol", $context, $identity->userid);
+        capability_guard::check("moodle/role:assign", $context, $identity->userid);
+
+        $roles = get_assignable_roles($context, ROLENAME_ALIAS, false, $identity->userid);
+        if (!array_key_exists((int)$arguments["roleid"], $roles)) {
+            throw new api_exception("permission_denied", 403);
+        }
     }
 }
