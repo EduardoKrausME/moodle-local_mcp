@@ -85,26 +85,26 @@ final class tool_input_validator_test extends advanced_testcase {
             ],
             "additionalProperties" => false,
         ];
-        $valid = json_decode('{"userid":7,"courses":[{"name":"Math","status":"ready"}]}');
+        $valid = json_decode("{\"userid\":7,\"courses\":[{\"name\":\"Math\",\"status\":\"ready\"}]}");
         tool_input_validator::validate($schema, $valid);
-        $this->assert_invalid($schema, json_decode('{"userid":"7","courses":[{"name":"Hi","status":"ready"}]}'),
+        $this->assert_invalid($schema, json_decode("{\"userid\":\"7\",\"courses\":[{\"name\":\"Hi\",\"status\":\"ready\"}]}"),
             "arguments.userid");
-        $this->assert_invalid($schema, json_decode('{"courses":[{"name":"Hi","status":"ready"}]}'),
+        $this->assert_invalid($schema, json_decode("{\"courses\":[{\"name\":\"Hi\",\"status\":\"ready\"}]}"),
             "arguments.userid");
-        $this->assert_invalid($schema, json_decode('{"userid":0,"courses":[{"name":"Hi","status":"ready"}]}'),
+        $this->assert_invalid($schema, json_decode("{\"userid\":0,\"courses\":[{\"name\":\"Hi\",\"status\":\"ready\"}]}"),
             "arguments.userid");
-        $this->assert_invalid($schema, json_decode('{"userid":7,"courses":[]}'), "arguments.courses");
-        $this->assert_invalid($schema, json_decode('{"userid":7,"courses":[{"name":"Hi","status":"closed"}]}'),
+        $this->assert_invalid($schema, json_decode("{\"userid\":7,\"courses\":[]}"), "arguments.courses");
+        $this->assert_invalid($schema, json_decode("{\"userid\":7,\"courses\":[{\"name\":\"Hi\",\"status\":\"closed\"}]}"),
             "arguments.courses[0].status");
-        $this->assert_invalid($schema, json_decode('{"userid":7,"courses":[{"name":"","status":"ready"}]}'),
+        $this->assert_invalid($schema, json_decode("{\"userid\":7,\"courses\":[{\"name\":\"\",\"status\":\"ready\"}]}"),
             "arguments.courses[0].name");
-        $this->assert_invalid($schema, json_decode('{"userid":7,"courses":[{"name":"Too long","status":"ready"}]}'),
+        $this->assert_invalid($schema, json_decode("{\"userid\":7,\"courses\":[{\"name\":\"Too long\",\"status\":\"ready\"}]}"),
             "arguments.courses[0].name");
-        $this->assert_invalid($schema, json_decode('{"userid":7,"courses":[{"name":"Hi","status":"ready","extra":true}]}'),
+        $this->assert_invalid($schema, json_decode("{\"userid\":7,\"courses\":[{\"name\":\"Hi\",\"status\":\"ready\",\"extra\":true}]}"),
             "arguments.courses[0].extra");
-        $this->assert_invalid($schema, json_decode('{"userid":7,"courses":[{"name":"Hi","status":"ready"}],"extra":true}'),
+        $this->assert_invalid($schema, json_decode("{\"userid\":7,\"courses\":[{\"name\":\"Hi\",\"status\":\"ready\"}],\"extra\":true}"),
             "arguments.extra");
-        $this->assert_invalid($schema, json_decode('{"userid":7,"courses":[{"name":"Hi","status":"ready"},{"name":"Hi","status":"draft"},{"name":"Hi","status":"ready"}]}'),
+        $this->assert_invalid($schema, json_decode("{\"userid\":7,\"courses\":[{\"name\":\"Hi\",\"status\":\"ready\"},{\"name\":\"Hi\",\"status\":\"draft\"},{\"name\":\"Hi\",\"status\":\"ready\"}]}"),
             "arguments.courses");
     }
 
@@ -124,6 +124,23 @@ final class tool_input_validator_test extends advanced_testcase {
     }
 
     /**
+     * Properties matching a declared pattern are not additional properties.
+     *
+     * @return void
+     */
+    public function test_pattern_properties_and_closed_objects(): void {
+        $schema = [
+            "type" => "object",
+            "properties" => (object)[],
+            "patternProperties" => ["^x-" => ["type" => "integer", "minimum" => 0]],
+            "additionalProperties" => false,
+        ];
+        tool_input_validator::validate($schema, json_decode("{\"x-count\":2}"));
+        $this->assert_invalid($schema, json_decode("{\"x-count\":\"2\"}"), "arguments.x-count");
+        $this->assert_invalid($schema, json_decode("{\"other\":2}"), "arguments.other");
+    }
+
+    /**
      * Boolean and numeric values are never silently coerced.
      *
      * @return void
@@ -139,12 +156,12 @@ final class tool_input_validator_test extends advanced_testcase {
             ],
             "additionalProperties" => false,
         ];
-        tool_input_validator::validate($schema, json_decode('{"dry_run":false,"score":0.25,"ids":[1,2]}'));
-        $this->assert_invalid($schema, json_decode('{"dry_run":"false"}'), "arguments.dry_run");
-        $this->assert_invalid($schema, json_decode('{"score":0}'), "arguments.score");
-        $this->assert_invalid($schema, json_decode('{"score":11}'), "arguments.score");
-        $this->assert_invalid($schema, json_decode('{"ids":[1,"2"]}'), "arguments.ids[1]");
-        $this->assert_invalid($schema, json_decode('{"ids":[1,1]}'), "arguments.ids");
+        tool_input_validator::validate($schema, json_decode("{\"dry_run\":false,\"score\":0.25,\"ids\":[1,2]}"));
+        $this->assert_invalid($schema, json_decode("{\"dry_run\":\"false\"}"), "arguments.dry_run");
+        $this->assert_invalid($schema, json_decode("{\"score\":0}"), "arguments.score");
+        $this->assert_invalid($schema, json_decode("{\"score\":11}"), "arguments.score");
+        $this->assert_invalid($schema, json_decode("{\"ids\":[1,\"2\"]}"), "arguments.ids[1]");
+        $this->assert_invalid($schema, json_decode("{\"ids\":[1,1]}"), "arguments.ids");
     }
 
     /**
