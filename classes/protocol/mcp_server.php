@@ -445,6 +445,7 @@ final class mcp_server {
      * @param array $params Parameter params.
      * @param authenticated_identity $identity Parameter identity.
      * @param string $rawtoken Parameter rawtoken.
+     * @param mixed $originalarguments Original JSON arguments preserving objects and arrays.
      * @return array Return value.
      */
     private function call_tool(string                 $name, array $arguments, array $params,
