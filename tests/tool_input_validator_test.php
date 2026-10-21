@@ -85,7 +85,7 @@ final class tool_input_validator_test extends advanced_testcase {
             ],
             "additionalProperties" => false,
         ];
-        $valid = json_decode('{"userid":7,"courses":[{"name":"Course","status":"ready"}]}');
+        $valid = json_decode('{"userid":7,"courses":[{"name":"Math","status":"ready"}]}');
         tool_input_validator::validate($schema, $valid);
         $this->assert_invalid($schema, json_decode('{"userid":"7","courses":[{"name":"Hi","status":"ready"}]}'),
             "arguments.userid");
