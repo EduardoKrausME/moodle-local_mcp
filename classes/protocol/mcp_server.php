@@ -299,8 +299,8 @@ final class mcp_server {
                         'tool' => $toolname, 'userid' => $identity->userid]);
                     $error = [
                         'error' => 'internal_error',
-                        'message' => 'The Moodle tool failed internally. Check the server PHP log '
-                            . 'for reference ' . $reference . '.',
+                        "message" => "The Moodle tool failed internally. Reference " . $reference . "."
+                            . (diagnostics::enabled() ? " Check the server PHP log for details." : ""),
                         'reference' => $reference,
                     ];
                     $error = discovery::with_site_identity($error);

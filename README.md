@@ -141,8 +141,10 @@ update_course accept summaryformat=1 (HTML), and update_course accepts categoryi
 Course changes check Moodle capabilities on the course and destination category.
 
 For unexpected tools/call exceptions, the server returns a generic error with
-a diagnostic reference and logs the PHP exception class and source location
-with that reference. No bearer tokens or tool arguments are logged.
+a diagnostic reference. Only when `$CFG->local_mcp_debugger` is enabled does it
+also log the PHP exception class and sanitized source location under that
+reference, allowing failed MCP calls to be correlated with the PHP log.
+Metadata diagnostics never include bearer tokens or tool argument values.
 
 After updating Moodle, refresh the custom MCP connector in ChatGPT so its
 advertised input schemas and list of tools reflect the new plugin version.
