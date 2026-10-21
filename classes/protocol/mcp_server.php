@@ -189,7 +189,8 @@ final class mcp_server {
                         (array)($params['arguments'] ?? []),
                         $params,
                         $identity,
-                        $rawtoken
+                        $rawtoken,
+                        http::original_tool_arguments()
                     );
                     // Images are sent as visual MCP content, not embedded into textual JSON.
                     $additionalcontent = $result['_mcp_content'] ?? [];
@@ -243,6 +244,18 @@ final class mcp_server {
                     ], 'WARNING');
                     diagnostics::exception($e, ['side' => $this->side, 'tool' => $toolname,
                         'userid' => $identity->userid], 'WARNING');
+                    if ($e->machinecode === "invalid_params") {
+                        // Schema violations use JSON-RPC -32602, not a tool-result error.
+                        http::json([
+                            "jsonrpc" => "2.0",
+                            "id" => $id,
+                            "error" => [
+                                "code" => -32602,
+                                "message" => "Invalid params",
+                                "data" => ["error" => "invalid_params", "details" => $e->details],
+                            ],
+                        ]);
+                    }
                     $error = [
                         'error' => $e->machinecode,
                         'message' => $e->getMessage(),
@@ -331,40 +344,8 @@ final class mcp_server {
             if (!$identity->has_scope($requiredscope)) {
                 continue;
             }
-            $schema = $tool->get_input_schema();
-            if ($iswrite && ($tool->requires_confirmation() || $tool->is_destructive())) {
-                $schema['properties']['confirmation_token'] = [
-                    'type' => 'string',
-                    'description' => 'One-time token returned when confirmation_required is true. '
-                        . 'Never retry with this token until the user explicitly approves the preview. '
-                        . 'Then repeat the same tool with identical original arguments plus this token.',
-                ];
-            }
-            if ($iswrite && $tool->supports_dry_run()) {
-                $schema['properties']['dry_run'] = [
-                    'type' => 'boolean',
-                    'description' => 'Preview without changing Moodle data.',
-                ];
-            }
-            // Validate provider schemas here because client-side MCP errors never reach PHP.
-            $issues = [];
-            $schema = tool_schema::normalize($schema, $issues);
             $invalid = false;
-            foreach ($issues as $issue) {
-                $repaired = $issue['repaired'];
-                diagnostics::event('tool_schema_invalid', [
-                    'side' => $this->side,
-                    'tool' => $tool->get_name(),
-                    'provider' => get_class($tool),
-                    'schema_path' => $issue['path'],
-                    'expected' => $issue['expected'],
-                    'actual' => $issue['actual'],
-                    'resolution' => $repaired ? 'normalized' : 'excluded',
-                ], $repaired ? 'WARNING' : 'ERROR');
-                if (!$repaired) {
-                    $invalid = true;
-                }
-            }
+            $schema = $this->normalized_tool_schema($tool, $iswrite, $invalid);
             if ($invalid) {
                 continue;
             }
@@ -395,6 +376,52 @@ final class mcp_server {
     }
 
     /**
+     * Normalize the schema shared by tools/list and runtime validation.
+     *
+     * @param object $tool Tool provider.
+     * @param bool $iswrite Whether this is a WRITE tool.
+     * @param bool $invalid Whether the schema has unrecoverable problems.
+     * @return array
+     */
+    private function normalized_tool_schema(object $tool, bool $iswrite, bool &$invalid): array {
+        $schema = $tool->get_input_schema();
+        if ($iswrite && ($tool->requires_confirmation() || $tool->is_destructive())) {
+            $schema['properties']['confirmation_token'] = [
+                'type' => 'string',
+                'description' => 'One-time token returned when confirmation_required is true. '
+                    . 'Never retry with this token until the user explicitly approves the preview. '
+                    . 'Then repeat the same tool with identical original arguments plus this token.',
+            ];
+        }
+        if ($iswrite && $tool->supports_dry_run()) {
+            $schema['properties']['dry_run'] = [
+                'type' => 'boolean',
+                'description' => 'Preview without changing Moodle data.',
+            ];
+        }
+        // Validate provider schemas here because client-side MCP errors never reach PHP.
+        $issues = [];
+        $schema = tool_schema::normalize($schema, $issues);
+        $invalid = false;
+        foreach ($issues as $issue) {
+            $repaired = $issue['repaired'];
+            diagnostics::event('tool_schema_invalid', [
+                'side' => $this->side,
+                'tool' => $tool->get_name(),
+                'provider' => get_class($tool),
+                'schema_path' => $issue['path'],
+                'expected' => $issue['expected'],
+                'actual' => $issue['actual'],
+                'resolution' => $repaired ? 'normalized' : 'excluded',
+            ], $repaired ? 'WARNING' : 'ERROR');
+            if (!$repaired) {
+                $invalid = true;
+            }
+        }
+        return $schema;
+    }
+
+    /**
      * Look up tools only from the registry sides enabled by this endpoint.
      *
      * @return array
@@ -421,7 +448,7 @@ final class mcp_server {
      * @return array Return value.
      */
     private function call_tool(string                 $name, array $arguments, array $params,
-                               authenticated_identity $identity, string $rawtoken): array {
+                               authenticated_identity $identity, string $rawtoken, mixed $originalarguments = null): array {
         $tools = $this->get_tools();
         if (!isset($tools[$name])) {
             throw new api_exception('tool_not_found', 404);
@@ -441,6 +468,26 @@ final class mcp_server {
                 $limit ?: ($iswrite
                     ? rate_limiter::DEFAULT_WRITE_PER_MINUTE
                     : rate_limiter::DEFAULT_READ_PER_MINUTE));
+        }
+        $invalid = false;
+        $schema = $this->normalized_tool_schema($tool, $iswrite, $invalid);
+        if ($invalid) {
+            throw new api_exception("invalid_tool_schema", 500);
+        }
+        // Validate the original JSON before context resolution, confirmation, or execution.
+        if (array_key_exists("arguments", $params) && !is_array($params["arguments"])) {
+            throw new api_exception("invalid_params", 400, "Tool arguments must be a JSON object.",
+                ["path" => "arguments", "reason" => "incorrect JSON type"]);
+        }
+        tool_input_validator::validate($schema, $originalarguments ?? (object)$arguments);
+        // Legacy control parameters outside arguments must also preserve their JSON types.
+        if (array_key_exists("confirmation_token", $params) && !is_string($params["confirmation_token"])) {
+            throw new api_exception("invalid_params", 400, "Invalid confirmation token type.",
+                ["path" => "params.confirmation_token", "reason" => "incorrect JSON type"]);
+        }
+        if (array_key_exists("dry_run", $params) && !is_bool($params["dry_run"])) {
+            throw new api_exception("invalid_params", 400, "Invalid dry run flag type.",
+                ["path" => "params.dry_run", "reason" => "incorrect JSON type"]);
         }
         $confirmation = (string)($arguments['confirmation_token'] ?? ($params['confirmation_token'] ?? ''));
         $dryrun = !empty($arguments['dry_run']) || !empty($params['dry_run']);
