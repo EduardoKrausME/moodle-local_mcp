@@ -44,6 +44,49 @@ final class client_service {
     }
 
     /**
+     * Disable a registered OAuth client and invalidate all of its outstanding credentials.
+     *
+     * @param int $clientid Internal client record ID.
+     * @return void
+     */
+    public static function disable(int $clientid): void {
+        global $DB;
+
+        $client = $DB->get_record("local_mcp_oauth_client", ["id" => $clientid], "*", MUST_EXIST);
+        if (!$client->enabled) {
+            return;
+        }
+
+        $transaction = $DB->start_delegated_transaction();
+        $DB->update_record("local_mcp_oauth_client", (object)[
+            "id" => $clientid,
+            "enabled" => 0,
+            "timemodified" => time(),
+        ]);
+
+        // Revoke connections through the existing service to preserve audit events.
+        $connections = $DB->get_recordset("local_mcp_connection",
+            ["clientid" => $clientid, "enabled" => 1], "", "id");
+        try {
+            foreach ($connections as $connection) {
+                connection_service::revoke((int)$connection->id);
+            }
+        } finally {
+            $connections->close();
+        }
+
+        // Include tokens/codes created before a connection was persisted.
+        $now = time();
+        $DB->set_field_select("local_mcp_access_token", "revokedat", $now,
+            "clientid = ? AND revokedat IS NULL", [$clientid]);
+        $DB->set_field_select("local_mcp_refresh_token", "revokedat", $now,
+            "clientid = ? AND revokedat IS NULL", [$clientid]);
+        $DB->delete_records("local_mcp_auth_code", ["clientid" => $clientid, "used" => 0]);
+        $DB->delete_records("local_mcp_confirm", ["clientid" => $clientid, "used" => 0]);
+        $transaction->allow_commit();
+    }
+
+    /**
      * Method validate_redirect_uri.
      *
      * @param stdClass $client Parameter client.

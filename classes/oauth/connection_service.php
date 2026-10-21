@@ -39,6 +39,10 @@ final class connection_service {
      */
     public static function revoke(int $connectionid): void {
         global $DB;
+        $connection = $DB->get_record("local_mcp_connection", ["id" => $connectionid], "*", MUST_EXIST);
+        if (!$connection->enabled || $connection->revokedat) {
+            return;
+        }
         $now = time();
         $transaction = $DB->start_delegated_transaction();
         $DB->update_record('local_mcp_connection', (object)[
@@ -50,7 +54,6 @@ final class connection_service {
             'connectionid = ? AND revokedat IS NULL', [$connectionid]);
         $DB->set_field_select('local_mcp_refresh_token', 'revokedat', $now,
             'connectionid = ? AND revokedat IS NULL', [$connectionid]);
-        $connection = $DB->get_record('local_mcp_connection', ['id' => $connectionid], '*', MUST_EXIST);
         $DB->delete_records('local_mcp_auth_code', ['clientid' => $connection->clientid, 'userid' => $connection->userid, 'used' => 0]);
         $DB->delete_records('local_mcp_confirm', ['connectionid' => $connectionid, 'used' => 0]);
         $transaction->allow_commit();
