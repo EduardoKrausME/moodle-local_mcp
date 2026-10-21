@@ -156,6 +156,7 @@ $string['dashboardwritecompletedtoday'] = 'Operações WRITE executadas hoje';
 $string['dashboardwritesummary'] = 'APIs WRITE por plugin';
 $string['dashboardwritesummaryhelp'] = 'Ferramentas descobertas no registro WRITE ativo, agrupadas pelo componente Moodle.';
 $string['dashboardwritetoday'] = 'Chamadas WRITE hoje';
+$string["error"] = "Erro da API MCP";
 $string['importgiftquestionbank'] = 'Importar banco de questões GIFT';
 $string['importgiftquestionbank_desc'] = 'Importa até 500 questões GIFT UTF-8 em uma categoria existente (categoryid) ou cria uma nova (name), em uma única operação confirmada.';
 $string['mcp:manage'] = 'Gerenciar o Moodle MCP';
