@@ -22,7 +22,9 @@
     Example context (json):
     {
         "clientname": "ChatGPT",
-        "origin": "https://chatgpt.com",
+        "origin": "https://callback.example.org",
+        "redirecturi": "https://callback.example.org/oauth/callback",
+        "unverified": true,
         "sitename": "Example Moodle",
         "sitedomain": "moodle.example.org",
         "read": true,
@@ -104,6 +106,18 @@
                     </div>
                 </div>
             </div>
+
+            <div class="local-mcp-consent__redirect">
+                <strong>{{#str}}oauthconsentredirecturi, local_mcp{{/str}}</strong>
+                <code>{{redirecturi}}</code>
+            </div>
+
+            {{#unverified}}
+                <div class="local-mcp-consent__unverified" role="note">
+                    <strong>{{#str}}oauthconsentunverifiedtitle, local_mcp{{/str}}</strong>
+                    <p>{{#str}}oauthconsentunverifiedbody, local_mcp{{/str}}</p>
+                </div>
+            {{/unverified}}
 
             <div class="local-mcp-consent__permissions-heading">
                 <h3>{{#str}}oauthconsentpermissions, local_mcp{{/str}}</h3>

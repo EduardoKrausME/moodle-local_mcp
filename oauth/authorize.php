@@ -23,6 +23,7 @@
  */
 
 use local_mcp\oauth\authorization_service;
+use local_mcp\oauth\consent_presentation;
 use local_mcp\security\transport;
 use local_mcp\security\user_access;
 
@@ -104,16 +105,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     redirect(new moodle_url($redirecturi, ['code' => $code, 'state' => $state]));
 }
 
-$origin = '';
-$parts = parse_url((string)($client->clienturi ?: $redirecturi));
-if (!empty($parts['scheme']) && !empty($parts['host'])) {
-    $origin = $parts['scheme'] . '://' . $parts['host'];
-}
+$consentdetails = consent_presentation::details($client, $redirecturi);
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('local_mcp/authorization_consent', [
     // Moodle Mustache escapes these values when rendering untrusted client metadata.
     'clientname' => $client->name,
-    'origin' => $origin,
+    "origin" => $consentdetails["origin"],
+    "redirecturi" => $consentdetails["redirecturi"],
+    "unverified" => $consentdetails["unverified"],
     'sitename' => $SITE->fullname,
     'sitedomain' => (string)parse_url($CFG->wwwroot, PHP_URL_HOST),
     'read' => in_array('mcp:read', $scopes, true),

@@ -792,3 +792,43 @@
 }
 
 /*# sourceMappingURL=styles.css.map */
+
+/* Consent destinations come from validated OAuth callbacks, not client-provided website claims. */
+.mcp-consent-page .local-mcp-consent__redirect {
+  margin-top: 12px;
+  padding: 13px 18px;
+  border: 1px solid var(--mcp-line);
+  border-radius: 12px;
+  background: #f8faff;
+}
+.mcp-consent-page .local-mcp-consent__redirect strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--mcp-ink);
+  font-size: 12px;
+}
+.mcp-consent-page .local-mcp-consent__redirect code {
+  display: block;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  color: #263e63;
+  font-size: 12px;
+}
+.mcp-consent-page .local-mcp-consent__unverified {
+  margin-top: 12px;
+  padding: 15px 18px;
+  border: 1px solid #e9c788;
+  border-radius: 12px;
+  background: #fff9ed;
+}
+.mcp-consent-page .local-mcp-consent__unverified strong {
+  display: block;
+  color: #81500a;
+  font-size: 13px;
+}
+.mcp-consent-page .local-mcp-consent__unverified p {
+  margin: 6px 0 0;
+  color: #74521e;
+  font-size: 13px;
+  line-height: 1.6;
+}
