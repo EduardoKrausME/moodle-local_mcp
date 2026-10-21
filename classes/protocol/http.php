@@ -39,6 +39,9 @@ final class http {
     /** @var string Current MCP endpoint. */
     private static string $traceside = 'server';
 
+    /** @var mixed Original JSON tool arguments, retaining object/array distinctions. */
+    private static mixed $originalarguments = null;
+
     /**
      * Enable tracing for this MCP endpoint (never for OAuth endpoints).
      *
@@ -94,7 +97,17 @@ final class http {
      */
     public static function request_json(): array {
         $raw = file_get_contents('php://input');
-        $data = json_decode($raw ?: '{}', true);
+        $data = json_decode($raw ?: "{}", true);
+        self::$originalarguments = null;
+        if (($data["method"] ?? "") === "tools/call") {
+            // The array decoder loses the distinction between JSON {} and [].
+            // Retain the original tool arguments solely for schema validation.
+            $original = json_decode($raw ?: "{}", false);
+            if (is_object($original) && isset($original->params) && is_object($original->params)
+                    && property_exists($original->params, "arguments")) {
+                self::$originalarguments = $original->params->arguments;
+            }
+        }
         if (!is_array($data)) {
             if (self::$tracemessages) {
                 message_logger::log('incoming', self::$traceside,
@@ -106,6 +119,15 @@ final class http {
             message_logger::log('incoming', self::$traceside, $data);
         }
         return $data;
+    }
+
+    /**
+     * Return the original JSON value of params.arguments for strict validation.
+     *
+     * @return mixed JSON arguments, or an empty object when omitted.
+     */
+    public static function original_tool_arguments(): mixed {
+        return self::$originalarguments ?? (object)[];
     }
 
     /**
