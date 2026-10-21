@@ -157,7 +157,7 @@ final class provider implements
         global $DB;
 
         $context = context_system::instance();
-        if (!in_array($context->id, $contextlist->get_contextids(), true)) {
+        if (!self::has_system_context($contextlist)) {
             return;
         }
         $userid = (int)$contextlist->get_user()->id;
@@ -208,7 +208,7 @@ final class provider implements
      * @return void
      */
     public static function delete_data_for_user(approved_contextlist $contextlist): void {
-        if (!in_array(context_system::instance()->id, $contextlist->get_contextids(), true)) {
+        if (!self::has_system_context($contextlist)) {
             return;
         }
         self::delete_user_records([(int)$contextlist->get_user()->id]);
@@ -225,6 +225,20 @@ final class provider implements
             return;
         }
         self::delete_user_records($userlist->get_userids());
+    }
+
+    /**
+     * Check approved context IDs, which may be returned as numeric strings by DML.
+     *
+     * @param approved_contextlist $contextlist Approved user contexts.
+     * @return bool
+     */
+    private static function has_system_context(approved_contextlist $contextlist): bool {
+        return in_array(
+            (int)context_system::instance()->id,
+            array_map("intval", $contextlist->get_contextids()),
+            true
+        );
     }
 
     /**

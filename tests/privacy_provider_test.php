@@ -90,11 +90,11 @@ final class privacy_provider_test extends provider_testcase {
                     $DB->delete_records($othertable, ["userid" => $user->id]);
                 }
             }
-            $this->assertContains(context_system::instance()->id,
-                provider::get_contexts_for_userid((int)$user->id)->get_contextids());
+            $this->assertContains((int)context_system::instance()->id,
+                array_map("intval", provider::get_contexts_for_userid((int)$user->id)->get_contextids()));
             $userlist = new userlist(context_system::instance(), "local_mcp");
             provider::get_users_in_context($userlist);
-            $this->assertContains((int)$user->id, $userlist->get_userids());
+            $this->assertContains((int)$user->id, array_map("intval", $userlist->get_userids()));
             $DB->delete_records($table, ["userid" => $user->id]);
             $this->assertEmpty(provider::get_contexts_for_userid((int)$user->id)->get_contextids());
         }
@@ -112,7 +112,7 @@ final class privacy_provider_test extends provider_testcase {
         $user = $this->getDataGenerator()->create_user();
         $this->create_records((int)$user->id);
         $context = context_system::instance();
-        provider::export_user_data(new approved_contextlist($user, "local_mcp", [$context->id]));
+        provider::export_user_data(new approved_contextlist($user, "local_mcp", [(string)$context->id]));
         $data = writer::with_context($context)->get_data([]);
         $this->assertNotEmpty($data);
         foreach (["connections", "audit", "authorization_codes", "access_tokens",
@@ -143,7 +143,7 @@ final class privacy_provider_test extends provider_testcase {
         foreach (self::TABLES as $table) {
             $this->assertTrue($DB->record_exists($table, ["userid" => $user->id]));
         }
-        provider::delete_data_for_user(new approved_contextlist($user, "local_mcp", [context_system::instance()->id]));
+        provider::delete_data_for_user(new approved_contextlist($user, "local_mcp", [(string)context_system::instance()->id]));
         foreach (self::TABLES as $table) {
             $this->assertFalse($DB->record_exists($table, ["userid" => $user->id]));
             $this->assertTrue($DB->record_exists($table, ["userid" => $other->id]));
