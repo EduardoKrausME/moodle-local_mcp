@@ -72,22 +72,8 @@ if ($userid > 0) {
     $params['userid'] = $userid;
 }
 
-// Client names can be arbitrarily renamed. Identify ChatGPT by its OAuth redirect URI.
-$chatgptids = [];
-$clients = $DB->get_records('local_mcp_oauth_client', null, '', 'id, name, redirecturis');
-foreach ($clients as $client) {
-    $redirects = json_decode($client->redirecturis, true);
-    if (!is_array($redirects)) {
-        continue;
-    }
-    foreach ($redirects as $redirect) {
-        if (is_string($redirect) &&
-                \local_mcp\oauth\connection_service::is_chatgpt_redirect_uri($redirect)) {
-            $chatgptids[] = (int)$client->id;
-            break;
-        }
-    }
-}
+// Resolve client IDs through a streaming lookup to avoid loading every OAuth client into memory.
+$chatgptids = \local_mcp\audit\chatgpt_client_lookup::get_client_ids();
 if ($onlychatgpt) {
     if (!$chatgptids) {
         $where[] = '1 = 0';
