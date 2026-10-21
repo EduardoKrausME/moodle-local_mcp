@@ -449,8 +449,9 @@ final class mcp_server {
      * @param mixed $originalarguments Original JSON arguments preserving objects and arrays.
      * @return array Return value.
      */
-    private function call_tool(string                 $name, array $arguments, array $params,
-                               authenticated_identity $identity, string $rawtoken, mixed $originalarguments = null): array {
+    private function call_tool(string $name, array $arguments, array $params,
+                               authenticated_identity $identity, string $rawtoken,
+                               mixed $originalarguments = null): array {
         $tools = $this->get_tools();
         if (!isset($tools[$name])) {
             throw new api_exception('tool_not_found', 404);
