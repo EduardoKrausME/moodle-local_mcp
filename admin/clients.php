@@ -27,6 +27,16 @@ require_login();
 $context = context_system::instance();
 require_capability('moodle/site:config', $context);
 require_capability("local/mcp:manage", $context);
+if (($_SERVER["REQUEST_METHOD"] ?? "") === "POST") {
+    require_sesskey();
+    $action = required_param("action", PARAM_ALPHA);
+    $clientid = required_param("clientid", PARAM_INT);
+    if ($action !== "disable" || $clientid <= 0) {
+        throw new moodle_exception("invalidrequest", "error");
+    }
+    \local_mcp\oauth\client_service::disable($clientid);
+    redirect(new moodle_url("/local/mcp/admin/clients.php"), get_string("oauthclientdisabled", "local_mcp"));
+}
 $PAGE->set_url('/local/mcp/admin/clients.php');
 $PAGE->set_context($context);
 $PAGE->set_title(get_string('oauthclients', 'local_mcp'));
@@ -37,6 +47,8 @@ $no = get_string("no");
 $rows = [];
 foreach ($DB->get_records("local_mcp_oauth_client", null, "timecreated DESC") as $client) {
     $rows[] = [
+        "id" => (int)$client->id,
+        "active" => (bool)$client->enabled,
         "clientid" => s($client->clientid),
         "name" => s($client->name),
         "type" => s($client->clienttype),
@@ -49,5 +61,9 @@ foreach ($DB->get_records("local_mcp_oauth_client", null, "timecreated DESC") as
 echo $OUTPUT->header();
 echo html_writer::link(new moodle_url('/local/mcp/admin/dashboard.php'),
     get_string('backtodashboard', 'local_mcp'), ['class' => 'btn btn-secondary mb-3']);
-echo $OUTPUT->render_from_template('local_mcp/clients', ['rows' => $rows]);
+echo $OUTPUT->render_from_template("local_mcp/clients", [
+    "rows" => $rows,
+    "actionurl" => (new moodle_url("/local/mcp/admin/clients.php"))->out(false),
+    "sesskey" => sesskey(),
+]);
 echo $OUTPUT->footer();

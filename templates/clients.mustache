@@ -34,6 +34,7 @@
         <th>{{#str}}clientcolenabled, local_mcp{{/str}}</th>
         <th>{{#str}}clientcolcreated, local_mcp{{/str}}</th>
         <th>{{#str}}clientcollastused, local_mcp{{/str}}</th>
+        <th>{{#str}}connectionactions, local_mcp{{/str}}</th>
     </tr>
     </thead>
     <tbody>
@@ -46,6 +47,18 @@
             <td>{{enabled}}</td>
             <td>{{created}}</td>
             <td>{{lastused}}</td>
+            <td>
+                {{#active}}
+                    <form method="post" action="{{actionurl}}">
+                        <input type="hidden" name="sesskey" value="{{sesskey}}">
+                        <input type="hidden" name="action" value="disable">
+                        <input type="hidden" name="clientid" value="{{id}}">
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            {{#str}}oauthclientdisable, local_mcp{{/str}}
+                        </button>
+                    </form>
+                {{/active}}
+            </td>
         </tr>{{/rows}}
     </tbody>
 </table>

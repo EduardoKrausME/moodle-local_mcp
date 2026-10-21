@@ -31,6 +31,16 @@ require_login();
 $context = context_system::instance();
 require_capability('moodle/site:config', $context);
 require_capability("local/mcp:manage", $context);
+if (($_SERVER["REQUEST_METHOD"] ?? "") === "POST") {
+    require_sesskey();
+    $action = required_param("action", PARAM_ALPHA);
+    $connectionid = required_param("connectionid", PARAM_INT);
+    if ($action !== "revoke" || $connectionid <= 0) {
+        throw new moodle_exception("invalidrequest", "error");
+    }
+    connection_service::revoke($connectionid);
+    redirect(new moodle_url("/local/mcp/admin/connections.php"), get_string("connectionrevoked", "local_mcp"));
+}
 
 $PAGE->set_url('/local/mcp/admin/connections.php');
 $PAGE->set_context($context);
@@ -55,4 +65,30 @@ echo $OUTPUT->header();
 echo html_writer::link(new moodle_url('/local/mcp/admin/dashboard.php'),
     get_string('backtodashboard', 'local_mcp'), ['class' => 'btn btn-secondary mb-3']);
 echo $OUTPUT->render_from_template('local_mcp/connections', $data);
+
+// Allow administrators to revoke existing grants without changing OAuth settings.
+$sql = "SELECT c.id, c.scopes, c.timecreated, c.lastused,
+               u.firstname, u.lastname, cl.name AS clientname
+          FROM {local_mcp_connection} c
+          JOIN {user} u ON u.id = c.userid
+          JOIN {local_mcp_oauth_client} cl ON cl.id = c.clientid
+         WHERE c.enabled = :enabled AND c.revokedat IS NULL
+      ORDER BY c.timecreated DESC";
+$rows = [];
+foreach ($DB->get_records_sql($sql, ["enabled" => 1], 0, 100) as $record) {
+    $rows[] = [
+        "id" => (int)$record->id,
+        "user" => fullname($record),
+        "client" => $record->clientname,
+        "scopes" => $record->scopes,
+        "created" => userdate($record->timecreated),
+        "lastused" => $record->lastused ? userdate($record->lastused) : "-",
+    ];
+}
+echo $OUTPUT->render_from_template("local_mcp/connections_admin", [
+    "rows" => $rows,
+    "hasconnections" => !empty($rows),
+    "actionurl" => (new moodle_url("/local/mcp/admin/connections.php"))->out(false),
+    "sesskey" => sesskey(),
+]);
 echo $OUTPUT->footer();

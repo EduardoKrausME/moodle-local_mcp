@@ -1,0 +1,67 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_mcp/connections_admin
+
+    Example context (json):
+    {
+        "rows": [{"id": 1, "user": "Admin", "client": "ChatGPT", "scopes": "mcp:read",
+                  "created": "Today", "lastused": "Today"}],
+        "hasconnections": true,
+        "actionurl": "/local/mcp/admin/connections.php",
+        "sesskey": "test"
+    }
+}}
+<section class="mt-4" aria-labelledby="mcp-active-connections-heading">
+    <h2 id="mcp-active-connections-heading">{{#str}}connectionactivelist, local_mcp{{/str}}</h2>
+    {{#hasconnections}}
+        <table class="generaltable">
+            <thead><tr>
+                <th>{{#str}}connectionuser, local_mcp{{/str}}</th>
+                <th>{{#str}}connectionclient, local_mcp{{/str}}</th>
+                <th>{{#str}}connectionscopes, local_mcp{{/str}}</th>
+                <th>{{#str}}connectioncreated, local_mcp{{/str}}</th>
+                <th>{{#str}}connectionlastused, local_mcp{{/str}}</th>
+                <th>{{#str}}connectionactions, local_mcp{{/str}}</th>
+            </tr></thead>
+            <tbody>
+                {{#rows}}
+                    <tr>
+                        <td>{{user}}</td>
+                        <td>{{client}}</td>
+                        <td>{{scopes}}</td>
+                        <td>{{created}}</td>
+                        <td>{{lastused}}</td>
+                        <td>
+                            <form method="post" action="{{actionurl}}">
+                                <input type="hidden" name="sesskey" value="{{sesskey}}">
+                                <input type="hidden" name="action" value="revoke">
+                                <input type="hidden" name="connectionid" value="{{id}}">
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    {{#str}}connectionrevoke, local_mcp{{/str}}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {{/rows}}
+            </tbody>
+        </table>
+    {{/hasconnections}}
+    {{^hasconnections}}
+        <p>{{#str}}connectionnoneactive, local_mcp{{/str}}</p>
+    {{/hasconnections}}
+</section>
