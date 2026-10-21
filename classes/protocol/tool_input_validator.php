@@ -86,7 +86,7 @@ final class tool_input_validator {
         }
 
         if (is_string($value)) {
-            $length = \core_text::strlen($value);
+            $length = strlen($value);
             if (isset($schema["minLength"]) && $length < $schema["minLength"]) {
                 self::reject($path, "string is shorter than minLength");
             }
