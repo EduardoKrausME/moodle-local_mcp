@@ -27,6 +27,7 @@ namespace local_mcp\read\tool;
 use context;
 use context_module;
 use local_mcp\security\authenticated_identity;
+use local_mcp\security\untrusted_content;
 
 /**
  * Class get_quiz.
@@ -98,7 +99,7 @@ final class get_quiz extends base_tool {
         global $DB;
         [$course, $cm] = get_course_and_cm_from_cmid((int)$arguments['cmid'], 'quiz');
         $q = $DB->get_record('quiz', ['id' => $cm->instance], 'id,name,intro,introformat,timeopen,timeclose,timelimit,grade,attempts', MUST_EXIST);
-        return ['cmid' => (int)$cm->id, 'id' => (int)$q->id, 'name' => $q->name, 'intro' => format_module_intro('quiz', $q, $cm->id),
+        return ['cmid' => (int)$cm->id, 'id' => (int)$q->id, 'name' => $q->name, 'intro' => untrusted_content::text(format_module_intro('quiz', $q, $cm->id)),
             'timeopen' => (int)$q->timeopen, 'timeclose' => (int)$q->timeclose, 'timelimit' => (int)$q->timelimit, 'grade' => $q->grade, 'attempts' => (int)$q->attempts];
     }
 }

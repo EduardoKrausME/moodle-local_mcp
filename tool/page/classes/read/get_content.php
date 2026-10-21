@@ -31,6 +31,7 @@ use dml_exception;
 use local_mcp\exception\api_exception;
 use local_mcp\read\tool\base_tool;
 use local_mcp\security\authenticated_identity;
+use local_mcp\security\untrusted_content;
 use moodle_exception;
 use moodle_url;
 
@@ -117,8 +118,8 @@ final class get_content extends base_tool {
         return [
             'cmid' => (int)$cm->id,
             'name' => $page->name,
-            'content' => format_text($page->content, $page->contentformat,
-                ['context' => $context, 'filter' => true]),
+            'content' => untrusted_content::text(format_text($page->content, $page->contentformat,
+                ['context' => $context, 'filter' => true])),
             'revision' => (int)$page->revision,
             'url' => (new moodle_url('/mod/page/view.php', ['id' => $cm->id]))->out(false),
         ];

@@ -31,6 +31,7 @@ use dml_exception;
 use local_mcp\exception\api_exception;
 use local_mcp\read\tool\base_tool;
 use local_mcp\security\authenticated_identity;
+use local_mcp\security\untrusted_content;
 use moodle_exception;
 
 /**
@@ -123,7 +124,7 @@ final class get_chapter extends base_tool {
         }
         return ['id' => (int)$chapter->id, 'bookid' => (int)$book->id,
             'title' => $chapter->title, 'pagenum' => (int)$chapter->pagenum,
-            'content' => format_text($chapter->content, $chapter->contentformat,
-                ['context' => $context, 'filter' => true])];
+            'content' => untrusted_content::text(format_text($chapter->content, $chapter->contentformat,
+                ['context' => $context, 'filter' => true]))];
     }
 }

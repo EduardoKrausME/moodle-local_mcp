@@ -31,6 +31,7 @@ use dml_exception;
 use local_mcp\exception\api_exception;
 use local_mcp\read\tool\base_tool;
 use local_mcp\security\authenticated_identity;
+use local_mcp\security\untrusted_content;
 use moodle_exception;
 
 /**
@@ -135,8 +136,8 @@ final class get_posts extends base_tool {
                 'parent' => (int)$post->parent,
                 'userid' => (int)$post->userid,
                 'subject' => $post->subject,
-                'message' => format_text($post->message, $post->messageformat,
-                    ['context' => $context, 'filter' => true]),
+                'message' => untrusted_content::text(format_text($post->message, $post->messageformat,
+                    ['context' => $context, 'filter' => true])),
                 'created' => (int)$post->created,
             ];
         }

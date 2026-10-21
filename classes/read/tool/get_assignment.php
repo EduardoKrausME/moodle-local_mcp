@@ -27,6 +27,7 @@ namespace local_mcp\read\tool;
 use context;
 use context_module;
 use local_mcp\security\authenticated_identity;
+use local_mcp\security\untrusted_content;
 
 /**
  * Class get_assignment.
@@ -99,6 +100,6 @@ final class get_assignment extends base_tool {
         global $DB;
         $a = $DB->get_record('assign', ['id' => $cm->instance], 'id,name,intro,introformat,duedate,cutoffdate,grade', MUST_EXIST);
         return ['cmid' => (int)$cm->id, 'id' => (int)$a->id, 'name' => $a->name,
-            'intro' => format_module_intro('assign', $a, $cm->id), 'duedate' => (int)$a->duedate, 'cutoffdate' => (int)$a->cutoffdate, 'grade' => $a->grade];
+            'intro' => untrusted_content::text(format_module_intro('assign', $a, $cm->id)), 'duedate' => (int)$a->duedate, 'cutoffdate' => (int)$a->cutoffdate, 'grade' => $a->grade];
     }
 }
