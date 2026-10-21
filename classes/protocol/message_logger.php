@@ -35,11 +35,13 @@ final class message_logger {
     private const MAX_TEXT_BYTES = 4096;
 
     /**
-     * @return bool Whether diagnostic logging is enabled.
+     * @return bool Whether sensitive JSON-RPC body tracing is explicitly enabled.
      */
     public static function enabled(): bool {
-        $value = get_config('local_mcp', 'logmessages');
-        return $value === false || (string)$value !== '0';
+        if (!diagnostics::enabled()) {
+            return false;
+        }
+        return (string)get_config("local_mcp", "logmessages") === "1";
     }
 
     /**
@@ -54,9 +56,11 @@ final class message_logger {
             return;
         }
         foreach (self::format($direction, $side, $payload, $httpstatus) as $line) {
+            // $CFG->local_mcp_debugger and local_mcp/logmessages are required to log JSON-RPC message bodies.
+            // This helps diagnose protocol errors but can expose personal Moodle data in the PHP log.
             // phpcs:disable moodle.PHP.ForbiddenFunctions.FoundWithAlternative
             error_log($line);
-            // phpcs:enable
+            // phpcs:enable moodle.PHP.ForbiddenFunctions.FoundWithAlternative
         }
     }
 

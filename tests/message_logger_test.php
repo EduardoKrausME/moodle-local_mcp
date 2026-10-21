@@ -34,6 +34,43 @@ use local_mcp\protocol\message_logger;
  */
 final class message_logger_test extends advanced_testcase {
     /**
+     * Body tracing needs both the config.php debugger and the Moodle checkbox.
+     *
+     * @return void
+     */
+    public function test_body_tracing_requires_both_debug_options(): void {
+        global $CFG;
+
+        $this->resetAfterTest();
+        $wasdefined = property_exists($CFG, "local_mcp_debugger");
+        $previous = $CFG->local_mcp_debugger ?? null;
+        try {
+            set_config("logmessages", 1, "local_mcp");
+            unset($CFG->local_mcp_debugger);
+            $this->assertFalse(message_logger::enabled());
+
+            $CFG->local_mcp_debugger = true;
+            $this->assertTrue(message_logger::enabled());
+
+            set_config("logmessages", 0, "local_mcp");
+            $this->assertFalse(message_logger::enabled());
+
+            unset_config("logmessages", "local_mcp");
+            $this->assertFalse(message_logger::enabled());
+
+            set_config("logmessages", 1, "local_mcp");
+            $CFG->local_mcp_debugger = false;
+            $this->assertFalse(message_logger::enabled());
+        } finally {
+            if ($wasdefined) {
+                $CFG->local_mcp_debugger = $previous;
+            } else {
+                unset($CFG->local_mcp_debugger);
+            }
+        }
+    }
+
+    /**
      * @return void
      */
     public function test_initialize_logs_server_version(): void {

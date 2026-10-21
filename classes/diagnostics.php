@@ -51,6 +51,20 @@ final class diagnostics {
     ];
 
     /**
+     * Check whether the administrator explicitly enabled PHP diagnostics.
+     *
+     * Without the config.php flag, MCP requests and failures do not write
+     * diagnostic entries to the PHP error log.
+     *
+     * @return bool True only when $CFG->local_mcp_debugger is enabled.
+     */
+    public static function enabled(): bool {
+        global $CFG;
+
+        return !empty($CFG->local_mcp_debugger);
+    }
+
+    /**
      * Correlate diagnostic messages for one MCP request without logging its token.
      *
      * @return string
@@ -120,8 +134,7 @@ final class diagnostics {
     }
 
     /**
-     * phpcs:disable moodle.PHP.ForbiddenFunctions.FoundWithAlternative
-     * Always record a significant MCP lifecycle event using PHP error_log().
+     * Record MCP calls, completion events and failures only during explicit debugging.
      *
      * @param string $event Event name.
      * @param array $fields Event properties.
@@ -129,7 +142,14 @@ final class diagnostics {
      * @return void
      */
     public static function event(string $event, array $fields = [], string $level = 'INFO'): void {
+        if (!self::enabled()) {
+            return;
+        }
+
+        // $CFG->local_mcp_debugger enables error_log to trace MCP calls, success events and failures.
+        // phpcs:disable moodle.PHP.ForbiddenFunctions.FoundWithAlternative
         error_log(self::format($level, $event, $fields));
+        // phpcs:enable moodle.PHP.ForbiddenFunctions.FoundWithAlternative
     }
 
     /**

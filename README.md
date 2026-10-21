@@ -65,14 +65,30 @@ When the Moodle server is updated, refresh the custom MCP connection to discover
 
 ## MCP JSON request/response diagnostics
 
-Incoming and outgoing JSON-RPC messages on server.php, read.php and write.php
-are logged to PHP error_log by default, with event protocol_message and
-direction incoming/outgoing. The request ID matches the existing diagnostics.
-Large JSON messages are split into numbered payload_fragment records (part/parts).
-Known secret fields, bearer tokens, long Base64 values and URL queries are masked.
-OAuth token endpoints are not traced. Logs can still contain personal Moodle
-records, so disable "Log MCP JSON messages to PHP error_log" in plugin settings
-after diagnosing the integration and restrict access to the PHP log.
+PHP diagnostic logging is disabled by default, including full JSON-RPC request
+and response bodies. To follow MCP calls and check whether they completed or
+failed, explicitly enable the server-side debugger in Moodle's `config.php`:
+
+```php
+$CFG->local_mcp_debugger = true;
+```
+
+Add this after the Moodle `$CFG` object is initialized and before
+`require_once(__DIR__ . '/lib/setup.php');`. This enables **metadata-only**
+events (request ID, tool name, outcome, duration and safe error information)
+for `server.php`, `read.php` and `write.php`; it does not require
+Moodle developer debugging or expose tool arguments by default.
+
+For unusually difficult protocol problems, additionally enable the
+**Log MCP JSON messages to PHP error_log** setting in the plugin's administration
+settings. This separate checkbox defaults to off and is effective only while
+`$CFG->local_mcp_debugger` is true. It traces incoming and outgoing JSON-RPC
+bodies, with numbered fragments for large messages and best-effort redaction
+of recognized secrets and binaries. **Other personal Moodle data can still
+appear in these logs**, so restrict PHP log access and retention, use body
+tracing only for a limited troubleshooting session, then disable the checkbox
+and remove (or set to `false`) the `config.php` flag. OAuth token endpoints
+are never body-traced.
 
 ## Architecture
 
@@ -234,9 +250,11 @@ context. Tokens, scopes and Moodle permissions are still checked on each
 request. Modern `tools/call` responses include `resultType: complete`. Existing clients using the
 `2025-06-18` `initialize` handshake continue to receive the legacy layout.
 
-For troubleshooting, this plugin does **not** write MCP request parameters,
-tool inputs, Base64 images or complete JSON-RPC responses to PHP logs.
-Unexpected exceptions retain a short reference and sanitized source location.
+By default the plugin writes neither MCP request parameters nor complete
+JSON-RPC responses to PHP logs. With `$CFG->local_mcp_debugger` enabled,
+sanitized metadata and exception references can be inspected; the separate
+`local_mcp/logmessages` option is required to trace full message bodies
+and should only be enabled briefly in a protected environment.
 
 For security, pass OAuth access tokens only in the `Authorization: Bearer` header.
 MCP query-string tokens (`?token=` and `?toke=`) are not supported.
@@ -419,12 +437,14 @@ Revoking a Connection immediately invalidates:
 - unused authorization codes for that user/client;
 - unused confirmation tokens.
 
-## Always-on PHP error log diagnostics
+## Optional PHP error log diagnostics
 
-The MCP server records significant lifecycle events and errors through PHP
-`error_log()` in both test and production installations. Each line starts with
-`[local_mcp]` followed by a single-line JSON object. The `request` field is
-a random 12-character correlation identifier shared by the request's log entries.
+When `$CFG->local_mcp_debugger = true;` is set in Moodle's `config.php`,
+the MCP server records significant lifecycle events and errors through PHP
+`error_log()`; when it is absent or false, none of these diagnostic entries
+are emitted. Each line starts with `[local_mcp]` followed by a single-line
+JSON object. The `request` field is a random 12-character correlation
+identifier shared by the request's log entries.
 
 Logged milestones include incoming requests (without their URL/query string),
 authenticated Moodle user ID and MCP scopes, protocol methods, discovery,
@@ -435,12 +455,16 @@ limit errors, unexpected JSON-RPC methods and exceptions are recorded too.
 Exceptions include their class, sanitized message, source file's basename,
 line and protocol HTTP status.
 
-**Secrets stay out of diagnostic messages:** the logger never serializes raw
-MCP requests, tool argument values, authorization headers, URL query strings,
-confirmation tokens, HTML content or uploaded Base64 images. Exception message
-strings are length-limited and redacted before being logged. Protocol response
-bodies remain unlogged. HTTP server access logs are managed separately from
-PHP; ensure access logs do not reveal OAuth access tokens or authorization codes.
+**Metadata diagnostics avoid secrets:** without the separate message-body
+tracing option, the logger does not serialize raw MCP requests, tool argument
+values, authorization headers, URL query strings, confirmation tokens, HTML
+content or uploaded Base64 images. Exception messages are length-limited and
+sanitized. To identify outcomes, look for `tool_response_ready` with
+`status: completed` (or `confirmation_pending` for previews), and
+`tool_call_failed` / `exception` for errors, correlating their `request`
+field. Explicit JSON-RPC body tracing is more sensitive and can include
+personal data despite redaction. HTTP server access logs are managed separately
+from PHP; ensure access logs do not reveal OAuth credentials.
 
 Example:
 

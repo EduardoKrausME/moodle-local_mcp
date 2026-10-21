@@ -59,7 +59,7 @@ if ($hassiteconfig) {
         get_string("settingsdynamicregistration_desc", "local_mcp"), 1));
     $settings->add(new admin_setting_configcheckbox("local_mcp/logmessages",
         get_string("settingslogmessages", "local_mcp"),
-        get_string("settingslogmessages_desc", "local_mcp"), 1));
+        get_string("settingslogmessages_desc", "local_mcp"), 0));
     $settings->add(new admin_setting_configtext("local_mcp/rateread",
         get_string("settingsrateread", "local_mcp"), "", rate_limiter::DEFAULT_READ_PER_MINUTE, PARAM_INT));
     $settings->add(new admin_setting_configtext("local_mcp/ratewrite",
