@@ -212,10 +212,12 @@ final class feedback_service {
         if ($area->activemethod !== "rubric") {
             return $out;
         }
-        $definition = $DB->get_record("grading_definitions", ["areaid" => $area->id], "*");
-        if (!$definition) {
+        $definitions = $DB->get_records("grading_definitions",
+            ["areaid" => $area->id], "id DESC", "*", 0, 1);
+        if (!$definitions) {
             return $out;
         }
+        $definition = reset($definitions);
         $criteria = $DB->get_records("gradingform_rubric_criteria",
             ["definitionid" => $definition->id], "sortorder ASC, id ASC");
         foreach ($criteria as $criterion) {
@@ -304,7 +306,7 @@ final class feedback_service {
         $grade = $assign->get_user_grade((int)$arguments["userid"], true);
         // Avoid removing attachments from an existing rich-text feedback entry.
         $oldfiles = get_file_storage()->get_area_files(
-            $assign->get_context()->id, "assignfeedback_comments", "comment", $grade->id, "id", false
+            $assign->get_context()->id, "assignfeedback_comments", "feedback", $grade->id, "id", false
         );
         if ($oldfiles) {
             throw new api_exception("feedback_attachments_present", 409);
