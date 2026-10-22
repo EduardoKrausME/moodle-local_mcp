@@ -131,6 +131,7 @@ final class feedback_service {
                     break;
                 }
                 $entry = [
+                    "fileid" => (int)$file->get_id(),
                     "filename" => $file->get_filename(),
                     "mimetype" => $file->get_mimetype(),
                     "size" => $file->get_filesize(),
@@ -238,6 +239,50 @@ final class feedback_service {
             $out["criteria"][] = $data;
         }
         return $out;
+    }
+
+    /**
+     * Load a submission image only after verifying the teacher, student and exact file area.
+     *
+     * @param int $cmid Course module id.
+     * @param int $userid Student id.
+     * @param int $fileid Moodle stored file id.
+     * @param authenticated_identity $identity Grader.
+     * @return array MCP image result.
+     */
+    public static function submission_image(int $cmid, int $userid, int $fileid,
+            authenticated_identity $identity): array {
+        [$assign, $cm, $submission] = self::target($cmid, $userid, $identity);
+        $plugin = $assign->get_submission_plugin_by_type("file");
+        if (!$plugin || !$plugin->is_enabled()) {
+            throw new api_exception("submission_files_disabled", 409);
+        }
+        $file = get_file_storage()->get_file_by_id($fileid);
+        if (!$file || $file->is_directory() ||
+                (int)$file->get_contextid() !== (int)$assign->get_context()->id ||
+                $file->get_component() !== "assignsubmission_file" ||
+                $file->get_filearea() !== "submission_files" ||
+                (int)$file->get_itemid() !== (int)$submission->id) {
+            throw new api_exception("submission_file_not_found", 404);
+        }
+        $mimetype = $file->get_mimetype();
+        if (!in_array($mimetype, ["image/png", "image/jpeg", "image/gif", "image/webp"], true)) {
+            throw new api_exception("unsupported_image_type", 415);
+        }
+        if ($file->get_filesize() > 3000000) {
+            throw new api_exception("submission_image_too_large", 413);
+        }
+        return [
+            "fileid" => $fileid,
+            "filename" => $file->get_filename(),
+            "mimetype" => $mimetype,
+            "size" => (int)$file->get_filesize(),
+            "_mcp_content" => [[
+                "type" => "image",
+                "mimeType" => $mimetype,
+                "data" => base64_encode($file->get_content()),
+            ]],
+        ];
     }
 
     /**

@@ -37,6 +37,7 @@ use local_mcp\write\registry as write_registry;
  * @covers \local_mcp\assignment\feedback_service
  * @covers \local_mcp\read\tool\get_assignment_feedback_context
  * @covers \local_mcp\read\tool\get_assignment_feedback_queue
+ * @covers \local_mcp\read\tool\get_assignment_submission_image
  * @covers \local_mcp\write\tool\save_assignment_feedback
  * @covers \local_mcp\read\registry
  * @covers \local_mcp\write\registry
@@ -47,6 +48,7 @@ final class assignment_feedback_tools_test extends advanced_testcase {
         $write = write_registry::get_tools();
         $this->assertArrayHasKey("get_assignment_feedback_context", $read);
         $this->assertArrayHasKey("get_assignment_feedback_queue", $read);
+        $this->assertArrayHasKey("get_assignment_submission_image", $read);
         $this->assertArrayHasKey("save_assignment_feedback", $write);
         $tool = $write["save_assignment_feedback"];
         $this->assertTrue($tool->requires_confirmation());

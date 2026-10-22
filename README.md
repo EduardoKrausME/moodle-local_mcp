@@ -696,7 +696,7 @@ small UTF-8 text attachments, rubric criteria and existing teacher feedback
 to a connected MCP assistant. Binary files are listed without extracting their
 contents, so a teacher should review those attachments independently.
 
-The WRITE tool `save_assignment_feedback` stores reviewed plain-text
+The READ tool `get_assignment_submission_image` can also return supported image\nattachments as native MCP image content (up to 3 MB).\n\nThe WRITE tool `save_assignment_feedback` stores reviewed plain-text
 comments through the native assignment feedback plugin, without changing
 numeric grades. It requires explicit approval through the existing
 confirmation-token workflow and rejects stale submissions or feedback,

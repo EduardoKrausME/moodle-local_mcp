@@ -33,6 +33,7 @@ use local_mcp\read\tool\list_question_banks;
 use local_mcp\read\tool\get_assignment;
 use local_mcp\read\tool\get_assignment_feedback_context;
 use local_mcp\read\tool\get_assignment_feedback_queue;
+use local_mcp\read\tool\get_assignment_submission_image;
 use local_mcp\read\tool\get_assignments;
 use local_mcp\read\tool\get_attempts;
 use local_mcp\read\tool\get_calendar_events;
@@ -75,6 +76,7 @@ final class registry {
             new get_assignment(),
             new get_assignment_feedback_context(),
             new get_assignment_feedback_queue(),
+            new get_assignment_submission_image(),
             new get_assignments(),
             new get_attempts(),
             new get_calendar_events(),
