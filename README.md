@@ -688,6 +688,24 @@ Two administrator-only tools are available with `mcp:write` scope and `moodle/si
 Both support `dry_run` and require the existing two-call confirmation protocol before performing any cache changes.
 Their preview responses never purge caches. The MCP audit log records successful writes and their duration.
 
+## Assignment feedback tools (mod_assign)
+
+The READ tools `get_assignment_feedback_queue` and
+`get_assignment_feedback_context` expose eligible submissions, online text,
+small UTF-8 text attachments, rubric criteria and existing teacher feedback
+to a connected MCP assistant. Binary files are listed without extracting their
+contents, so a teacher should review those attachments independently.
+
+The WRITE tool `save_assignment_feedback` stores reviewed plain-text
+comments through the native assignment feedback plugin, without changing
+numeric grades. It requires explicit approval through the existing
+confirmation-token workflow and rejects stale submissions or feedback,
+anonymous marking and team submissions. Moodle grading capabilities and
+separate-group restrictions are enforced.
+
+See [Assignment feedback tools](docs/assignment-feedback-tools.md) for
+arguments, safeguards and an example workflow.
+
 ## Question bank support
 
 Question banks use Moodle's context model. In Moodle 5.0+, a course may have multiple
