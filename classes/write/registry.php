@@ -37,6 +37,7 @@ use local_mcp\write\tool\create_section;
 use local_mcp\write\tool\create_user;
 use local_mcp\write\tool\enrol_user;
 use local_mcp\write\tool\grade_submission;
+use local_mcp\write\tool\save_assignment_feedback;
 use local_mcp\write\tool\purge_all_caches;
 use local_mcp\write\tool\purge_css_cache;
 use local_mcp\write\tool\send_message;
@@ -73,6 +74,7 @@ final class registry {
             new create_user(),
             new enrol_user(),
             new grade_submission(),
+            new save_assignment_feedback(),
             new purge_css_cache(),
             new purge_all_caches(),
             new send_message(),
