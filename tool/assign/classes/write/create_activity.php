@@ -80,6 +80,9 @@ final class create_activity extends activity_create_base {
                 empty($a["file_submissions"]) && array_key_exists("file_submissions", $a)) {
             throw new api_exception("no_submission_method", 400);
         }
+        // Core add_moduleinfo() copies introeditor over intro when that draft exists.
+        $info->introeditor["text"] = $info->intro;
+        $info->introeditor["format"] = FORMAT_HTML;
         $info->allowsubmissionsfromdate = $open;
         $info->duedate = $due;
         $info->cutoffdate = $cutoff;

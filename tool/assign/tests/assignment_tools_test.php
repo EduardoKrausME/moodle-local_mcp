@@ -50,6 +50,41 @@ final class assignment_tools_test extends \advanced_testcase {
         }
     }
 
+    /**
+     * Test the real module lifecycle rather than a schema-only placeholder.
+     *
+     * @covers \mcptool_assign\write\create_activity::execute
+     * @covers \mcptool_assign\write\update_activity::execute
+     */
+    public function test_create_and_update_assignment_without_disabling_submission_plugins(): void {
+        global $DB, $USER;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $course = $this->getDataGenerator()->create_course();
+        $identity = new \local_mcp\security\authenticated_identity($USER->id, "test", ["mcp:write"]);
+        $create = new \mcptool_assign\write\create_activity();
+        $created = $create->execute([
+            "courseid" => $course->id, "sectionnum" => 0,
+            "name" => "Assignment One", "intro" => "<p>Prepare a summary.</p>",
+            "duedate" => time() + 86400, "file_submissions" => true, "onlinetext" => true,
+        ], $identity);
+        $this->assertGreaterThan(0, $created["cmid"]);
+        $record = $DB->get_record("assign", ["id" => $created["instanceid"]], "*", MUST_EXIST);
+        $this->assertStringContainsString("Prepare a summary", $record->intro);
+        [$updatedcourse, $cm] = get_course_and_cm_from_cmid($created["cmid"], "assign");
+        $assignment = new \assign(\context_module::instance($cm->id), $cm, $updatedcourse);
+        $this->assertTrue($assignment->get_submission_plugin_by_type("file")->is_enabled());
+
+        $update = new \mcptool_assign\write\update_activity();
+        $response = $update->execute(["cmid" => $created["cmid"], "name" => "Assignment Two"], $identity);
+        $this->assertTrue($response["updated"]);
+        $this->assertSame("Assignment Two",
+            $DB->get_field("assign", "name", ["id" => $created["instanceid"]]));
+        $assignment = new \assign(\context_module::instance($cm->id), $cm, $updatedcourse);
+        $this->assertTrue($assignment->get_submission_plugin_by_type("file")->is_enabled());
+        $this->assertTrue($assignment->get_submission_plugin_by_type("onlinetext")->is_enabled());
+    }
+
     public function test_assignment_creation_has_supported_moodle_capability(): void {
         $tool = new \mcptool_assign\write\create_activity();
         $this->assertSame("assign_create_activity", $tool->get_name());
