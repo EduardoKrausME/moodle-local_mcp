@@ -15,32 +15,39 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * MCP tools provider.
+ * Register quiz READ and WRITE MCP tools.
  *
  * @package   mcptool_quiz
- * @copyright 2026 Eduardo Kraus
+ * @copyright 2026 Eduardo Kraus {@link https://eduardokraus.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace mcptool_quiz;
 
+use local_mcp\extension\read_provider_interface;
 use local_mcp\extension\write_provider_interface;
-use mcptool_quiz\write\create_activity;
-use mcptool_quiz\write\add_question;
 
 /**
- * Register writable activity tools.
+ * Read-only analytics and confirmed quiz management mutations.
  */
-final class provider implements write_provider_interface {
-    /**
-     * Method get_write_tools.
-     *
-     * @return array Return value.
-     */
+final class provider implements read_provider_interface, write_provider_interface {
+    public function get_read_tools(): array {
+        return [
+            new \mcptool_quiz\read\get_question_slots(),
+            new \mcptool_quiz\read\get_attempt_responses(),
+            new \mcptool_quiz\read\get_attempt_statistics(),
+            new \mcptool_quiz\read\get_question_statistics(),
+        ];
+    }
+
     public function get_write_tools(): array {
         return [
-            new create_activity(),
-            new add_question(),
+            new \mcptool_quiz\write\create_activity(),
+            new \mcptool_quiz\write\add_question(),
+            new \mcptool_quiz\write\update_activity(),
+            new \mcptool_quiz\write\remove_question(),
+            new \mcptool_quiz\write\reorder_questions(),
+            new \mcptool_quiz\write\regrade_attempt(),
         ];
     }
 }
