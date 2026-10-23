@@ -158,8 +158,10 @@ final class group_service {
         $context = context_course::instance((int)$group->courseid);
         $planned = [];
         foreach ($users as $userid) {
-            if (!$DB->record_exists("user", ["id" => $userid, "deleted" => 0]) ||
-                    !is_enrolled($context, $userid, "", true)) {
+            // Addition requires active enrolment. Removal must still work after
+            // enrolment ends or the user record is soft-deleted.
+            if (!$remove && (!$DB->record_exists("user", ["id" => $userid, "deleted" => 0]) ||
+                    !is_enrolled($context, $userid, "", true))) {
                 throw new api_exception("member_not_actively_enrolled", 409);
             }
             $exists = groups_is_member($group->id, $userid);

@@ -79,7 +79,7 @@ final class course_group_settings_tools_test extends advanced_testcase {
         $after = group_service::members(["courseid" => $course->id,
             "groupid" => $created["groupid"]], $identity);
         $this->assertSame(1, $after["total"]);
-        $this->assertSame($student->id, $after["members"][0]["userid"]);
+        $this->assertSame((int)$student->id, $after["members"][0]["userid"]);
 
         try {
             group_service::change($arguments, $identity, false);
