@@ -99,7 +99,7 @@ final class group_service {
         $group = self::group((int)$a["courseid"], (int)$a["groupid"], $identity);
         $limit = min(50, max(1, (int)($a["limit"] ?? 25)));
         $offset = max(0, (int)($a["offset"] ?? 0));
-        $sql = "SELECT u.id, u.firstname, u.lastname, gm.component
+        $sql = "SELECT u.*, gm.component AS membershipcomponent
                   FROM {groups_members} gm
                   JOIN {user} u ON u.id = gm.userid
                  WHERE gm.groupid = :groupid AND u.deleted = 0
@@ -109,7 +109,7 @@ final class group_service {
         foreach ($records as $user) {
             $members[] = ["userid" => (int)$user->id,
                 "fullname" => untrusted_content::text(fullname($user)),
-                "externally_managed" => !empty($user->component)];
+                "externally_managed" => !empty($user->membershipcomponent)];
         }
         return ["courseid" => (int)$group->courseid, "groupid" => (int)$group->id,
             "members" => $members, "total" => $DB->count_records("groups_members", ["groupid" => $group->id]),
