@@ -92,34 +92,49 @@ final class update_activity extends base_tool {
 
     public function execute(array $arguments, authenticated_identity $identity): array {
         global $CFG, $DB;
-        require_once($CFG->dirroot . "/course/modlib.php");
+        require_once($CFG->dirroot . "/mod/assign/locallib.php");
         [$course, $cm] = get_course_and_cm_from_cmid((int)$arguments["cmid"], "assign");
-        if (!has_capability("moodle/course:manageactivities",
-                context_module::instance($cm->id), $identity->userid)) {
+        $context = context_module::instance($cm->id);
+        if (!has_capability("moodle/course:manageactivities", $context, $identity->userid)) {
             throw new api_exception("permission_denied", 403);
         }
-        [$modulecm, $context, $module, $data] = get_moduleinfo_data($cm, $course);
         $instance = $DB->get_record("assign", ["id" => $cm->instance], "*", MUST_EXIST);
-        foreach (["name", "allowsubmissionsfromdate", "duedate", "cutoffdate",
-                "gradingduedate"] as $field) {
-            if (array_key_exists($field, $arguments)) {
-                $data->{$field} = $field === "name"
-                    ? clean_param($arguments[$field], PARAM_TEXT) : (int)$arguments[$field];
+        $allowed = ["name", "intro", "allowsubmissionsfromdate",
+            "duedate", "cutoffdate", "gradingduedate"];
+        $change = (object)["id" => $instance->id, "timemodified" => time()];
+        $changedfields = [];
+        foreach ($allowed as $field) {
+            if (!array_key_exists($field, $arguments)) {
+                continue;
             }
+            $change->{$field} = $field === "name"
+                ? clean_param($arguments[$field], PARAM_TEXT)
+                : ($field === "intro" ? clean_text($arguments[$field], FORMAT_HTML)
+                    : (int)$arguments[$field]);
+            $changedfields[] = $field;
         }
-        if (array_key_exists("intro", $arguments)) {
-            $data->introeditor["text"] = clean_text($arguments["intro"], FORMAT_HTML);
-            $data->introeditor["format"] = FORMAT_HTML;
+        if (!$changedfields) {
+            throw new api_exception("no_fields_to_update", 400);
         }
-        $open = (int)$data->allowsubmissionsfromdate;
-        $due = (int)$data->duedate;
-        $cutoff = (int)$data->cutoffdate;
+        $open = (int)($change->allowsubmissionsfromdate ?? $instance->allowsubmissionsfromdate);
+        $due = (int)($change->duedate ?? $instance->duedate);
+        $cutoff = (int)($change->cutoffdate ?? $instance->cutoffdate);
         if (($open && $due && $due < $open) || ($cutoff && $due && $cutoff < $due) ||
                 ($cutoff && $open && $cutoff < $open)) {
             throw new api_exception("invalid_assignment_dates", 400);
         }
-        update_moduleinfo($modulecm, $data, $course);
+        // Only modify explicitly chosen columns. Passing an incomplete form to Moodle's
+        // update_moduleinfo() would disable unrelated submission and feedback plugins.
+        $DB->update_record("assign", $change);
+        $assign = new \assign($context, $cm, $course);
+        $assign->update_calendar($cm->id);
+        $assign->update_gradebook(false, $cm->id);
+        \core_completion\api::update_completion_date_event($cm->id, "assign",
+            $DB->get_record("assign", ["id" => $cm->instance], "*", MUST_EXIST),
+            (int)$cm->completionexpected);
+        rebuild_course_cache($course->id, true);
+        \core\event\course_module_updated::create_from_cm($cm)->trigger();
         return ["updated" => true, "cmid" => (int)$cm->id,
-            "instanceid" => (int)$instance->id, "changed_fields" => array_keys($arguments)];
+            "instanceid" => (int)$instance->id, "changed_fields" => $changedfields];
     }
 }
