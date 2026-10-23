@@ -292,6 +292,88 @@ final class service {
     }
 
     /**
+     * Group submissions stay group-scoped and are never passed to individual grading tools.
+     *
+     * @return array Paged, group-scoped submission metadata.
+     */
+    public static function group_submissions(array $a, authenticated_identity $identity): array {
+        global $DB, $CFG;
+        [$assign, $cm] = self::assignment((int)$a["cmid"], $identity);
+        if (empty($assign->get_instance()->teamsubmission)) {
+            throw new api_exception("team_submissions_disabled", 409);
+        }
+        require_once($CFG->libdir . "/grouplib.php");
+        $limit = max(1, min(50, (int)($a["limit"] ?? 20)));
+        $offset = max(0, (int)($a["offset"] ?? 0));
+        $groups = groups_get_activity_allowed_groups($cm, $identity->userid);
+        $all = has_capability("moodle/site:accessallgroups", $assign->get_context(), $identity->userid) ||
+            groups_get_activity_groupmode($cm) !== SEPARATEGROUPS;
+        $records = $DB->get_records("assign_submission",
+            ["assignment" => $assign->get_instance()->id, "latest" => 1, "userid" => 0],
+            "timemodified DESC, id DESC", "*", $offset, $limit);
+        $result = [];
+        foreach ($records as $r) {
+            if (!$all && !isset($groups[$r->groupid])) {
+                continue;
+            }
+            $result[] = ["groupid" => (int)$r->groupid,
+                "submissionid" => (int)$r->id, "status" => $r->status,
+                "attemptnumber" => (int)$r->attemptnumber,
+                "timemodified" => (int)$r->timemodified];
+        }
+        return ["cmid" => (int)$a["cmid"], "submissions" => $result,
+            "offset" => $offset, "next_offset" => $offset + count($records)];
+    }
+
+    /**
+     * Anonymous grading must never expose userid, filename, document body or reverse mappings.
+     *
+     * @return array De-identified submission progress via existing Moodle blind-marking aliases.
+     */
+    public static function anonymous_submissions(array $a, authenticated_identity $identity): array {
+        global $DB, $CFG;
+        [$assign, $cm] = self::assignment((int)$a["cmid"], $identity);
+        $instance = $assign->get_instance();
+        if (empty($instance->blindmarking) || !empty($instance->revealidentities) ||
+                !empty($instance->teamsubmission)) {
+            throw new api_exception("anonymous_marking_not_active", 409);
+        }
+        require_once($CFG->libdir . "/grouplib.php");
+        $all = has_capability("moodle/site:accessallgroups", $assign->get_context(), $identity->userid) ||
+            groups_get_activity_groupmode($cm) !== SEPARATEGROUPS;
+        $groups = $all ? [] : groups_get_activity_allowed_groups($cm, $identity->userid);
+        $limit = max(1, min(50, (int)($a["limit"] ?? 20)));
+        $offset = max(0, (int)($a["offset"] ?? 0));
+        $sql = "SELECT s.id, s.userid, s.status, s.attemptnumber, s.timemodified, m.id AS anonymousid
+                  FROM {assign_submission} s
+                  JOIN {assign_user_mapping} m ON m.assignment = s.assignment AND m.userid = s.userid
+                 WHERE s.assignment = :assignment AND s.latest = 1 AND s.groupid = 0
+              ORDER BY s.timemodified DESC, s.id DESC";
+        $records = $DB->get_records_sql($sql, ["assignment" => $instance->id], $offset, $limit);
+        $rows = [];
+        foreach ($records as $r) {
+            if (!$all) {
+                $allowed = false;
+                foreach (array_keys($groups) as $groupid) {
+                    if (groups_is_member((int)$groupid, (int)$r->userid)) {
+                        $allowed = true;
+                        break;
+                    }
+                }
+                if (!$allowed) {
+                    continue;
+                }
+            }
+            $rows[] = ["anonymousid" => (int)$r->anonymousid,
+                "status" => $r->status, "attemptnumber" => (int)$r->attemptnumber,
+                "timemodified" => (int)$r->timemodified];
+        }
+        return ["cmid" => (int)$a["cmid"], "submissions" => $rows,
+            "offset" => $offset, "next_offset" => $offset + count($records),
+            "identities_hidden" => true];
+    }
+
+    /**
      * Validate simple grading and the concurrency fingerprint before a grade mutation.
      *
      * @return array Assignment, submission and previous feedback.

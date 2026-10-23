@@ -38,6 +38,8 @@ final class provider implements read_provider_interface, write_provider_interfac
             new \mcptool_assign\read\get_extensions(),
             new \mcptool_assign\read\get_grading_guide(),
             new \mcptool_assign\read\get_submission_document(),
+            new \mcptool_assign\read\get_group_submissions(),
+            new \mcptool_assign\read\get_anonymous_submissions(),
         ];
     }
 

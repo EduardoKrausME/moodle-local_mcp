@@ -914,7 +914,7 @@ origin. The plugin never accepts OAuth access tokens in URL query parameters.
 
 ## Assignment management subplugin
 
-The bundled `mcptool_assign` provides 13 additional READ/WRITE tools for managing assignments,
+The bundled `mcptool_assign` provides 15 additional READ/WRITE tools for managing assignments,
 reviewing submission history, extracting authorized text attachments, granting extensions,
 drafting rubric assessments and managing release workflows. Install/upgrade the
 subplugin and refresh MCP discovery. See [assignment management documentation](docs/mcptool-assign.md).

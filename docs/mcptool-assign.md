@@ -5,7 +5,8 @@ refresh the MCP connection. The existing local_mcp assignment feedback tools rem
 
 READ: `assign_get_submission_history`, `assign_get_grading_progress`,
 `assign_get_extensions`, `assign_get_grading_guide`,
-`assign_get_submission_document`.
+`assign_get_submission_document`, `assign_get_group_submissions`,
+`assign_get_anonymous_submissions`.
 
 WRITE (explicit preview and one-use confirmation): `assign_create_activity`,
 `assign_update_activity`, `assign_set_extension`, `assign_reopen_submission`,
@@ -14,7 +15,8 @@ WRITE (explicit preview and one-use confirmation): `assign_create_activity`,
 
 Only assigned graders can see learner-specific data. Group membership and
 blind marking restrictions are enforced for these individual-submission tools;
-team and blind-marking workflows must use their dedicated Moodle UI.
+team and blind-marking grading continues through Moodle's dedicated UI; group
+submission metadata and anonymous progress are exposed in separate safe tools.
 The progress tool is paginated, with a maximum of 50 records at once.
 
 Document text extraction is limited to 5 MB and 100,000 characters.

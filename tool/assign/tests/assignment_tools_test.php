@@ -36,7 +36,7 @@ final class assignment_tools_test extends \advanced_testcase {
         $provider = new provider();
         $read = $provider->get_read_tools();
         $write = $provider->get_write_tools();
-        $this->assertCount(5, $read);
+        $this->assertCount(7, $read);
         $this->assertCount(8, $write);
         $names = array_merge(
             array_map(static function($tool) { return $tool->get_name(); }, $read),
