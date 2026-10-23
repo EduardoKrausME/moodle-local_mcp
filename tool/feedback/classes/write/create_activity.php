@@ -62,6 +62,8 @@ final class create_activity extends activity_create_base {
         $info->email_notification = 0;
         $info->autonumbering = 1;
         $info->site_after_submit = "";
+        $info->page_after_submit = "";
+        $info->page_after_submitformat = FORMAT_HTML;
         $info->page_after_submit_editor = ["text" => "", "format" => FORMAT_HTML, "itemid" => 0];
         $info->introeditor = ["text" => $info->intro, "format" => FORMAT_HTML, "itemid" => 0];
     }

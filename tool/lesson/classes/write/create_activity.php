@@ -58,6 +58,7 @@ final class create_activity extends activity_create_base {
         $info->available = $start;
         $info->deadline = $end;
         $info->mediafile = 0;
+        $info->cmidnumber = "";
         $info->practice = 0;
         $info->custom = 0;
         $info->review = 1;
