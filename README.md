@@ -918,3 +918,10 @@ The bundled `mcptool_assign` provides 15 additional READ/WRITE tools for managin
 reviewing submission history, extracting authorized text attachments, granting extensions,
 drafting rubric assessments and managing release workflows. Install/upgrade the
 subplugin and refresh MCP discovery. See [assignment management documentation](docs/mcptool-assign.md).
+
+## Quiz management and statistics
+
+The bundled `mcptool_quiz` supports quiz creation and question insertion plus
+10 additional tools for editing, responses, statistical summaries, question
+bank versions/reuse, slot operations and confirmed single-attempt regrading.
+See [quiz integration documentation](docs/mcptool-quiz.md).

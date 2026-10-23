@@ -37,6 +37,8 @@ final class provider implements read_provider_interface, write_provider_interfac
             new \mcptool_quiz\read\get_attempt_responses(),
             new \mcptool_quiz\read\get_attempt_statistics(),
             new \mcptool_quiz\read\get_question_statistics(),
+            new \mcptool_quiz\read\get_question_versions(),
+            new \mcptool_quiz\read\get_question_usage(),
         ];
     }
 
