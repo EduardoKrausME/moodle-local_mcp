@@ -932,3 +932,10 @@ Ten additional built-in MCP tools manage course groups, active-enrolment
 membership, activity group mode, access conditions and completion rules.
 READ tools provide the latest fingerprints for safe WRITE confirmations.
 See [course groups, restrictions and completion](docs/course-groups-restrictions-completion.md).
+
+## Feedback and Lesson MCP integrations
+
+The bundled `mcptool_feedback` and `mcptool_lesson` expose 12 new READ/WRITE
+tools for feedback questions, anonymized report summaries, activity creation,
+lesson page authoring, and conditional navigation. WRITE calls require previews
+and single-use confirmation; see [Feedback and Lesson documentation](docs/mcptool-feedback-lesson.md).
