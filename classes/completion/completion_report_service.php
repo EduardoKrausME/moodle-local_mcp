@@ -42,9 +42,7 @@ final class completion_report_service {
         $context = context_course::instance($courseid, MUST_EXIST);
         $crossuser = $userid !== 0 && $userid !== $identity->userid;
         $capability = $crossuser ? "moodle/grade:viewall" : "moodle/course:view";
-        if (!has_capability($capability, $context, $identity->userid)) {
-            throw new api_exception("permission_denied", 403);
-        }
+        \local_mcp\security\capability_guard::check($capability, $context, $identity->userid);
         if ($userid) {
             global $DB;
             if (!$DB->record_exists("user", ["id" => $userid, "deleted" => 0]) ||

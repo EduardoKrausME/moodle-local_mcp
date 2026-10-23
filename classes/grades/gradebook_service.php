@@ -67,7 +67,7 @@ final class gradebook_service {
             "*", $offset, $limit);
         $rows = [];
         foreach ($items as $item) {
-            $rows[] = ["itemid" => (int)$item->id, "name" => untrusted_content::text($item->itemname),
+            $rows[] = ["itemid" => (int)$item->id, "name" => untrusted_content::text((string)$item->itemname),
                 "itemtype" => $item->itemtype, "itemmodule" => $item->itemmodule,
                 "iteminstance" => (int)$item->iteminstance, "categoryid" => (int)$item->categoryid,
                 "gradetype" => (int)$item->gradetype, "minimum" => (float)$item->grademin,
@@ -81,7 +81,7 @@ final class gradebook_service {
         $categories = [];
         foreach ($cats as $cat) {
             $categories[] = ["categoryid" => (int)$cat->id, "parent" => (int)$cat->parent,
-                "name" => untrusted_content::text($cat->fullname),
+                "name" => untrusted_content::text((string)$cat->fullname),
                 "aggregation" => (int)$cat->aggregation, "depth" => (int)$cat->depth];
         }
         return ["courseid" => $courseid, "items" => $rows, "categories" => $categories,
