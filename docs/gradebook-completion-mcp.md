@@ -12,7 +12,9 @@ These tools extend the built-in `local_mcp` registries. Existing
   for safe subsequent edits. No student grades are returned.
 - `get_grade_history(courseid, userid, itemid?, limit?, offset?)`: latest
   gradebook history snapshots for a currently enrolled participant.
-  Requires `moodle/grade:viewall`. Refuses cross-group requests when the
+  Requires `moodle/grade:viewall`; hidden grades also require
+  `moodle/grade:viewhidden`, otherwise those records are filtered.
+  Refuses cross-group requests when the
   course uses separate groups and the actor shares no group with the participant.
   Returns grade values but **never grading feedback, comments, IP addresses,
   grader identities or other personal metadata**. Up to 50 rows per call.

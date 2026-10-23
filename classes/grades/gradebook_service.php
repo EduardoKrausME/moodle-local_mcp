@@ -114,6 +114,10 @@ final class gradebook_service {
             $where = " AND gh.itemid = :itemid";
             $params["itemid"] = $itemid;
         }
+        // Full gradebook access does not imply permission to view hidden grades.
+        if (!has_capability("moodle/grade:viewhidden", $context, $identity->userid)) {
+            $where .= " AND gi.hidden = 0 AND gh.hidden = 0";
+        }
         $sql = "SELECT gh.id, gh.action, gh.itemid, gh.timemodified, gh.finalgrade,
                        gh.rawgrade, gh.overridden, gh.hidden, gh.locked
                   FROM {grade_grades_history} gh
