@@ -26,6 +26,7 @@ namespace local_mcp\write;
 
 use coding_exception;
 use local_mcp\extension\manager;
+use local_mcp\write\tool\set_grade_item_visibility;
 use local_mcp\write\tool\create_group;
 use local_mcp\write\tool\add_group_members;
 use local_mcp\write\tool\remove_group_members;
@@ -86,6 +87,7 @@ final class registry {
             new create_user(),
             new enrol_user(),
             new grade_submission(),
+            new set_grade_item_visibility(),
             new save_assignment_feedback(),
             new purge_css_cache(),
             new purge_all_caches(),

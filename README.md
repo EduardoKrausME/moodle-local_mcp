@@ -939,3 +939,10 @@ The bundled `mcptool_feedback` and `mcptool_lesson` expose 12 new READ/WRITE
 tools for feedback questions, anonymized report summaries, activity creation,
 lesson page authoring, and conditional navigation. WRITE calls require previews
 and single-use confirmation; see [Feedback and Lesson documentation](docs/mcptool-feedback-lesson.md).
+
+## Gradebook and completion reporting
+
+Additional MCP tools expose the gradebook structure, grade history, course
+completion criteria, per-user completion and group-scoped cohort progress.
+One confirmed WRITE operation changes grade item visibility. See
+[gradebook and completion documentation](docs/gradebook-completion-mcp.md).
