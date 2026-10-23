@@ -50,7 +50,7 @@ final class reorder_questions extends \local_mcp\write\tool\base_tool {
     }
 
     public function get_input_schema(): array {
-        return $this->object_schema(["cmid" => ["type" => "integer", "minimum" => 1], "slotid" => ["type" => "integer", "minimum" => 1], "page" => ["type" => "integer", "minimum" => 1], "after_slotid" => ["type" => "integer", "minimum" => 0]], ["cmid", "slotid", "page"]);
+        return $this->object_schema(["cmid" => ["type" => "integer", "minimum" => 1], "slotid" => ["type" => "integer", "minimum" => 1], "expected_layout_sha256" => ["type" => "string", "pattern" => "^[a-f0-9]{64}$"], "page" => ["type" => "integer", "minimum" => 1], "after_slotid" => ["type" => "integer", "minimum" => 0]], ["cmid", "slotid", "expected_layout_sha256", "page"]);
     }
 
     public function resolve_context(array $arguments): context {

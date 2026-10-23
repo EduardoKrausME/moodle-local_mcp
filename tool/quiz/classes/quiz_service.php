@@ -97,7 +97,32 @@ final class quiz_service {
                 "name" => isset($slot->name) ? untrusted_content::text($slot->name) : null];
         }
         return ["cmid" => (int)$cm->id, "quizid" => (int)$quiz->id,
-            "editable" => $structure->can_be_edited(), "slots" => $items];
+            "editable" => $structure->can_be_edited(), "slots" => $items,
+            "layout_sha256" => self::layout_hash($quiz->id)];
+    }
+
+    /**
+     * Re-read the persisted quiz slot layout for optimistic concurrency checks.
+     */
+    private static function layout_hash(int $quizid): string {
+        global $DB;
+        $slots = $DB->get_records("quiz_slots", ["quizid" => $quizid], "slot ASC",
+            "id,slot,page,maxmark");
+        $parts = [];
+        foreach ($slots as $slot) {
+            $parts[] = [(int)$slot->id, (int)$slot->slot, (int)$slot->page,
+                (float)$slot->maxmark];
+        }
+        return hash("sha256", json_encode($parts));
+    }
+
+    /**
+     * Reject stale or mismatched slot layout snapshots.
+     */
+    private static function verify_layout(int $quizid, string $expected): void {
+        if (!hash_equals(self::layout_hash($quizid), $expected)) {
+            throw new api_exception("quiz_layout_changed", 409);
+        }
     }
 
     /**
@@ -167,6 +192,7 @@ final class quiz_service {
         require_once($CFG->dirroot . "/mod/quiz/locallib.php");
         $structure = structure::create_for_quiz(quiz_settings::create($quiz->id));
         $structure->check_can_be_edited();
+        self::verify_layout((int)$quiz->id, (string)$a["expected_layout_sha256"]);
         $slotid = (int)$a["slotid"];
         $slot = $DB->get_record("quiz_slots", ["id" => $slotid, "quizid" => $quiz->id], "*", MUST_EXIST);
         $structure->remove_slot((int)$slot->slot);
@@ -183,6 +209,7 @@ final class quiz_service {
         require_once($CFG->dirroot . "/mod/quiz/locallib.php");
         $structure = structure::create_for_quiz(quiz_settings::create($quiz->id));
         $structure->check_can_be_edited();
+        self::verify_layout((int)$quiz->id, (string)$a["expected_layout_sha256"]);
         $slotid = (int)$a["slotid"];
         $after = (int)($a["after_slotid"] ?? 0);
         $DB->get_record("quiz_slots", ["id" => $slotid, "quizid" => $quiz->id], "*", MUST_EXIST);

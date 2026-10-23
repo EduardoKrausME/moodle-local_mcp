@@ -64,6 +64,8 @@ final class attempt_service {
         }
         return ["cmid" => (int)$cm->id, "attemptid" => (int)$attempt->id,
             "userid" => (int)$attempt->userid, "state" => $attempt->state,
+            "sumgrades" => (float)$attempt->sumgrades,
+            "timemodified" => (int)$attempt->timemodified,
             "responses" => $rows, "truncated" => count($usage->get_slots()) > 60];
     }
 

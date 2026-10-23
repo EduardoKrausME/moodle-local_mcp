@@ -50,7 +50,7 @@ final class remove_question extends \local_mcp\write\tool\base_tool {
     }
 
     public function get_input_schema(): array {
-        return $this->object_schema(["cmid" => ["type" => "integer", "minimum" => 1], "slotid" => ["type" => "integer", "minimum" => 1]], ["cmid", "slotid"]);
+        return $this->object_schema(["cmid" => ["type" => "integer", "minimum" => 1], "slotid" => ["type" => "integer", "minimum" => 1], "expected_layout_sha256" => ["type" => "string", "pattern" => "^[a-f0-9]{64}$"]], ["cmid", "slotid", "expected_layout_sha256"]);
     }
 
     public function resolve_context(array $arguments): context {

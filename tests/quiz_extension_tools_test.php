@@ -76,6 +76,9 @@ final class quiz_extension_tools_test extends advanced_testcase {
         $slots = quiz_service::slots(["cmid" => $module->cmid], $identity);
         $this->assertSame($module->cmid, $slots["cmid"]);
         $this->assertTrue($slots["editable"]);
+        $this->assertMatchesRegularExpression("/^[a-f0-9]{64}$/", $slots["layout_sha256"]);
+        $removal = new \mcptool_quiz\write\remove_question();
+        $this->assertContains("expected_layout_sha256", $removal->get_input_schema()["required"]);
     }
 
     public function test_student_cannot_access_question_structure(): void {
