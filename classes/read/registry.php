@@ -26,6 +26,10 @@ namespace local_mcp\read;
 
 use coding_exception;
 use local_mcp\extension\manager;
+use local_mcp\read\tool\get_course_groups;
+use local_mcp\read\tool\get_group_members;
+use local_mcp\read\tool\get_activity_restrictions;
+use local_mcp\read\tool\get_activity_completion;
 use local_mcp\read\tool\get_question;
 use local_mcp\read\tool\search_questions;
 use local_mcp\read\tool\list_question_categories;
@@ -81,6 +85,10 @@ final class registry {
             new get_attempts(),
             new get_calendar_events(),
             new get_course(),
+            new get_course_groups(),
+            new get_group_members(),
+            new get_activity_restrictions(),
+            new get_activity_completion(),
             new get_site_config(),
             new get_site_status(),
             new get_course_image(),

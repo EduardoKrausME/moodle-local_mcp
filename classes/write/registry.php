@@ -26,6 +26,12 @@ namespace local_mcp\write;
 
 use coding_exception;
 use local_mcp\extension\manager;
+use local_mcp\write\tool\create_group;
+use local_mcp\write\tool\add_group_members;
+use local_mcp\write\tool\remove_group_members;
+use local_mcp\write\tool\set_activity_groupmode;
+use local_mcp\write\tool\set_activity_restrictions;
+use local_mcp\write\tool\set_activity_completion;
 use local_mcp\write\tool\update_question;
 use local_mcp\write\tool\create_question;
 use local_mcp\write\tool\create_question_category;
@@ -70,6 +76,12 @@ final class registry {
             new create_category(),
             new bulk_create_courses(),
             new create_course(),
+            new create_group(),
+            new add_group_members(),
+            new remove_group_members(),
+            new set_activity_groupmode(),
+            new set_activity_restrictions(),
+            new set_activity_completion(),
             new create_section(),
             new create_user(),
             new enrol_user(),

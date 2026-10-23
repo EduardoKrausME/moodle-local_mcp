@@ -925,3 +925,10 @@ The bundled `mcptool_quiz` supports quiz creation and question insertion plus
 10 additional tools for editing, responses, statistical summaries, question
 bank versions/reuse, slot operations and confirmed single-attempt regrading.
 See [quiz integration documentation](docs/mcptool-quiz.md).
+
+## Course groups, restrictions and completion
+
+Ten additional built-in MCP tools manage course groups, active-enrolment
+membership, activity group mode, access conditions and completion rules.
+READ tools provide the latest fingerprints for safe WRITE confirmations.
+See [course groups, restrictions and completion](docs/course-groups-restrictions-completion.md).
