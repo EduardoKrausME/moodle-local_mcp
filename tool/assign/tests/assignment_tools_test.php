@@ -39,8 +39,12 @@ final class assignment_tools_test extends \advanced_testcase {
         $this->assertCount(7, $read);
         $this->assertCount(8, $write);
         $names = array_merge(
-            array_map(static function($tool) { return $tool->get_name(); }, $read),
-            array_map(static function($tool) { return $tool->get_name(); }, $write)
+            array_map(static function($tool) {
+                return $tool->get_name();
+            }, $read),
+            array_map(static function($tool) {
+                return $tool->get_name();
+            }, $write)
         );
         $this->assertCount(count(array_unique($names)), $names);
         foreach ($write as $tool) {
