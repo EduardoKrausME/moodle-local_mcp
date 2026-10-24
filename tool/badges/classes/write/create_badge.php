@@ -114,7 +114,8 @@ final class create_badge extends base_tool {
             "imageauthoremail" => "", "imageauthorurl" => "",
             "imagecaption" => clean_param($arguments["image_caption"] ?? "", PARAM_TEXT),
             "issuername" => clean_param($arguments["issuer_name"] ??
-                ($CFG->badges_defaultissuername ?: get_site()->fullname), PARAM_NOTAGS),
+                (!empty($CFG->badges_defaultissuername) ? $CFG->badges_defaultissuername
+                    : get_site()->fullname), PARAM_NOTAGS),
             "issuerurl" => $issuerurl,
             "issuercontact" => $arguments["issuer_contact"] ?? ($CFG->badges_defaultissuercontact ?? ""),
             "expiry" => 0,
