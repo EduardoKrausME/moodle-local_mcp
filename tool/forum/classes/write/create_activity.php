@@ -118,6 +118,7 @@ final class create_activity extends base_tool {
             $course, 'forum', (int)$arguments['sectionnum']);
         $info->name = clean_param($arguments['name'], PARAM_TEXT);
         $info->type = 'general';
+        $info->cmidnumber = "";
         $info->intro = clean_text($arguments['intro'] ?? '', FORMAT_HTML);
         $info->introformat = FORMAT_HTML;
         // Preserve the HTML introduction when add_moduleinfo() processes the editor draft.
