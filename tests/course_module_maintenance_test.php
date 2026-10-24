@@ -35,7 +35,7 @@ use local_mcp\write\registry;
 final class course_module_maintenance_test extends advanced_testcase {
     /**
      * @covers \local_mcp\write\registry
-     * @covers \local_mcp\write\tool\assign_create_activity
+     * @covers \mcptool_assign\write\create_activity
      * @covers \local_mcp\write\tool\delete_course_module
      */
     public function test_tools_are_registered_with_safe_schemas(): void {
@@ -52,6 +52,9 @@ final class course_module_maintenance_test extends advanced_testcase {
         $assignschema = $tools["assign_create_activity"]->get_input_schema();
         $this->assertArrayHasKey("file_enabled", $assignschema["properties"]);
         $this->assertArrayHasKey("onlinetext_enabled", $assignschema["properties"]);
+        $this->assertArrayHasKey("file_submissions", $assignschema["properties"]);
+        $this->assertArrayHasKey("onlinetext", $assignschema["properties"]);
+        $this->assertInstanceOf(\mcptool_assign\write\create_activity::class, $tools["assign_create_activity"]);
     }
 
     /**
@@ -107,7 +110,7 @@ final class course_module_maintenance_test extends advanced_testcase {
     }
 
     /**
-     * @covers \local_mcp\write\tool\assign_create_activity
+     * @covers \mcptool_assign\write\create_activity
      */
     public function test_assignment_requires_at_least_one_submission_type(): void {
         global $USER;
@@ -126,4 +129,22 @@ final class course_module_maintenance_test extends advanced_testcase {
         $this->expectException(api_exception::class);
         $tool->preview($args, $identity);
     }
+
+    /**
+     * @covers \mcptool_assign\write\create_activity::preview
+     */
+    public function test_assignment_creation_rejects_duplicate_names_in_one_section(): void {
+        global $USER;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $course = $this->getDataGenerator()->create_course();
+        $this->getDataGenerator()->create_module("assign",
+            ["course" => $course->id, "name" => "Existing assignment"]);
+        $identity = new authenticated_identity($USER->id, "test", ["mcp:write"]);
+        $tool = registry::get_tools()["assign_create_activity"];
+        $this->expectException(api_exception::class);
+        $tool->preview(["courseid" => $course->id, "sectionnum" => 0,
+            "name" => "Existing assignment"], $identity);
+    }
+
 }
