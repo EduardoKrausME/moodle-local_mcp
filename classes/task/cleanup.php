@@ -53,6 +53,18 @@ final class cleanup extends scheduled_task {
         $DB->delete_records_select('local_mcp_refresh_token',
             'expiresat < ? OR (revokedat IS NOT NULL AND revokedat < ?)', [$now, $now - 30 * DAYSECS]);
 
+        // Workflow metadata uses the existing configuration table (no schema upgrade).
+        // Remove expired plans even when the original client never reconnects.
+        $workflowconfigs = $DB->get_records_select("config_plugins",
+            "plugin = ? AND " . $DB->sql_like("name", "?", false),
+            ["local_mcp", "workflow\\_%"], "", "id,name,value");
+        foreach ($workflowconfigs as $record) {
+            $data = json_decode((string)$record->value, true);
+            if (is_array($data) && isset($data["expires"]) && (int)$data["expires"] < $now) {
+                unset_config($record->name, "local_mcp");
+            }
+        }
+
         $days = max(1, (int)get_config('local_mcp', 'auditretention') ?: 180);
         $DB->delete_records_select('local_mcp_audit', 'timecreated < ?', [$now - $days * DAYSECS]);
     }
