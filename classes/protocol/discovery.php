@@ -81,7 +81,15 @@ final class discovery {
             . "for this instance. For requests about live Moodle courses, categories, "
             . "users, enrolments or images, invoke tools/call instead of inventing data. "
             . "READ and WRITE permissions are independent; Moodle capabilities are "
-            . "checked for each operation. WRITE tools can require confirmation.";
+            . "checked for each operation. WRITE tools can require confirmation. "
+            . "When the user requests multiple Moodle changes, create a workflow_sequence plan "
+            . "with the ordered item titles and their WRITE tool names (maximum 30). "
+            . "Prepare, preview, approve, execute and check exactly one item at a time. "
+            . "Pass workflow_id and workflow_step to each planned WRITE operation. "
+            . "Do not preview or perform later items before the user selects Next. "
+            . "After a successful confirmed WRITE, present the Next action supplied by the connector. "
+            . "Next advances the workflow plan only; it never approves or executes a Moodle WRITE. "
+            . "Do not silently advance, batch confirmations, or claim that a preview changed Moodle.";
     }
 
     /**
@@ -105,7 +113,7 @@ final class discovery {
      * @return array
      */
     public static function capabilities(): array {
-        return ['tools' => (object)[]];
+        return ["tools" => (object)[], "resources" => ["listChanged" => false]];
     }
 
     /**
