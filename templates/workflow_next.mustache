@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  body { font: 14px system-ui, sans-serif; margin: 0; color: var(--color-text-primary, #202124); }
+  #panel { padding: 12px; border: 1px solid var(--color-border-default,#ccc); border-radius: 10px; }
+  #progress { opacity: .75; font-size: 12px; }
+  #title { margin: 6px 0 10px; overflow-wrap: anywhere; }
+  button { border: none; border-radius: 7px; padding: 9px 18px; cursor: pointer;
+    background: var(--color-background-primary,#222); color: var(--color-text-primary,#fff); }
+  button:disabled { opacity: .6; cursor: default; }
+</style>
+</head>
+<body>
+<div id="panel" hidden>
+  <div id="progress" aria-live="polite"></div>
+  <div id="title"></div>
+  <button type="button" id="next" hidden>{{nextlabel}}</button>
+</div>
+<script>
+(function () {
+  "use strict";
+  const panel = document.getElementById("panel");
+  const progress = document.getElementById("progress");
+  const title = document.getElementById("title");
+  const button = document.getElementById("next");
+  let workflow = null;
+  let pending = false;
+  function render() {
+    const output = window.openai && window.openai.toolOutput;
+    workflow = output && output.workflow;
+    if (!workflow || !Number.isInteger(workflow.step) || !Number.isInteger(workflow.total)) {
+      panel.hidden = true;
+      return;
+    }
+    panel.hidden = false;
+    progress.textContent = workflow.step + " / " + workflow.total;
+    title.textContent = workflow.title || "";
+    button.hidden = workflow.state !== "done" || !workflow.next;
+    button.disabled = pending;
+  }
+  button.addEventListener("click", async function () {
+    if (pending || !workflow || !workflow.next ||
+        !window.openai || typeof window.openai.sendFollowUpMessage !== "function") {
+      return;
+    }
+    pending = true;
+    button.disabled = true;
+    const prompt = "Próximo. No Moodle, execute apenas workflow_sequence com action=next, " +
+      "courseid=" + workflow.courseid + ", workflow_id=" + workflow.id + ". " +
+      "Depois prepare exclusivamente a prévia da etapa " + workflow.next.step + " de " +
+      workflow.total + " (" + workflow.next.title + "), usando workflow_id e " +
+      "workflow_step nos argumentos da ferramenta. Não grave sem minha aprovação explícita.";
+    try {
+      await window.openai.sendFollowUpMessage({prompt: prompt});
+    } catch (error) {
+      pending = false;
+      button.disabled = false;
+    }
+  });
+  window.addEventListener("openai:set_globals", render);
+  render();
+}());
+</script>
+</body>
+</html>
