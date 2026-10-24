@@ -126,6 +126,7 @@ final class create_activity extends base_tool {
         $info->introeditor["format"] = FORMAT_HTML;
         $info->assessed = 0;
         $info->scale = 0;
+        $info->grade_forum = 0;
         $info->maxattachments = 0;
         $info->forcesubscribe = 0;
         $info->trackingtype = 0;
