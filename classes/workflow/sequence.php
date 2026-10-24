@@ -136,6 +136,10 @@ final class sequence {
             "tool" => $current["tool"],
             "state" => $data["state"],
             "next" => $next,
+            "next_action" => $next !== null
+                ? ["label" => get_string("next"), "requires_explicit_user_action" => true,
+                   "action" => "workflow_sequence", "courseid" => (int)$data["courseid"],
+                   "workflow_id" => $id] : null,
             "completed" => $data["completed"] ?? [],
             "expires" => (int)$data["expires"],
         ];
