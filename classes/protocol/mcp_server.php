@@ -43,6 +43,7 @@ use local_mcp\security\token_resolver;
 use local_mcp\security\user_access;
 use local_mcp\write\registry;
 use local_mcp\write\tool_interface;
+use local_mcp\workflow\sequence;
 use stdClass;
 use Throwable;
 
@@ -160,6 +161,34 @@ final class mcp_server {
                 is_array($params) ? $params : [],
                 (string)($_SERVER['HTTP_MCP_PROTOCOL_VERSION'] ?? '')
             );
+            if ($method === "resources/list") {
+                http::json(["jsonrpc" => "2.0", "id" => $id, "result" => discovery::decorate_result([
+                    "resources" => [[
+                        "uri" => "ui://local-mcp/workflow-next",
+                        "name" => "Moodle sequential workflow",
+                        "mimeType" => "text/html;profile=mcp-app",
+                        "description" => "Advance one confirmed Moodle workflow step at a time.",
+                    ]],
+                ], $modern, true)]);
+            }
+            if ($method === "resources/read") {
+                if (($params["uri"] ?? "") !== "ui://local-mcp/workflow-next") {
+                    throw new api_exception("resource_not_found", 404);
+                }
+                global $OUTPUT;
+                $html = $OUTPUT->render_from_template("local_mcp/workflow_next", [
+                    "nextlabel" => get_string("next"),
+                    "lang" => current_language(),
+                ]);
+                http::json(["jsonrpc" => "2.0", "id" => $id, "result" => discovery::decorate_result([
+                    "contents" => [[
+                        "uri" => "ui://local-mcp/workflow-next",
+                        "mimeType" => "text/html;profile=mcp-app",
+                        "text" => $html,
+                        "_meta" => ["ui" => ["prefersBorder" => false]],
+                    ]],
+                ], $modern)]);
+            }
             if ($method === 'tools/list') {
                 $definitions = $this->tool_definitions($identity);
                 diagnostics::event('tools_listed', [
@@ -360,6 +389,13 @@ final class mcp_server {
                         . 'Show the preview and obtain explicit user approval before retrying with confirmation_token.'
                         : ''),
                 'inputSchema' => $schema,
+                // Clients without MCP Apps continue using the ordinary text response.
+                "_meta" => $iswrite ? [
+                    "ui" => [
+                        "resourceUri" => "ui://local-mcp/workflow-next",
+                        "visibility" => ["model", "app"],
+                    ],
+                ] : (object)[],
 
                 'annotations' => [
                     'readOnlyHint' => !$iswrite,
@@ -392,6 +428,17 @@ final class mcp_server {
                 'description' => 'One-time token returned when confirmation_required is true. '
                     . 'Never retry with this token until the user explicitly approves the preview. '
                     . 'Then repeat the same tool with identical original arguments plus this token.',
+            ];
+        }
+        if ($iswrite && $tool->get_name() !== "workflow_sequence") {
+            $schema["properties"]["workflow_id"] = [
+                "type" => "string", "pattern" => "^[a-f0-9]{24}$",
+                "description" => "Optional ID returned by workflow_sequence. "
+                    . "Only use with its active step.",
+            ];
+            $schema["properties"]["workflow_step"] = [
+                "type" => "integer", "minimum" => 1,
+                "description" => "One-based workflow step. Never skip ahead.",
             ];
         }
         if ($iswrite && $tool->supports_dry_run()) {
@@ -495,8 +542,24 @@ final class mcp_server {
         $confirmation = (string)($arguments['confirmation_token'] ?? ($params['confirmation_token'] ?? ''));
         $dryrun = !empty($arguments['dry_run']) || !empty($params['dry_run']);
         unset($arguments['confirmation_token'], $arguments['dry_run']);
+        // Bind workflow metadata to each confirmation token but do not pass it into
+        // Moodle activity APIs or extension providers, which reject unknown fields.
+        $confirmationarguments = $arguments;
+        $workflowid = "";
+        $workflowstep = 0;
+        if ($iswrite && $name !== "workflow_sequence") {
+            $workflowid = (string)($arguments["workflow_id"] ?? "");
+            $workflowstep = (int)($arguments["workflow_step"] ?? 0);
+            unset($arguments["workflow_id"], $arguments["workflow_step"]);
+            if (($workflowid === "") !== ($workflowstep === 0)) {
+                throw new api_exception("invalid_workflow", 400);
+            }
+        }
         $context = $tool->resolve_context($arguments);
         capability_guard::check($tool->get_required_capability(), $context, $identity->userid);
+        if ($workflowid !== "") {
+            sequence::assert_current($workflowid, $identity, $workflowstep, $name, $context);
+        }
 
         diagnostics::event('tool_permission_granted', [
             'tool' => $name,
@@ -539,7 +602,7 @@ final class mcp_server {
             if ($confirmation === '') {
                 $preview = $tool->preview($arguments, $identity);
                 $token = confirmation_service::issue(
-                    $identity, $rawtoken, $name, $arguments, $context);
+                    $identity, $rawtoken, $name, $confirmationarguments, $context);
                 logger::record('tool_called', $identity, $name, 'write', $context,
                     summary::from_call($name, $arguments),
                     $tool->is_destructive(), false, false, 'confirmation_pending');
@@ -559,18 +622,32 @@ final class mcp_server {
                     'message' => 'No changes have been made. Show this preview to the user and '
                         . 'request explicit approval. Only if approved, call the same tool again '
                         . 'with identical original arguments plus confirmation_token.',
-                ];
+                ] + ($workflowid !== "" ? ["workflow" =>
+                    sequence::status($workflowid, $identity,
+                        (int)$context->get_course_context(false)->instanceid)] : []);
             }
             confirmation_service::consume(
-                $confirmation, $identity, $rawtoken, $name, $arguments, $context);
+                $confirmation, $identity, $rawtoken, $name, $confirmationarguments, $context);
             diagnostics::event('confirmation_accepted', [
                 'tool' => $name, 'userid' => $identity->userid,
                 'contextid' => (int)$context->id,
                 'status' => 'approved',
             ]);
         }
+        // Only one approved call can claim a workflow step, even if several
+        // preview tokens were issued before either was confirmed.
+        if ($workflowid !== "") {
+            sequence::claim($workflowid, $identity, $workflowstep, $name, $context);
+        }
         $started = microtime(true);
+        // On failure leave the step in "executing" for manual reconciliation;
+        // retrying blindly could duplicate a partially persisted activity.
         $result = $tool->execute($arguments, $identity);
+        if ($workflowid !== "") {
+            $coursecontext = $context->get_course_context(false);
+            $result["workflow"] = sequence::complete($workflowid, $identity,
+                (int)$coursecontext->instanceid, $result);
+        }
         logger::record('tool_called', $identity, $name, 'write', $context,
             summary::from_call($name, $arguments, $result),
             $tool->is_destructive(), false, ($tool->requires_confirmation() || $tool->is_destructive()),
