@@ -142,23 +142,26 @@ final class image {
         if (!$resource) {
             throw new api_exception("PNG could not be decoded", 400);
         }
-        $transparent = false;
+        $clear = 0;
+        $samples = 0;
         $size = imagesx($resource);
-        // Inspect the border, where a transparent background should actually be visible.
+        // Transparent artwork has a mostly clear perimeter, not just one transparent pixel.
         for ($i = 0; $i < $size; $i += max(1, (int)floor($size / 32))) {
             foreach ([[0, $i], [$size - 1, $i], [$i, 0], [$i, $size - 1]] as [$x, $y]) {
                 $pixel = imagecolorat($resource, $x, $y);
-                if (imageistruecolor($resource)) {
-                    $transparent = $transparent || (($pixel >> 24) & 0x7f) > 0;
-                } else {
-                    $colour = imagecolorsforindex($resource, $pixel);
-                    $transparent = $transparent || $colour["alpha"] > 0;
+                $alpha = imageistruecolor($resource)
+                    ? (($pixel >> 24) & 0x7f)
+                    : imagecolorsforindex($resource, $pixel)["alpha"];
+                $samples++;
+                if ($alpha >= 120) {
+                    $clear++;
                 }
             }
         }
+        $transparent = $samples > 0 && $clear / $samples >= 0.95;
         imagedestroy($resource);
         if ($requiretransparency && !$transparent) {
-            throw new api_exception("PNG has no transparency on its edges; export with a real alpha channel", 400);
+            throw new api_exception("PNG border is not mostly transparent; export with a real alpha channel and clear margins", 400);
         }
         return [
             "bytes" => $raw, "sha256" => hash("sha256", $raw),
