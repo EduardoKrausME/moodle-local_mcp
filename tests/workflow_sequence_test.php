@@ -109,6 +109,8 @@ final class workflow_sequence_test extends advanced_testcase {
     /**
      * MCP Apps linkage must be discoverable without breaking text-only clients.
      *
+     * @covers \local_mcp\protocol\mcp_server
+     * @covers \local_mcp\protocol\tool_schema
      * @return void
      */
     public function test_mcp_tool_discovery_links_workflow_ui(): void {
@@ -123,9 +125,13 @@ final class workflow_sequence_test extends advanced_testcase {
         $this->assertArrayHasKey("workflow_sequence", $indexed);
         $this->assertSame("ui://local-mcp/workflow-next",
             $indexed["create_section"]["_meta"]["ui"]["resourceUri"]);
-        $this->assertArrayHasKey("workflow_id", $indexed["create_section"]["inputSchema"]["properties"]);
-        $this->assertArrayNotHasKey("workflow_step",
-            $indexed["workflow_sequence"]["inputSchema"]["properties"]);
+        // JSON Schema properties must be JSON objects after tool_schema::normalize().
+        $sectionproperties = $indexed["create_section"]["inputSchema"]["properties"];
+        $workflowproperties = $indexed["workflow_sequence"]["inputSchema"]["properties"];
+        $this->assertIsObject($sectionproperties);
+        $this->assertIsObject($workflowproperties);
+        $this->assertTrue(property_exists($sectionproperties, "workflow_id"));
+        $this->assertFalse(property_exists($workflowproperties, "workflow_step"));
         $this->assertArrayHasKey("resources", discovery::capabilities());
     }
 }
