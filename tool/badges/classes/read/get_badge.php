@@ -56,6 +56,24 @@ final class get_badge extends base_tool {
         return $badge->courseid ? context_course::instance((int)$badge->courseid)
             : context_system::instance();
     }
+    /**
+     * @param int $badgeid Badge ID.
+     * @return array Summary of stored native badge criteria.
+     */
+    private static function criteria_summary(int $badgeid): array {
+        global $DB;
+        $rows = $DB->get_records("badge_criteria", ["badgeid" => $badgeid]);
+        $result = [];
+        foreach ($rows as $row) {
+            $params = $DB->get_records("badge_criteria_param", ["critid" => $row->id]);
+            $result[] = ["type" => (int)$row->criteriatype, "method" => (int)$row->method,
+                "required_cmids" => array_values(array_map("intval", array_column(array_filter(
+                    array_values($params), static fn($p): bool => preg_match("/^module_[0-9]+$/D", $p->name) === 1),
+                    "value")))];
+        }
+        return $result;
+    }
+
     public function execute(array $arguments, authenticated_identity $identity): array {
         global $DB, $CFG;
         require_once($CFG->libdir . "/badgeslib.php");
@@ -68,6 +86,7 @@ final class get_badge extends base_tool {
             "status" => (int)$badge->status, "timemodified" => (int)$badge->timemodified,
             "issuername" => $badge->issuername, "issuerurl" => $badge->issuerurl,
             "awards" => (int)$DB->count_records("badge_issued", ["badgeid" => $badge->id]),
+            "criteria" => self::criteria_summary((int)$badge->id),
             "image_exists" => (bool)$file,
             "image_url" => $file ? \moodle_url::make_pluginfile_url(
                 $context->id, "badges", "badgeimage", $badge->id, "/", "f3.png")->out(false) : null,

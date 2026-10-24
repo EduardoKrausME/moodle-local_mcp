@@ -25,6 +25,7 @@
 namespace local_mcp\read;
 
 use coding_exception;
+use local_mcp\read\tool\get_course_completion_config;
 use local_mcp\extension\manager;
 use local_mcp\read\tool\get_gradebook_structure;
 use local_mcp\read\tool\get_grade_history;
@@ -104,6 +105,7 @@ final class registry {
             new get_grades(),
             new get_gradebook_structure(),
             new get_grade_history(),
+            new get_course_completion_config(),
             new get_course_completion_criteria(),
             new get_course_completion_status(),
             new get_course_progress_report(),

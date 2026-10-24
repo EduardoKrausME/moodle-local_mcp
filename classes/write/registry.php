@@ -25,6 +25,7 @@
 namespace local_mcp\write;
 
 use coding_exception;
+use local_mcp\write\tool\set_course_completion_config;
 use local_mcp\extension\manager;
 use local_mcp\write\tool\workflow_sequence;
 use local_mcp\write\tool\set_grade_item_visibility;
@@ -87,6 +88,7 @@ final class registry {
             new set_activity_groupmode(),
             new set_activity_restrictions(),
             new set_activity_completion(),
+            new set_course_completion_config(),
             new create_section(),
             new create_user(),
             new enrol_user(),

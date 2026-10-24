@@ -1,6 +1,6 @@
 # Moodle badge MCP tools
 
-This subplugin integrates with the **native Moodle badge subsystem** in Moodle 4.5–5.3. It exposes READ tools \`badges_image_guide\`, \`badges_list\`, \`badges_get\`, and confirmed WRITE tools \`badges_create\` and \`badges_replace_image\`. The parent \`local_mcp\` plugin discovers them automatically once Moodle has installed the new \`mcptool_badges\` subplugin. No changes to the root version or GitHub Actions workflows are needed.
+This subplugin integrates with the **native Moodle badge subsystem** in Moodle 4.5–5.3. It exposes READ tools \`badges_image_guide\`, \`badges_list\`, \`badges_get\`, and confirmed WRITE tools \`badges_create\`, \`badges_replace_image\`, \`badges_set_criteria\` and \`badges_enable\`. The parent \`local_mcp\` plugin discovers them automatically once Moodle has installed the new \`mcptool_badges\` subplugin. No changes to the root version or GitHub Actions workflows are needed.
 
 ## How to prepare a badge image
 
@@ -30,3 +30,16 @@ Example tool arguments:
 Use \`courseid: 0\` or omit it for a site-level badge. \`badges_list\` and \`badges_get\` accept course/badge IDs, and \`badges_replace_image\` accepts \`badgeid\`, \`expected_timemodified\` from \`badges_get\`, and one image source. Replacement is denied after activation or issuance.
 
 **Security:** Creation requires \`moodle/badges:createbadge\`; replacement requires \`moodle/badges:configuredetails\`; listing and details require \`moodle/badges:viewbadges\` in the matching system/course context. URL downloads go through Moodle's SSRF-protected curl, reject non-HTTPS/redirects/private hosts and enforce a size cap. All WRITEs use the parent MCP preview/confirmation flow; Base64 values are never echoed in previews or result data. No badge is enabled or awarded automatically.
+
+
+## Automatic awarding from activity completion
+
+1. Enable completion tracking at site level, then call `get_course_completion_config` and, when needed, `set_course_completion_config` with the current expected state (WRITE preview/confirmation).
+2. Inspect each module using the existing `get_activity_completion`; use `set_activity_completion` to configure automatic view/grade completion. This operation refuses to rewrite activity settings when there is already student completion history.
+3. Create an inactive course badge (`badges_create`), then read its `timemodified` revision with `badges_get`.
+4. Call `badges_set_criteria` with that badge revision and the exact list of course module IDs (`cmids`). The tool supports a strict AND (ALL) aggregator for native activity completion. Preview and confirm explicitly. It refuses active, previously issued, or previously configured badges.
+5. Read the new badge revision, review its criteria and call `badges_enable` with preview/confirmation. Once enabled, Moodle issues badges via its normal completion events and scheduled processing. Existing qualifying learners might also receive a badge.
+
+All modifications use Moodle core APIs, course scope checks, and the connector confirmation flow; the native Moodle badge issuer remains responsible for awards. `badges_set_criteria` currently configures the initial rules only and does not edit previously enabled or issued badge criteria.
+
+**Book caveat:** Moodle's ordinary Book completion based on opening the activity does not require opening all chapters. Do not market an award as proof of reading every chapter without a separate chapter-level tracker. The developer track also requires real learning activities before an overall completion badge can be meaningfully enabled.

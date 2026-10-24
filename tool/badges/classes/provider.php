@@ -31,6 +31,8 @@ use mcptool_badges\read\image_guide;
 use mcptool_badges\read\list_badges;
 use mcptool_badges\write\create_badge;
 use mcptool_badges\write\replace_image;
+use mcptool_badges\write\set_criteria;
+use mcptool_badges\write\enable_badge;
 
 /**
  * Moodle badge provider; no special cases in the parent MCP plugin.
@@ -43,6 +45,6 @@ final class provider implements read_provider_interface, write_provider_interfac
 
     /** @return array */
     public function get_write_tools(): array {
-        return [new create_badge(), new replace_image()];
+        return [new create_badge(), new replace_image(), new set_criteria(), new enable_badge()];
     }
 }

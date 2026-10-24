@@ -33,6 +33,8 @@ use mcptool_badges\read\get_badge;
 use mcptool_badges\read\list_badges;
 use mcptool_badges\write\create_badge;
 use mcptool_badges\write\replace_image;
+use mcptool_badges\write\set_criteria;
+use mcptool_badges\write\enable_badge;
 
 /**
  * Badge creation is intentionally separated from activation and issuance.
@@ -43,6 +45,8 @@ use mcptool_badges\write\replace_image;
  * @covers \mcptool_badges\read\list_badges
  * @covers \mcptool_badges\write\create_badge
  * @covers \mcptool_badges\write\replace_image
+ * @covers \mcptool_badges\write\set_criteria
+ * @covers \mcptool_badges\write\enable_badge
  * @covers \mcptool_badges\read\image_guide
  */
 final class badges_tools_test extends advanced_testcase {
@@ -75,7 +79,7 @@ final class badges_tools_test extends advanced_testcase {
         $read = array_map(static fn($tool): string => $tool->get_name(), $provider->get_read_tools());
         $write = array_map(static fn($tool): string => $tool->get_name(), $provider->get_write_tools());
         $this->assertSame(["badges_image_guide", "badges_list", "badges_get"], $read);
-        $this->assertSame(["badges_create", "badges_replace_image"], $write);
+        $this->assertSame(["badges_create", "badges_replace_image", "badges_set_criteria", "badges_enable"], $write);
         foreach ($provider->get_write_tools() as $tool) {
             $this->assertTrue($tool->requires_confirmation());
             $this->assertSame("object", $tool->get_input_schema()["type"]);
