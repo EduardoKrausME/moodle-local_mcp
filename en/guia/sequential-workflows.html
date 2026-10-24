@@ -10,7 +10,7 @@
 <p>Example:</p>
 <pre><code class="language-json">{
   &quot;action&quot;: &quot;start&quot;,
-  &quot;courseid&quot;: 33,
+  &quot;courseid&quot;: 123,
   &quot;items&quot;: [
     {&quot;title&quot;: &quot;Discussion forum&quot;, &quot;tool&quot;: &quot;forum_create_activity&quot;},
     {&quot;title&quot;: &quot;Assignment&quot;, &quot;tool&quot;: &quot;assign_create_activity&quot;}
@@ -19,7 +19,7 @@
 <p>The specified tools must be installed and exposed by the selected Moodle site; names above are illustrative. The plan stores <strong>labels and tool names only</strong>, not HTML, arguments, students' data or confirmation tokens.</p>
 <h3 id="safety-and-interoperability">Safety and interoperability</h3>
 <p>The same user, client and OAuth connection must access the workflow. The plugin checks the tool name, step number, course context and Moodle capability on each WRITE. An approved WRITE claims a step before execution; a second call cannot claim it. After a failure, the stage deliberately stays <code>executing</code> so a partially completed Moodle operation is not repeated automatically. Inspect Moodle, then cancel and replan if recovery is required.</p>
-<p>Workflows expire after seven days. Persistence uses Moodle's existing <code>config_plugins</code> API so no DB migration or <code>version.php</code> change is needed.</p>
+<p>Workflows expire after seven days. Their state is stored using Moodle's <code>config_plugins</code> API.</p>
 <p>MCP Apps-aware clients fetch <code>ui://local-mcp/workflow-next</code> via <code>resources/read</code> and render the Next button after a tracked WRITE succeeds. Clients without UI support still receive structured workflow data and must offer a text-based Next action. The button depends on the MCP client supporting the extension; the server cannot force a native ChatGPT button.</p>
 <p>Untracked operations work as before. The plugin does not infer a batch from arbitrary ChatGPT prose: the client must call <code>workflow_sequence(action=start)</code> to activate a server-enforced plan.</p><nav class="doc-prevnext" aria-label="Previous and next guides"><a href="oauth-webserver.html">← OAuth web-server setup</a><a href="assignment-feedback-tools.html">Assignment feedback →</a></nav></article><aside class="detail-aside doc-aside"><h3>On this page</h3><nav class="doc-toc"><a href="#usage">Usage</a>
 <a href="#safety-and-interoperability">Safety and interoperability</a></nav><h3>All guides</h3><nav class="doc-side-links"><a href="assignment-feedback-tools.html">Assignment feedback</a>

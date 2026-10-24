@@ -10,7 +10,7 @@
 <h3 id="exemplo">Exemplo</h3>
 <pre><code class="language-json">{
   &quot;action&quot;: &quot;start&quot;,
-  &quot;courseid&quot;: 33,
+  &quot;courseid&quot;: 123,
   &quot;items&quot;: [
     {&quot;title&quot;: &quot;Fórum de discussão&quot;, &quot;tool&quot;: &quot;forum_create_activity&quot;},
     {&quot;title&quot;: &quot;Tarefa&quot;, &quot;tool&quot;: &quot;assign_create_activity&quot;}
@@ -20,7 +20,7 @@
 <h3 id="seguranca-e-interoperabilidade">Segurança e interoperabilidade</h3>
 <p>O mesmo usuário, cliente e conexão OAuth precisam acessar o fluxo. Em cada WRITE, o plugin confere a ferramenta, o número da etapa, o contexto do curso e as capacidades do Moodle. Uma operação aprovada reivindica sua etapa antes da execução; uma segunda chamada não consegue reivindicar a mesma etapa.</p>
 <p>Se ocorrer falha, a etapa permanece propositalmente no estado <code>executing</code>, evitando a repetição automática de uma operação que talvez tenha sido parcialmente concluída no Moodle. Nesse caso, examine o curso e, se necessário, cancele o fluxo e planeje novamente.</p>
-<p>Os fluxos expiram em sete dias. A persistência utiliza a API <code>config_plugins</code> existente no Moodle, sem migração de banco nem mudança de <code>version.php</code>.</p>
+<p>Os fluxos expiram em sete dias. Seu estado é armazenado pela API <code>config_plugins</code> do Moodle.</p>
 <p>Clientes compatíveis com MCP Apps acessam <code>ui://local-mcp/workflow-next</code> via <code>resources/read</code> e apresentam o botão Próximo depois de um WRITE rastreado. Clientes sem suporte de interface continuam recebendo dados estruturados e precisam oferecer uma continuação textual. O botão depende do suporte do cliente à extensão; o servidor não consegue impor um botão nativo no ChatGPT.</p>
 <p>Operações fora do fluxo continuam funcionando como antes. O plugin não deduz automaticamente uma sequência de comandos a partir de texto livre: o cliente deve chamar explicitamente <code>workflow_sequence(action=start)</code> para ativar um plano controlado pelo servidor.</p><nav class="doc-prevnext" aria-label="Guia anterior e seguinte"><a href="oauth-webserver.html">← OAuth e configuração do servidor web</a><a href="assignment-feedback-tools.html">Feedback de tarefas →</a></nav></article><aside class="detail-aside doc-aside"><h3>Nesta página</h3><nav class="doc-toc"><a href="#como-utilizar">Como utilizar</a>
 <a href="#exemplo">Exemplo</a>
