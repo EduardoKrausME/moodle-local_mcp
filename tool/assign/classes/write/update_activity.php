@@ -116,6 +116,9 @@ final class update_activity extends base_tool {
         if (!$changedfields) {
             throw new api_exception("no_fields_to_update", 400);
         }
+        if (in_array("intro", $changedfields, true)) {
+            $change->introformat = FORMAT_HTML;
+        }
         $open = (int)($change->allowsubmissionsfromdate ?? $instance->allowsubmissionsfromdate);
         $due = (int)($change->duedate ?? $instance->duedate);
         $cutoff = (int)($change->cutoffdate ?? $instance->cutoffdate);

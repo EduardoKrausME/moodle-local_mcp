@@ -120,6 +120,9 @@ final class create_activity extends base_tool {
         $info->type = 'general';
         $info->intro = clean_text($arguments['intro'] ?? '', FORMAT_HTML);
         $info->introformat = FORMAT_HTML;
+        // Preserve the HTML introduction when add_moduleinfo() processes the editor draft.
+        $info->introeditor["text"] = $info->intro;
+        $info->introeditor["format"] = FORMAT_HTML;
         $info->assessed = 0;
         $info->scale = 0;
         $info->maxattachments = 0;

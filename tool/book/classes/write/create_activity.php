@@ -119,6 +119,9 @@ final class create_activity extends base_tool {
         $info->name = clean_param($arguments['name'], PARAM_TEXT);
         $info->intro = clean_text($arguments['intro'] ?? '', FORMAT_HTML);
         $info->introformat = FORMAT_HTML;
+        // Preserve the HTML introduction when add_moduleinfo() processes the editor draft.
+        $info->introeditor["text"] = $info->intro;
+        $info->introeditor["format"] = FORMAT_HTML;
         $info->numbering = 1;
         $info->customtitles = 0;
         $result = add_moduleinfo($info, $course);

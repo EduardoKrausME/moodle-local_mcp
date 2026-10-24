@@ -219,6 +219,12 @@ abstract class activity_create_base extends base_tool {
         $info->intro = clean_text($arguments['intro'] ?? '', FORMAT_HTML);
         $info->introformat = FORMAT_HTML;
         $this->configure($info, $arguments, $identity);
+        // The core module API takes intro and introformat from introeditor when present.
+        // Synchronize after configure() because some tools replace the introduction.
+        if (isset($info->introeditor)) {
+            $info->introeditor["text"] = $info->intro;
+            $info->introeditor["format"] = FORMAT_HTML;
+        }
         $result = add_moduleinfo($info, $course);
         $moduleurl = $this->module_name() === 'label'
             ? new moodle_url('/course/view.php', ['id' => $course->id])

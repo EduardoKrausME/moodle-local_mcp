@@ -166,6 +166,9 @@ final class quiz_service {
         if (!$changed) {
             throw new api_exception("no_quiz_changes", 400);
         }
+        if (in_array("intro", $changed, true)) {
+            $changes->introformat = FORMAT_HTML;
+        }
         $open = (int)($changes->timeopen ?? $quiz->timeopen);
         $close = (int)($changes->timeclose ?? $quiz->timeclose);
         if ($open && $close && $close <= $open) {

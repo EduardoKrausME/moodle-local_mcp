@@ -120,6 +120,9 @@ final class create_activity extends base_tool {
         require_once($CFG->libdir . '/resourcelib.php');
         $info->intro = clean_text($arguments['intro'] ?? '', FORMAT_HTML);
         $info->introformat = FORMAT_HTML;
+        // Preserve the HTML introduction when add_moduleinfo() processes the editor draft.
+        $info->introeditor["text"] = $info->intro;
+        $info->introeditor["format"] = FORMAT_HTML;
         $info->content = clean_text($arguments['content'], FORMAT_HTML);
         $info->contentformat = FORMAT_HTML;
         $info->display = RESOURCELIB_DISPLAY_OPEN;
