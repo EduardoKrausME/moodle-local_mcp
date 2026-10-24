@@ -706,7 +706,7 @@ confirmation-token workflow and rejects stale submissions or feedback,
 anonymous marking and team submissions. Moodle grading capabilities and
 separate-group restrictions are enforced.
 
-See [Assignment feedback tools](docs/assignment-feedback-tools.md) for
+See [Assignment feedback tools](https://github.com/EduardoKrausME/moodle-local_mcp/blob/docs/assignment-feedback-tools.md) for
 arguments, safeguards and an example workflow.
 
 ## Question bank support
@@ -917,32 +917,32 @@ origin. The plugin never accepts OAuth access tokens in URL query parameters.
 The bundled `mcptool_assign` provides 15 additional READ/WRITE tools for managing assignments,
 reviewing submission history, extracting authorized text attachments, granting extensions,
 drafting rubric assessments and managing release workflows. Install/upgrade the
-subplugin and refresh MCP discovery. See [assignment management documentation](docs/mcptool-assign.md).
+subplugin and refresh MCP discovery. See [assignment management documentation](https://github.com/EduardoKrausME/moodle-local_mcp/blob/docs/mcptool-assign.md).
 
 ## Quiz management and statistics
 
 The bundled `mcptool_quiz` supports quiz creation and question insertion plus
 10 additional tools for editing, responses, statistical summaries, question
 bank versions/reuse, slot operations and confirmed single-attempt regrading.
-See [quiz integration documentation](docs/mcptool-quiz.md).
+See [quiz integration documentation](https://github.com/EduardoKrausME/moodle-local_mcp/blob/docs/mcptool-quiz.md).
 
 ## Course groups, restrictions and completion
 
 Ten additional built-in MCP tools manage course groups, active-enrolment
 membership, activity group mode, access conditions and completion rules.
 READ tools provide the latest fingerprints for safe WRITE confirmations.
-See [course groups, restrictions and completion](docs/course-groups-restrictions-completion.md).
+See [course groups, restrictions and completion](https://github.com/EduardoKrausME/moodle-local_mcp/blob/docs/course-groups-restrictions-completion.md).
 
 ## Feedback and Lesson MCP integrations
 
 The bundled `mcptool_feedback` and `mcptool_lesson` expose 12 new READ/WRITE
 tools for feedback questions, anonymized report summaries, activity creation,
 lesson page authoring, and conditional navigation. WRITE calls require previews
-and single-use confirmation; see [Feedback and Lesson documentation](docs/mcptool-feedback-lesson.md).
+and single-use confirmation; see [Feedback and Lesson documentation](https://github.com/EduardoKrausME/moodle-local_mcp/blob/docs/mcptool-feedback-lesson.md).
 
 ## Gradebook and completion reporting
 
 Additional MCP tools expose the gradebook structure, grade history, course
 completion criteria, per-user completion and group-scoped cohort progress.
 One confirmed WRITE operation changes grade item visibility. See
-[gradebook and completion documentation](docs/gradebook-completion-mcp.md).
+[gradebook and completion documentation](https://github.com/EduardoKrausME/moodle-local_mcp/blob/docs/gradebook-completion-mcp.md).
