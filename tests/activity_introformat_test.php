@@ -69,17 +69,17 @@ final class activity_introformat_test extends advanced_testcase {
             $created = $tool->execute($args, $identity);
             $record = $DB->get_record($modulename, ["id" => $created["instanceid"]], "*", MUST_EXIST);
             $this->assertSame($intro, $record->intro);
-            $this->assertSame(FORMAT_HTML, (int)$record->introformat);
+            $this->assertSame((int)FORMAT_HTML, (int)$record->introformat);
 
             if ($modulename === "page") {
                 $this->assertSame($args["content"], $record->content);
-                $this->assertSame(FORMAT_HTML, (int)$record->contentformat);
+                $this->assertSame((int)FORMAT_HTML, (int)$record->contentformat);
                 require_once($CFG->dirroot . "/course/modlib.php");
                 $cm = get_coursemodule_from_id("page", (int)$created["cmid"], 0, false, MUST_EXIST);
                 [, , , $formdata] = get_moduleinfo_data($cm, $course);
                 $this->assertTrue(property_exists($formdata, "content"));
                 $this->assertSame($args["content"], $formdata->content);
-                $this->assertSame(FORMAT_HTML, (int)$formdata->contentformat);
+                $this->assertSame((int)FORMAT_HTML, (int)$formdata->contentformat);
             }
         }
     }
@@ -103,7 +103,7 @@ final class activity_introformat_test extends advanced_testcase {
 
         $record = $DB->get_record("label", ["id" => $created["instanceid"]], "*", MUST_EXIST);
         $this->assertSame($content, $record->intro);
-        $this->assertSame(FORMAT_HTML, (int)$record->introformat);
+        $this->assertSame((int)FORMAT_HTML, (int)$record->introformat);
     }
 
     /**
@@ -132,7 +132,7 @@ final class activity_introformat_test extends advanced_testcase {
             $tool->execute(["cmid" => (int)$cm->id, "intro" => $intro], $identity);
             $updated = $DB->get_record($modulename, ["id" => $instance->id], "*", MUST_EXIST);
             $this->assertSame($intro, $updated->intro);
-            $this->assertSame(FORMAT_HTML, (int)$updated->introformat);
+            $this->assertSame((int)FORMAT_HTML, (int)$updated->introformat);
         }
     }
 }
