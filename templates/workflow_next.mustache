@@ -48,11 +48,12 @@
     }
     pending = true;
     button.disabled = true;
-    const prompt = "Próximo. No Moodle, execute apenas workflow_sequence com action=next, " +
+    const prompt = "Next. On the same Moodle site, call workflow_sequence with action=next, " +
       "courseid=" + workflow.courseid + ", workflow_id=" + workflow.id + ". " +
-      "Depois prepare exclusivamente a prévia da etapa " + workflow.next.step + " de " +
-      workflow.total + " (" + workflow.next.title + "), usando workflow_id e " +
-      "workflow_step nos argumentos da ferramenta. Não grave sem minha aprovação explícita.";
+      "Then prepare only a preview for step " + workflow.next.step + " of " +
+      workflow.total + " (" + workflow.next.title + "). Include workflow_id and " +
+      "workflow_step in the WRITE tool arguments. Do not execute any WRITE " +
+      "until I explicitly approve that new step.";
     try {
       await window.openai.sendFollowUpMessage({prompt: prompt});
     } catch (error) {
