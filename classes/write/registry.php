@@ -26,6 +26,7 @@ namespace local_mcp\write;
 
 use coding_exception;
 use local_mcp\extension\manager;
+use local_mcp\write\tool\workflow_sequence;
 use local_mcp\write\tool\set_grade_item_visibility;
 use local_mcp\write\tool\create_group;
 use local_mcp\write\tool\add_group_members;
@@ -72,6 +73,7 @@ final class registry {
      */
     public static function get_tools(): array {
         $tools = [
+            new workflow_sequence(),
             new assign_create_activity(),
             new delete_course_module(),
             new create_question_category(),
