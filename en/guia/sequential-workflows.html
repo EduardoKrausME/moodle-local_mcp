@@ -1,0 +1,33 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Stepwise confirmed WRITE workflows."><title>Sequential workflows · Moodle MCP</title><link rel="icon" href="../../favicon.svg"><script src="../../theme-init.js"></script><link rel="stylesheet" href="../../styles.css"></head><body><a class="skip" href="#conteudo">Skip to content</a><header class="site-header"><div class="shell header-inner"><a class="brand" href="../index.html"><span class="brand-mark">M</span><span>Moodle <strong>MCP</strong></span></a><nav aria-label="Navigation"><a href="../index.html#recursos">Features</a><a href="../index.html#conectar">Connection</a><a href="index.html">Technical guides</a><a href="../index.html#seguranca">Security</a></nav><div class="header-actions"><a class="button small primary" href="https://github.com/EduardoKrausME/moodle-local_mcp" target="_blank" rel="noopener">View on GitHub ↗</a><button class="menu-button" aria-label="Open menu" aria-expanded="false">☰</button></div></div></header><main id="conteudo"><section class="detail-hero"><div class="shell"><a class="back" href="index.html">← Back to guides</a><span class="eyebrow" style="display:flex;margin-top:32px">Technical documentation</span><h1>Sequential workflows</h1><p>Stepwise confirmed WRITE workflows.</p></div></section><div class="shell detail-layout doc-layout"><article class="prose doc-prose"><p>The MCP server can plan <strong>2–30</strong> Moodle WRITE operations for a single course and guide the client through one confirmation at a time. This behavior is delivered by the Moodle plugin's discovery instructions and an optional MCP Apps <strong>Next</strong> button, not by ChatGPT memory or custom instructions.</p>
+<h3 id="usage">Usage</h3>
+<ol>
+<li>Call <code>workflow_sequence</code> with <code>action=start</code>, <code>courseid</code> and ordered <code>items</code> containing only <code>title</code> and the existing WRITE <code>tool</code> name.</li>
+<li>The response returns an opaque <code>workflow.id</code> and the first step. Generate the arguments <strong>only for that step</strong>. Call the original tool, including <code>workflow_id</code> and <code>workflow_step=1</code>.</li>
+<li>Show the preview and obtain explicit user approval. Reinvoke the <em>same</em> tool with its identical arguments plus <code>confirmation_token</code>. The plugin rejects steps other than the current one and prevents parallel claims.</li>
+<li>Verify the created content with the relevant READ tool when available. The successful WRITE result contains workflow progress and an MCP App with a <strong>Next</strong> button. Clicking it sends a follow-up; it does not authorize a WRITE.</li>
+<li>For the next step, call <code>workflow_sequence</code> with <code>action=next</code>, <code>courseid</code> and <code>workflow_id</code>. Prepare a new preview, wait for approval, and repeat. Use <code>action=status</code> to resume or <code>action=cancel</code> to discard a plan.</li>
+</ol>
+<p>Example:</p>
+<pre><code class="language-json">{
+  &quot;action&quot;: &quot;start&quot;,
+  &quot;courseid&quot;: 33,
+  &quot;items&quot;: [
+    {&quot;title&quot;: &quot;Discussion forum&quot;, &quot;tool&quot;: &quot;forum_create_activity&quot;},
+    {&quot;title&quot;: &quot;Assignment&quot;, &quot;tool&quot;: &quot;assign_create_activity&quot;}
+  ]
+}</code></pre>
+<p>The specified tools must be installed and exposed by the selected Moodle site; names above are illustrative. The plan stores <strong>labels and tool names only</strong>, not HTML, arguments, students' data or confirmation tokens.</p>
+<h3 id="safety-and-interoperability">Safety and interoperability</h3>
+<p>The same user, client and OAuth connection must access the workflow. The plugin checks the tool name, step number, course context and Moodle capability on each WRITE. An approved WRITE claims a step before execution; a second call cannot claim it. After a failure, the stage deliberately stays <code>executing</code> so a partially completed Moodle operation is not repeated automatically. Inspect Moodle, then cancel and replan if recovery is required.</p>
+<p>Workflows expire after seven days. Persistence uses Moodle's existing <code>config_plugins</code> API so no DB migration or <code>version.php</code> change is needed.</p>
+<p>MCP Apps-aware clients fetch <code>ui://local-mcp/workflow-next</code> via <code>resources/read</code> and render the Next button after a tracked WRITE succeeds. Clients without UI support still receive structured workflow data and must offer a text-based Next action. The button depends on the MCP client supporting the extension; the server cannot force a native ChatGPT button.</p>
+<p>Untracked operations work as before. The plugin does not infer a batch from arbitrary ChatGPT prose: the client must call <code>workflow_sequence(action=start)</code> to activate a server-enforced plan.</p><nav class="doc-prevnext" aria-label="Previous and next guides"><a href="oauth-webserver.html">← OAuth web-server setup</a><a href="assignment-feedback-tools.html">Assignment feedback →</a></nav></article><aside class="detail-aside doc-aside"><h3>On this page</h3><nav class="doc-toc"><a href="#usage">Usage</a>
+<a href="#safety-and-interoperability">Safety and interoperability</a></nav><h3>All guides</h3><nav class="doc-side-links"><a href="assignment-feedback-tools.html">Assignment feedback</a>
+<a href="course-groups-restrictions-completion.html">Groups, access restrictions and completion</a>
+<a href="course-module-maintenance.html">Assignment creation and safe module deletion</a>
+<a href="gradebook-completion-mcp.html">Gradebook and completion</a>
+<a href="mcptool-assign.html">Advanced assignment tools</a>
+<a href="mcptool-feedback-lesson.html">Feedback and Lesson tools</a>
+<a href="mcptool-quiz.html">Quiz and question bank</a>
+<a href="oauth-webserver.html">OAuth web-server setup</a>
+<a href="sequential-workflows.html" aria-current="page" class="is-current">Sequential workflows</a></nav></aside></div></main><footer><div class="shell footer-main"><a class="brand" href="../index.html"><span class="brand-mark">M</span><span>Moodle <strong>MCP</strong></span></a><p>An extensible MCP server for Moodle.</p><div><a href="https://github.com/EduardoKrausME/moodle-local_mcp" target="_blank" rel="noopener">Open source ↗</a><a href="../privacy.html">Privacy Policy</a></div></div><div class="shell footer-bottom"><span>© 2026 Eduardo Kraus · Moodle MCP</span><span>Moodle™ is a registered trademark. Independent project.</span></div></footer><script src="../../script.js"></script></body></html>

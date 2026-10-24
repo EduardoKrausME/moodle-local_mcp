@@ -1,0 +1,47 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Permissões, SHA-256 de estado e configuração de conclusão."><title>Grupos, restrições e conclusão · Moodle MCP</title><link rel="icon" href="../../favicon.svg"><script src="../../theme-init.js"></script><link rel="stylesheet" href="../../styles.css"></head><body><a class="skip" href="#conteudo">Ir para o conteúdo</a><header class="site-header"><div class="shell header-inner"><a class="brand" href="../index.html"><span class="brand-mark">M</span><span>Moodle <strong>MCP</strong></span></a><nav aria-label="Navegação"><a href="../index.html#recursos">Recursos</a><a href="../index.html#conectar">Conexão</a><a href="index.html">Guias técnicos</a><a href="../index.html#seguranca">Segurança</a></nav><div class="header-actions"><a class="button small primary" href="https://github.com/EduardoKrausME/moodle-local_mcp" target="_blank" rel="noopener">Ver no GitHub ↗</a><button class="menu-button" aria-label="Abrir menu" aria-expanded="false">☰</button></div></div></header><main id="conteudo"><section class="detail-hero"><div class="shell"><a class="back" href="index.html">← Voltar aos guias</a><span class="eyebrow" style="display:flex;margin-top:32px">Documentação técnica</span><h1>Grupos, restrições e conclusão</h1><p>Permissões, SHA-256 de estado e configuração de conclusão.</p></div></section><div class="shell detail-layout doc-layout"><article class="prose doc-prose"><p>This suite extends the core <code>local_mcp</code> READ and WRITE registries, so no new subplugin install is needed. Moodle 4.5 LTS and Moodle 5.3 are supported.</p>
+<h3 id="read-operations">READ operations</h3>
+<ul>
+<li><code>get_course_groups(courseid, limit?, offset?)</code>: list group IDs, names and member counts.</li>
+<li><code>get_group_members(courseid, groupid, limit?, offset?)</code>: paginated member IDs and display names, with <code>members_sha256</code> representing the complete group's current membership.</li>
+<li><code>get_activity_restrictions(cmid)</code>: current Moodle availability JSON, group mode and <code>availability_sha256</code> (SHA-256 of stored JSON or the empty string).</li>
+<li><code>get_activity_completion(cmid)</code>: completion mode, view/grade rules and number of existing student completion records.</li>
+</ul>
+<h3 id="confirmed-write-operations">Confirmed WRITE operations</h3>
+<ul>
+<li><code>create_group(courseid, name)</code></li>
+<li><code>add_group_members(courseid, groupid, userids, expected_members_sha256)</code></li>
+<li><code>remove_group_members(courseid, groupid, userids, expected_members_sha256)</code></li>
+<li><code>set_activity_groupmode(cmid, groupmode, expected_groupmode)</code> — 0 none, 1 separate, 2 visible.</li>
+<li><code>set_activity_restrictions(cmid, mode, expected_availability_sha256, conditions?)</code></li>
+<li><code>set_activity_completion(cmid, completion, expected_completion, requireview?, requiregrade?)</code></li>
+</ul>
+<p>All WRITE calls use existing MCP single-use confirmation. The server rechecks the same permissions and prerequisites during actual execution, not only preview. Group mutation requires <code>moodle/course:managegroups</code>, active student enrolment for additions, and a fresh membership fingerprint. External group membership components may forbid deletion. Group-mode, restrictions, and completion require <code>moodle/course:manageactivities</code> in the module context.</p>
+<h3 id="availability-conditions">Availability conditions</h3>
+<p><code>set_activity_restrictions</code> replaces the entire prior restriction tree with a single logical AND containing between 1 and 20 conditions. <code>mode=clear</code> removes all restrictions and ignores <code>conditions</code>. It does not merge or partially modify existing rules. Users must review the full before/after preview.</p>
+<p>Supported condition shapes:</p>
+<pre><code class="language-json">{
+  &quot;cmid&quot;: 17,
+  &quot;mode&quot;: &quot;replace&quot;,
+  &quot;expected_availability_sha256&quot;: &quot;&lt;sha256 from get_activity_restrictions&gt;&quot;,
+  &quot;conditions&quot;: [
+    {&quot;type&quot;: &quot;group&quot;, &quot;groupid&quot;: 11},
+    {&quot;type&quot;: &quot;date&quot;, &quot;direction&quot;: &quot;from&quot;, &quot;timestamp&quot;: 1790000000},
+    {&quot;type&quot;: &quot;completion&quot;, &quot;cmid&quot;: 16, &quot;state&quot;: &quot;complete&quot;},
+    {&quot;type&quot;: &quot;grade&quot;, &quot;gradeitemid&quot;: 54, &quot;min&quot;: 60}
+  ]
+}</code></pre>
+<p>Date conditions support <code>from</code> (inclusive) or <code>until</code> (exclusive). Completion supports <code>complete</code>, <code>incomplete</code>, <code>passed</code>, <code>failed</code>. Grade min/max are Moodle's percentage bounds 0–100, with max exclusive. Each referenced group/activity/grade item is checked against the same course. Completion rules reject self-references and disabled course completion. Only enabled Moodle availability plugins are accepted, and the resulting restriction tree is validated by Moodle core.</p>
+<h3 id="completion">Completion</h3>
+<p>The completion tool supports off (0), manual (1), and automatic (2). Automatic completion requires <code>requireview=true</code>, <code>requiregrade=true</code>, or both; grade completion is allowed only when the activity has a grade item. It does not expose module-specific completion rules. Existing completion records lock this tool, preventing silent destruction/recalculation of student histories. The course and site must already have completion enabled. Changes only update core course-module flags, not the activity-specific form fields.</p>
+<p>Refresh Moodle caches and MCP discovery after installation. No existing completion data or course grades are deleted or changed by these operations.</p><nav class="doc-prevnext" aria-label="Guia anterior e seguinte"><a href="assignment-feedback-tools.html">← Feedback de tarefas</a><a href="course-module-maintenance.html">Criação de tarefas e exclusão segura →</a></nav></article><aside class="detail-aside doc-aside"><h3>Nesta página</h3><nav class="doc-toc"><a href="#read-operations">READ operations</a>
+<a href="#confirmed-write-operations">Confirmed WRITE operations</a>
+<a href="#availability-conditions">Availability conditions</a>
+<a href="#completion">Completion</a></nav><h3>Todos os guias</h3><nav class="doc-side-links"><a href="assignment-feedback-tools.html">Feedback de tarefas</a>
+<a href="course-groups-restrictions-completion.html" aria-current="page" class="is-current">Grupos, restrições e conclusão</a>
+<a href="course-module-maintenance.html">Criação de tarefas e exclusão segura</a>
+<a href="gradebook-completion-mcp.html">Notas e progresso</a>
+<a href="mcptool-assign.html">Ferramentas avançadas de tarefas</a>
+<a href="mcptool-feedback-lesson.html">Questionários de feedback e lições</a>
+<a href="mcptool-quiz.html">Questionários e banco de questões</a>
+<a href="oauth-webserver.html">OAuth e configuração do servidor web</a>
+<a href="sequential-workflows.html">Fluxos sequenciais com confirmação</a></nav></aside></div></main><footer><div class="shell footer-main"><a class="brand" href="../index.html"><span class="brand-mark">M</span><span>Moodle <strong>MCP</strong></span></a><p>Um servidor MCP extensível para o Moodle.</p><div><a href="https://github.com/EduardoKrausME/moodle-local_mcp" target="_blank" rel="noopener">Open source ↗</a><a href="../privacy.html">Política de Privacidade</a></div></div><div class="shell footer-bottom"><span>© 2026 Eduardo Kraus · Moodle MCP</span><span>Moodle™ é uma marca registrada. Projeto independente.</span></div></footer><script src="../../script.js"></script></body></html>
