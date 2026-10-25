@@ -64,10 +64,77 @@ final class activity_upload {
         if ($binary === false || $binary === '' || strlen($binary) > self::MAX_BYTES) {
             throw new api_exception('invalid_upload', 400, 'Invalid Base64 or file over 40 MiB.');
         }
-        if ($h5p && !str_starts_with($binary, "PK\x03\x04")) {
-            throw new api_exception('invalid_h5p_package', 400, 'H5P packages must be ZIP files.');
+        if ($h5p) {
+            self::validate_h5p_package($binary);
         }
         return [$cleanfilename, $binary];
+    }
+
+    /**
+     * Validate a complete H5P ZIP, not just its initial PK signature.
+     * The core H5P importer remains responsible for checking libraries and dependencies.
+     *
+     * @param string $binary Decoded H5P ZIP bytes.
+     * @return void
+     */
+    private static function validate_h5p_package(string $binary): void {
+        if (!str_starts_with($binary, "PK\\x03\\x04")) {
+            throw new api_exception("invalid_h5p_package", 400, "H5P packages must be ZIP archives.");
+        }
+        if (!class_exists(\\ZipArchive::class)) {
+            throw new api_exception("h5p_zip_support_unavailable", 503);
+        }
+        $tempfile = tempnam(sys_get_temp_dir(), "mcp-h5p-");
+        if ($tempfile === false) {
+            throw new api_exception("h5p_validation_unavailable", 503);
+        }
+        $zip = new \\ZipArchive();
+        try {
+            if (file_put_contents($tempfile, $binary) !== strlen($binary)) {
+                throw new api_exception("h5p_validation_unavailable", 503);
+            }
+            if ($zip->open($tempfile, \\ZipArchive::CHECKCONS) !== true) {
+                throw new api_exception("invalid_h5p_package", 400, "The H5P ZIP is incomplete or corrupt.");
+            }
+            try {
+                if ($zip->numFiles > 5000 || $zip->numFiles < 2) {
+                    throw new api_exception("invalid_h5p_package", 400);
+                }
+                $totalbytes = 0;
+                for ($i = 0; $i < $zip->numFiles; $i++) {
+                    $entry = $zip->statIndex($i);
+                    if (!$entry || !isset($entry["name"], $entry["size"]) ||
+                        str_starts_with($entry["name"], "/") ||
+                        str_contains($entry["name"], "\\\\") ||
+                        preg_match("~(?:^|/)\\.\\.(?:/|$)~", $entry["name"])) {
+                        throw new api_exception("invalid_h5p_package", 400);
+                    }
+                    $totalbytes += (int)$entry["size"];
+                    if ($totalbytes > 5 * self::MAX_BYTES) {
+                        throw new api_exception("invalid_h5p_package", 400, "H5P archive expands beyond the upload limit.");
+                    }
+                }
+                foreach (["h5p.json", "content/content.json"] as $required) {
+                    $stat = $zip->statName($required);
+                    if (!$stat || $stat["size"] > 1048576) {
+                        throw new api_exception("invalid_h5p_package", 400, "Missing or oversized H5P metadata.");
+                    }
+                    $payload = $zip->getFromName($required);
+                    $data = is_string($payload) ? json_decode($payload, true) : null;
+                    if (!is_array($data) || json_last_error() !== JSON_ERROR_NONE) {
+                        throw new api_exception("invalid_h5p_package", 400, "Invalid H5P JSON metadata.");
+                    }
+                    if ($required === "h5p.json" &&
+                        (!is_string($data["mainLibrary"] ?? null) || trim($data["mainLibrary"]) === "")) {
+                        throw new api_exception("invalid_h5p_package", 400, "Missing H5P main library.");
+                    }
+                }
+            } finally {
+                $zip->close();
+            }
+        } finally {
+            unlink($tempfile);
+        }
     }
 
     /**
