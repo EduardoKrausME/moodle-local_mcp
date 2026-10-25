@@ -28,6 +28,7 @@ use assign;
 use context;
 use context_module;
 use local_mcp\security\authenticated_identity;
+use local_mcp\security\input_guard;
 
 /**
  * Class get_submissions.
@@ -85,7 +86,7 @@ final class get_submissions extends base_tool {
      * @return context Return value.
      */
     public function resolve_context(array $arguments): context {
-        return context_module::instance((int)$arguments['cmid'], MUST_EXIST);
+        return input_guard::module((int)$arguments["cmid"], "assign");
     }
 
     /**
