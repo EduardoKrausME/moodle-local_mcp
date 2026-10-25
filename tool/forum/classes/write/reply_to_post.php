@@ -29,6 +29,7 @@ use context;
 use context_module;
 use dml_exception;
 use local_mcp\exception\api_exception;
+use local_mcp\security\input_guard;
 use local_mcp\security\authenticated_identity;
 use local_mcp\write\tool\base_tool;
 
@@ -91,10 +92,9 @@ final class reply_to_post extends base_tool {
      */
     public function resolve_context(array $arguments): context {
         global $DB;
-        $post = $DB->get_record('forum_posts', ['id' => (int)$arguments['postid']], '*', MUST_EXIST);
-        $discussion = $DB->get_record('forum_discussions', ['id' => $post->discussion], '*', MUST_EXIST);
-        $cm = get_coursemodule_from_instance('forum', $discussion->forum, $discussion->course, false, MUST_EXIST);
-        return context_module::instance($cm->id);
+        $post = input_guard::record("forum_posts", (int)$arguments["postid"], "post_not_found");
+        $discussion = input_guard::record("forum_discussions", (int)$post->discussion, "discussion_not_found");
+        return input_guard::instance("forum", (int)$discussion->forum, (int)$discussion->course);
     }
 
     /**
@@ -111,10 +111,11 @@ final class reply_to_post extends base_tool {
                             authenticated_identity $identity): array {
         global $DB, $CFG, $USER;
         require_once($CFG->dirroot . '/mod/forum/lib.php');
-        $parent = $DB->get_record('forum_posts', ['id' => (int)$arguments['postid']], '*', MUST_EXIST);
-        $discussion = $DB->get_record('forum_discussions', ['id' => $parent->discussion], '*', MUST_EXIST);
-        $forum = $DB->get_record('forum', ['id' => $discussion->forum], '*', MUST_EXIST);
-        $cm = get_coursemodule_from_instance('forum', $forum->id, $forum->course, false, MUST_EXIST);
+        $parent = input_guard::record("forum_posts", (int)$arguments["postid"], "post_not_found");
+        $discussion = input_guard::record("forum_discussions", (int)$parent->discussion, "discussion_not_found");
+        $forum = input_guard::record("forum", (int)$discussion->forum, "forum_not_found");
+        $context = input_guard::instance("forum", (int)$forum->id, (int)$forum->course);
+        $cm = get_coursemodule_from_id("forum", (int)$context->instanceid, 0, false, MUST_EXIST);
         $context = context_module::instance($cm->id);
         $course = get_course($forum->course);
         if (!forum_user_can_see_post($forum, $discussion, $parent, $USER, $cm)
