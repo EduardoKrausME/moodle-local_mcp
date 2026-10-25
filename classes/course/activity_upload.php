@@ -81,19 +81,19 @@ final class activity_upload {
         if (!str_starts_with($binary, "PK\x03\x04")) {
             throw new api_exception("invalid_h5p_package", 400, "H5P packages must be ZIP archives.");
         }
-        if (!class_exists(\\ZipArchive::class)) {
+        if (!class_exists(\ZipArchive::class)) {
             throw new api_exception("h5p_zip_support_unavailable", 503);
         }
         $tempfile = tempnam(sys_get_temp_dir(), "mcp-h5p-");
         if ($tempfile === false) {
             throw new api_exception("h5p_validation_unavailable", 503);
         }
-        $zip = new \\ZipArchive();
+        $zip = new \ZipArchive();
         try {
             if (file_put_contents($tempfile, $binary) !== strlen($binary)) {
                 throw new api_exception("h5p_validation_unavailable", 503);
             }
-            if ($zip->open($tempfile, \\ZipArchive::CHECKCONS) !== true) {
+            if ($zip->open($tempfile, \ZipArchive::CHECKCONS) !== true) {
                 throw new api_exception("invalid_h5p_package", 400, "The H5P ZIP is incomplete or corrupt.");
             }
             try {
