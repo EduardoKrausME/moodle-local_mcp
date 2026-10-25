@@ -30,6 +30,7 @@ use context_module;
 use dml_exception;
 use dml_transaction_exception;
 use local_mcp\exception\api_exception;
+use local_mcp\security\input_guard;
 use local_mcp\security\authenticated_identity;
 use local_mcp\write\tool\base_tool;
 use mod_book\event\chapter_updated;
@@ -93,10 +94,9 @@ final class update_chapter extends base_tool {
      */
     public function resolve_context(array $arguments): context {
         global $DB;
-        $chapter = $DB->get_record('book_chapters', ['id' => (int)$arguments['chapterid']], '*', MUST_EXIST);
-        $book = $DB->get_record('book', ['id' => $chapter->bookid], '*', MUST_EXIST);
-        $cm = get_coursemodule_from_instance('book', $book->id, $book->course, false, MUST_EXIST);
-        return context_module::instance($cm->id);
+        $chapter = input_guard::record("book_chapters", (int)$arguments["chapterid"], "chapter_not_found");
+        $book = input_guard::record("book", (int)$chapter->bookid, "book_not_found");
+        return input_guard::instance("book", (int)$book->id, (int)$book->course);
     }
 
     /**
@@ -113,8 +113,8 @@ final class update_chapter extends base_tool {
     public function execute(array                  $arguments,
                             authenticated_identity $identity): array {
         global $DB;
-        $chapter = $DB->get_record('book_chapters', ['id' => (int)$arguments['chapterid']], '*', MUST_EXIST);
-        $book = $DB->get_record('book', ['id' => $chapter->bookid], '*', MUST_EXIST);
+        $chapter = input_guard::record("book_chapters", (int)$arguments["chapterid"], "chapter_not_found");
+        $book = input_guard::record("book", (int)$chapter->bookid, "book_not_found");
         if ((int)$book->revision !== (int)$arguments['expected_revision']) {
             throw new api_exception('revision_conflict', 409);
         }
