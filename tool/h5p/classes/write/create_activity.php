@@ -75,6 +75,19 @@ final class create_activity extends activity_create_base {
     }
 
     /**
+     * Check the complete H5P archive before the confirmation token is issued.
+     *
+     * @param array $arguments Tool arguments.
+     * @param authenticated_identity $identity Authenticated user.
+     * @return array
+     */
+    public function preview(array $arguments, authenticated_identity $identity): array {
+        $preview = parent::preview($arguments, $identity);
+        activity_upload::decode($arguments["file_base64"], $arguments["filename"], true);
+        return $preview;
+    }
+
+    /**
      * Method configure.
      *
      * @param stdClass $info Parameter info.
