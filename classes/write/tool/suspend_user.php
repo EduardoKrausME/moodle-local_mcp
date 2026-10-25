@@ -27,6 +27,8 @@ namespace local_mcp\write\tool;
 use context;
 use context_user;
 use local_mcp\security\authenticated_identity;
+use local_mcp\security\input_guard;
+use local_mcp\exception\api_exception;
 
 /**
  * Class suspend_user.
@@ -84,7 +86,11 @@ final class suspend_user extends base_tool {
      * @return context Return value.
      */
     public function resolve_context(array $arguments): context {
-        return context_user::instance((int)$arguments['userid'], MUST_EXIST);
+        $user = input_guard::record("user", (int)$arguments["userid"], "user_not_found");
+        if ($user->deleted) {
+            throw new api_exception("user_not_found", 404);
+        }
+        return context_user::instance((int)$user->id, MUST_EXIST);
     }
 
     /**
