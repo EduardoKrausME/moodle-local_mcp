@@ -108,15 +108,15 @@ final class activity_integrations_test extends advanced_testcase {
         $this->resetAfterTest();
         $this->setAdminUser();
         try {
-            activity_upload::decode(base64_encode("PK\\x03\\x04test"), "lesson.h5p", true);
+            activity_upload::decode(base64_encode("PK\x03\x04test"), "lesson.h5p", true);
             $this->fail("A truncated ZIP signature must not pass H5P package validation.");
         } catch (api_exception $e) {
             $this->assertSame("invalid_h5p_package", $e->machinecode);
         }
 
         $course = $this->getDataGenerator()->create_course();
-        $tool = new \\mcptool_h5p\\write\\create_activity();
-        $identity = new \\local_mcp\\security\\authenticated_identity((int)$USER->id, "test", ["mcp:write"]);
+        $tool = new \mcptool_h5p\write\create_activity();
+        $identity = new \local_mcp\security\authenticated_identity((int)$USER->id, "test", ["mcp:write"]);
         try {
             $tool->preview([
                 "courseid" => (int)$course->id, "sectionnum" => 0, "name" => "Invalid H5P",
