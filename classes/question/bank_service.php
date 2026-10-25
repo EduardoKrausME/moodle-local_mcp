@@ -57,14 +57,18 @@ final class bank_service {
      */
     public static function row(int $questionid): stdClass {
         global $DB;
-        return $DB->get_record_sql(
+        $record = $DB->get_record_sql(
             "SELECT q.*, v.version, v.status, v.questionbankentryid,
                     e.questioncategoryid, e.idnumber, e.ownerid
                FROM {question} q
                JOIN {question_versions} v ON v.questionid = q.id
                JOIN {question_bank_entries} e ON e.id = v.questionbankentryid
               WHERE q.id = :id",
-            ['id' => $questionid], MUST_EXIST);
+            ['id' => $questionid]);
+        if (!$record) {
+            throw new api_exception("question_not_found", 404);
+        }
+        return $record;
     }
 
     /**
