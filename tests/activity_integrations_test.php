@@ -37,6 +37,8 @@ use local_mcp\write\registry;
  *
  * @covers \local_mcp\write\registry
  * @covers \local_mcp\course\activity_upload
+ * @covers \mcptool_h5p\write\create_activity
+ * @covers \local_mcp\write\tool\activity_create_base
  */
 final class activity_integrations_test extends advanced_testcase {
     /**
@@ -81,9 +83,49 @@ final class activity_integrations_test extends advanced_testcase {
         );
         $this->assertSame('handout.pdf', $filename);
         $this->assertSame('%PDF-1.7', $bytes);
-        [$name, $zip] = activity_upload::decode(base64_encode("PK\x03\x04test"), 'lesson.h5p', true);
-        $this->assertSame('lesson.h5p', $name);
-        $this->assertStringStartsWith('PK', $zip);
+        $temporary = tempnam(sys_get_temp_dir(), "h5p-test-");
+        $zip = new \ZipArchive();
+        $this->assertTrue($zip->open($temporary, \ZipArchive::CREATE | \ZipArchive::OVERWRITE));
+        $zip->addFromString("h5p.json", '{"title":"Test","mainLibrary":"H5P.Text"}');
+        $zip->addFromString("content/content.json", '{"text":"Sample content"}');
+        $zip->close();
+        try {
+            [$name, $bytes] = activity_upload::decode(base64_encode(file_get_contents($temporary)), "lesson.h5p", true);
+            $this->assertSame("lesson.h5p", $name);
+            $this->assertStringStartsWith("PK", $bytes);
+        } finally {
+            unlink($temporary);
+        }
+    }
+
+    /**
+     * A forged ZIP signature must be rejected during preview, before any token is issued.
+     *
+     * @return void
+     */
+    public function test_invalid_h5p_archive_and_preview_are_rejected(): void {
+        global $USER;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        try {
+            activity_upload::decode(base64_encode("PK\\x03\\x04test"), "lesson.h5p", true);
+            $this->fail("A truncated ZIP signature must not pass H5P package validation.");
+        } catch (api_exception $e) {
+            $this->assertSame("invalid_h5p_package", $e->machinecode);
+        }
+
+        $course = $this->getDataGenerator()->create_course();
+        $tool = new \\mcptool_h5p\\write\\create_activity();
+        $identity = new \\local_mcp\\security\\authenticated_identity((int)$USER->id, "test", ["mcp:write"]);
+        try {
+            $tool->preview([
+                "courseid" => (int)$course->id, "sectionnum" => 0, "name" => "Invalid H5P",
+                "filename" => "content.h5p", "file_base64" => base64_encode("test"),
+            ], $identity);
+            $this->fail("Non-ZIP H5P preview must fail.");
+        } catch (api_exception $e) {
+            $this->assertSame("invalid_h5p_package", $e->machinecode);
+        }
     }
 
     /**
