@@ -176,4 +176,25 @@ final class badges_tools_test extends advanced_testcase {
             "expected_timemodified" => (int)$stored->timemodified,
             "image_base64" => base64_encode(self::png(true))], $identity);
     }
+    /**
+     * Missing badges return a typed 404 instead of an internal server error.
+     *
+     * @return void
+     */
+    public function test_missing_badge_uses_explicit_not_found(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $arguments = ["badgeid" => 2147483647, "expected_timemodified" => 0,
+            "cmids" => [1]];
+        foreach ([new get_badge(), new replace_image(), new set_criteria(), new enable_badge()] as $tool) {
+            try {
+                $tool->resolve_context($arguments);
+                $this->fail("Missing badge did not return a controlled error.");
+            } catch (api_exception $e) {
+                $this->assertSame("badge_not_found", $e->machinecode);
+                $this->assertSame(404, $e->httpstatus);
+            }
+        }
+    }
+
 }

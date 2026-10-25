@@ -60,7 +60,10 @@ final class enable_badge extends base_tool {
 
     public function resolve_context(array $arguments): context {
         global $DB;
-        $row = $DB->get_record("badge", ["id" => (int)$arguments["badgeid"]], "courseid", MUST_EXIST);
+        $row = $DB->get_record("badge", ["id" => (int)$arguments["badgeid"]], "courseid");
+        if (!$row) {
+            throw new api_exception("badge_not_found", 404);
+        }
         return $row->courseid ? context_course::instance((int)$row->courseid, MUST_EXIST)
             : context_system::instance();
     }
@@ -68,6 +71,7 @@ final class enable_badge extends base_tool {
     private function checked(array $arguments): array {
         global $DB, $CFG;
         require_once($CFG->libdir . "/badgeslib.php");
+        require_once($CFG->libdir . "/completionlib.php");
         $badge = new \badge((int)$arguments["badgeid"]);
         if ((int)$badge->type !== BADGE_TYPE_COURSE ||
                 empty($CFG->enablebadges) || empty($CFG->badges_allowcoursebadges) ||

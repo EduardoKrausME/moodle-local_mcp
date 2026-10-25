@@ -27,6 +27,7 @@ namespace mcptool_badges\read;
 use context;
 use context_course;
 use context_system;
+use local_mcp\exception\api_exception;
 use local_mcp\read\tool\base_tool;
 use local_mcp\security\authenticated_identity;
 use moodle_url;
@@ -52,7 +53,10 @@ final class get_badge extends base_tool {
     }
     public function resolve_context(array $arguments): context {
         global $DB;
-        $badge = $DB->get_record("badge", ["id" => (int)$arguments["badgeid"]], "id,courseid", MUST_EXIST);
+        $badge = $DB->get_record("badge", ["id" => (int)$arguments["badgeid"]], "id,courseid");
+        if (!$badge) {
+            throw new api_exception("badge_not_found", 404);
+        }
         return $badge->courseid ? context_course::instance((int)$badge->courseid)
             : context_system::instance();
     }

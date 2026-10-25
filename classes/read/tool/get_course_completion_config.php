@@ -58,6 +58,7 @@ final class get_course_completion_config extends base_tool {
 
     public function execute(array $arguments, authenticated_identity $identity): array {
         global $CFG, $DB;
+        require_once($CFG->libdir . "/completionlib.php");
         $course = get_course((int)$arguments["courseid"]);
         return ["courseid" => (int)$course->id,
             "site_enabled" => !empty($CFG->enablecompletion),

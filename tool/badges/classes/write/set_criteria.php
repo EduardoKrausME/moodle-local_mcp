@@ -62,7 +62,10 @@ final class set_criteria extends base_tool {
 
     public function resolve_context(array $arguments): context {
         global $DB;
-        $badge = $DB->get_record("badge", ["id" => (int)$arguments["badgeid"]], "courseid", MUST_EXIST);
+        $badge = $DB->get_record("badge", ["id" => (int)$arguments["badgeid"]], "courseid");
+        if (!$badge) {
+            throw new api_exception("badge_not_found", 404);
+        }
         return $badge->courseid
             ? context_course::instance((int)$badge->courseid, MUST_EXIST) : context_system::instance();
     }
@@ -70,6 +73,7 @@ final class set_criteria extends base_tool {
     private function checked(array $arguments): array {
         global $CFG, $DB;
         require_once($CFG->libdir . "/badgeslib.php");
+        require_once($CFG->libdir . "/completionlib.php");
         $badge = new \badge((int)$arguments["badgeid"]);
         if ((int)$badge->type !== BADGE_TYPE_COURSE || empty($badge->courseid)) {
             throw new api_exception("Only course badges accept activity completion criteria", 400);
