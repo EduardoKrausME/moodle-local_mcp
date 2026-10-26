@@ -63,7 +63,7 @@ final class token_service {
         try {
             $rec = $DB->get_record("local_mcp_auth_code", ["codehash" => $hash, "clientid" => $client->id]);
             if (!$rec || $rec->used || $rec->expires < time() || !hash_equals($rec->redirecturi, $redirecturi)
-                || !hash_equals((string)$rec->resource, $resource)) {
+                || !isset($rec->resource) || !hash_equals((string)$rec->resource, $resource)) {
                 throw new api_exception("invalid_grant", 400);
             }
             $challenge = secret::base64url(hash("sha256", $verifier, true));
@@ -97,6 +97,9 @@ final class token_service {
         }
         if ($rec->revokedat || $rec->usedat || $rec->expiresat < time()) {
             self::revoke_family($rec->family);
+            throw new api_exception('invalid_grant', 400);
+        }
+        if (!isset($rec->resource)) {
             throw new api_exception('invalid_grant', 400);
         }
         $audience = resource::validate((string)$rec->resource);
