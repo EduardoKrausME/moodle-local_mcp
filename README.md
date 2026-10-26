@@ -10,7 +10,7 @@ authentication layer.
 
 ## Extend Moodle MCP with other Moodle plugins
 
-Moodle MCP automatically discovers MCP providers from compatible plugins installed on the same site. These three integrations are ready to use with ChatGPT: install the corresponding plugin, refresh the MCP connection, and use the READ/WRITE tools permitted to your Moodle account. Each image opens a practical guide in Brazilian Portuguese, with an English version available on the documentation website.
+Moodle MCP automatically discovers MCP providers from compatible plugins installed on the same site. These three integrations provide READ/WRITE tools to ChatGPT according to the connected Moodle account's permissions. Each image opens a practical guide in Brazilian Portuguese, with an English version available on the documentation website.
 
 | Kopere BI | Helpdesk | Kopere Proctoring |
 | --- | --- | --- |
@@ -23,7 +23,7 @@ Moodle MCP automatically discovers MCP providers from compatible plugins install
 
 **Kopere Proctoring** supports reviewing quiz settings, monitored attempts and recorded events, and a confirmable WRITE action to enable or disable monitoring on a quiz. Monitoring events must be reviewed by a person and are not proof of cheating. [Documentation (English)](https://eduardokrausme.github.io/moodle-local_mcp/en/recursos/kopere-proctoring.html).
 
-Every integration remains subject to Moodle capabilities and MCP scopes. READ and WRITE are separate, and WRITE calls require an explicit preview/confirmation flow. After installing or updating a plugin, refresh the ChatGPT connector to discover its tools.
+Every integration remains subject to Moodle capabilities and MCP scopes. READ and WRITE are separate, and WRITE calls require an explicit preview/confirmation flow. Connector tool discovery can be refreshed when a provider's capabilities change.
 
 ## Site diagnostics and safe Moodle configuration
 
@@ -193,11 +193,7 @@ revalidates the batch immediately before writing. Creation uses a delegated
 database transaction; Moodle integrations may have external side effects that
 transactions cannot undo.
 
-**If ChatGPT still shows `create_course` with only four fields or does not show
-`list_categories`, it is using an old connector schema. Deploy the updated
-plugin in Moodle and refresh/reinstall the custom ChatGPT MCP connection to
-fetch the new tool definitions. Changing repository files alone does not
-update an already-installed Moodle server or a cached connector.**
+**If ChatGPT still shows `create_course` with only four fields or does not show `list_categories`, its connector schema is out of date; refreshed discovery provides the current tool definitions.**
 
 ## Creating complete courses and organizing categories
 
@@ -419,8 +415,7 @@ mode, HTML, layout, SCSS and a revision hash; `learnlingo_update_homepage`
 previews and updates those settings using the theme's existing validation,
 requires `moodle/site:config`, and clears theme caches.
 
-After installing/updating an external provider, refresh the ChatGPT MCP
-plugin's tool definitions so the new commands become visible.
+The ChatGPT MCP tool definitions can be refreshed when an external provider changes.
 
 External Moodle plugins can explicitly provide one side only.
 
@@ -611,8 +606,7 @@ access credentials and confirmation tokens are never logged.
 
 ## Activity subplugins
 
-The MCP activity integrations are **real Moodle subplugins**, installed under
-`local/mcp/tool/<name>`, with component names `mcptool_<name>`. The parent plugin
+The MCP activity integrations are **real Moodle subplugins**, with components `mcptool_<name>`. The parent plugin
 defines a single `mcptool` plugintype in `db/subplugins.json`, using both
 the Moodle 5.0+ `subplugintypes` and pre-5.0 `plugintypes` formats.
 
@@ -850,8 +844,7 @@ H5P packages must be valid ZIP-based `.h5p` files and are created with the
 built-in Moodle `mod_h5pactivity` module (not the third-party `mod_hvp`).
 The MCP endpoint does not fetch arbitrary remote URLs for file uploads.
 
-After installing the new subplugins, run Moodle's upgrade process and refresh
-the MCP connector so these WRITE tools appear in the published tool schema.
+The published MCP tool schema includes these WRITE tools when their providers are available.
 
 ## OAuth for ChatGPT (1.3.17)
 
@@ -925,8 +918,7 @@ origin. The plugin never accepts OAuth access tokens in URL query parameters.
 
 The bundled `mcptool_assign` provides 15 additional READ/WRITE tools for managing assignments,
 reviewing submission history, extracting authorized text attachments, granting extensions,
-drafting rubric assessments and managing release workflows. Install/upgrade the
-subplugin and refresh MCP discovery. See [assignment management documentation](https://github.com/EduardoKrausME/moodle-local_mcp/blob/docs/mcptool-assign.md).
+drafting rubric assessments and managing release workflows. Tool discovery includes this subplugin when available. See [assignment management documentation](https://github.com/EduardoKrausME/moodle-local_mcp/blob/docs/mcptool-assign.md).
 
 ## Quiz management and statistics
 
