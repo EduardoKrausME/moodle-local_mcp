@@ -8,7 +8,6 @@ READ and WRITE architecture.
 This is a **local plugin**: `local_mcp`. It does not use Moodle's traditional `wstoken` mechanism as its primary
 authentication layer.
 
-
 ## Extend Moodle MCP with other Moodle plugins
 
 Moodle MCP automatically discovers MCP providers from compatible plugins installed on the same site. These three integrations are ready to use with ChatGPT: install the corresponding plugin, refresh the MCP connection, and use the READ/WRITE tools permitted to your Moodle account. Each image opens a practical guide in Brazilian Portuguese, with an English version available on the documentation website.
@@ -393,7 +392,6 @@ final class provider implements read_provider_interface, write_provider_interfac
 }
 ```
 
-Place the tool classes alongside it, e.g. `classes/mcp/get_homepage.php` and
 `classes/mcp/update_homepage.php`. READ tools implement
 `local_mcp\read\tool_interface`; WRITE tools implement
 `local_mcp\write\tool_interface`. WRITE implementations may extend the
@@ -889,7 +887,6 @@ The audit covers only requests processed through this MCP server, not
 ChatGPT's conversation transcript or actions performed elsewhere. It does
 not include field-level before/after diffs, OAuth credentials, confirmation
 tokens, prompts, user-entered HTML, images or raw tool payloads.
-
 
 ## Troubleshooting OAuth and MCP tool discovery
 
