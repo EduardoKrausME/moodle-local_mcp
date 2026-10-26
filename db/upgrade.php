@@ -43,5 +43,26 @@ function xmldb_local_mcp_upgrade(int $oldversion): bool {
         upgrade_plugin_savepoint(true, 2026101104, 'local', 'mcp');
     }
 
+    if ($oldversion < 2026102600) {
+        // Existing installations need the RFC 8707 resource column added to all OAuth tables.
+        $dbman = $DB->get_manager();
+        foreach (['local_mcp_auth_code', 'local_mcp_access_token', 'local_mcp_refresh_token'] as $tablename) {
+            $table = new xmldb_table($tablename);
+            $field = new xmldb_field('resource', XMLDB_TYPE_TEXT, null, null, null, null, null, 'scopes');
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+
+        // Legacy credentials have no trustworthy audience. Never infer one from the client or request.
+        $DB->set_field_select('local_mcp_auth_code', 'used', 1, 'resource IS NULL AND used = 0', []);
+        $now = time();
+        foreach (['local_mcp_access_token', 'local_mcp_refresh_token'] as $tablename) {
+            $DB->set_field_select($tablename, 'revokedat', $now, 'resource IS NULL AND revokedat IS NULL', []);
+        }
+
+        upgrade_plugin_savepoint(true, 2026102600, 'local', 'mcp');
+    }
+
     return true;
 }
