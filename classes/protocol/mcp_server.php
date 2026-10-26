@@ -524,12 +524,19 @@ final class mcp_server {
         if ($invalid) {
             throw new api_exception("invalid_tool_schema", 500);
         }
-        // Validate the original JSON before context resolution, confirmation, or execution.
+        // Preserve the original JSON container types for strict schema validation.
         if (array_key_exists("arguments", $params) && !is_array($params["arguments"])) {
             throw new api_exception("invalid_params", 400, "Tool arguments must be a JSON object.",
                 ["path" => "arguments", "reason" => "incorrect JSON type"]);
         }
-        tool_input_validator::validate($schema, $originalarguments ?? (object)$arguments);
+        $originalarguments = $originalarguments ?? (object)$arguments;
+        if ($iswrite) {
+            // Normalize before validation, previews and confirmation hashing so the
+            // approved WRITE always matches the text that Moodle will receive.
+            $originalarguments = write_text_normalizer::normalize($originalarguments);
+            $arguments = write_text_normalizer::normalize($arguments);
+        }
+        tool_input_validator::validate($schema, $originalarguments);
         // Legacy control parameters outside arguments must also preserve their JSON types.
         if (array_key_exists("confirmation_token", $params) && !is_string($params["confirmation_token"])) {
             throw new api_exception("invalid_params", 400, "Invalid confirmation token type.",

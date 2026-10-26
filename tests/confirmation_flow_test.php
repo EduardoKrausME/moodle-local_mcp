@@ -68,6 +68,37 @@ final class confirmation_flow_test extends advanced_testcase {
         $this->assertTrue($DB->record_exists('course_categories', ['id' => $created['id']]));
     }
     /**
+     * WRITE previews, confirmation hashes and persisted text use normalized hyphens.
+     */
+    public function test_write_replaces_em_dash_before_preview_and_execution(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $identity = new authenticated_identity((int)get_admin()->id, 'test', ['mcp:write']);
+        $server = new mcp_server('write');
+        $method = new ReflectionMethod(mcp_server::class, 'call_tool');
+        $args = ['name' => 'MCP — Typography test', 'parentid' => 0];
+        $access = 'test-typography-token';
+
+        $pending = $method->invoke($server, 'create_category', $args, [], $identity, $access);
+        $this->assertTrue($pending['confirmation_required']);
+        $this->assertSame('MCP - Typography test', $pending['preview']['name']);
+        $this->assertFalse($DB->record_exists('course_categories', [
+            'name' => 'MCP - Typography test', 'parent' => 0,
+        ]));
+
+        // Even a repeated request with the original em dash resolves to the approved content.
+        $created = $method->invoke($server, 'create_category',
+            $args + ['confirmation_token' => $pending['confirmation_token']], [], $identity, $access);
+        $this->assertSame('MCP - Typography test', $created['name']);
+        $this->assertTrue($DB->record_exists('course_categories', [
+            'name' => 'MCP - Typography test', 'parent' => 0,
+        ]));
+        $this->assertSame('MCP — Typography test', $args['name']);
+    }
+
+    /**
      * Invalid confirmation tokens must be reported as approval conflicts, not database errors.
      *
      * @return void

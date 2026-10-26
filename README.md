@@ -322,6 +322,18 @@ valid token
 -> operation
 ```
 
+## WRITE content typography
+
+Every incoming WRITE tool argument is normalized before validation, previews, confirmation
+token hashes and execution. Unicode em dashes (U+2014) in strings, including nested JSON
+arrays or objects and HTML content, are replaced with ASCII hyphens (`-`). The structure,
+JSON value types and other characters remain unchanged, and the original MCP request is
+not modified. This applies to built-in tools and tools provided by other Moodle plugins.
+
+This rule affects new content sent to Moodle; it does not rewrite previously stored data
+or control the ChatGPT conversation outside MCP tool calls. The connector discovery
+instructions also ask the model to use ASCII hyphens in WRITE content.
+
 ## WRITE confirmation
 
 WRITE tools declare additional security behavior:
