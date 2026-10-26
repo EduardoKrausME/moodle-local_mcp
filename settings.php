@@ -42,31 +42,41 @@ if ($hassiteconfig) {
     }
 
     $settings = new admin_settingpage("local_mcp_settings", get_string("settings", "local_mcp"));
-    $settings->add(new admin_setting_configduration("local_mcp/accessttl",
+    $setting = new admin_setting_configduration("local_mcp/accessttl",
         get_string("settingsaccessttl", "local_mcp"),
-        get_string("settingsaccessttl_desc", "local_mcp"), 3600, 60));
-    $settings->add(new admin_setting_configduration("local_mcp/refreshttl",
+        get_string("settingsaccessttl_desc", "local_mcp"), 3600, 60);
+    $settings->add($setting);
+    $setting = new admin_setting_configduration("local_mcp/refreshttl",
         get_string("settingsrefreshttl", "local_mcp"),
-        get_string("settingsrefreshttl_desc", "local_mcp"), 90 * DAYSECS, HOURSECS));
-    $settings->add(new admin_setting_configduration("local_mcp/codettl",
+        get_string("settingsrefreshttl_desc", "local_mcp"), 90 * DAYSECS, HOURSECS);
+    $settings->add($setting);
+    $setting = new admin_setting_configduration("local_mcp/codettl",
         get_string("settingscodettl", "local_mcp"),
-        get_string("settingscodettl_desc", "local_mcp"), 300, 60));
-    $settings->add(new admin_setting_configduration("local_mcp/confirmationttl",
+        get_string("settingscodettl_desc", "local_mcp"), 300, 60);
+    $settings->add($setting);
+    $setting = new admin_setting_configduration("local_mcp/confirmationttl",
         get_string("settingsconfirmationttl", "local_mcp"),
-        get_string("settingsconfirmationttl_desc", "local_mcp"), 1800, 30));
-    $settings->add(new admin_setting_configcheckbox("local_mcp/dynamicregistration",
+        get_string("settingsconfirmationttl_desc", "local_mcp"), 1800, 30);
+    $settings->add($setting);
+    $setting = new admin_setting_configcheckbox("local_mcp/dynamicregistration",
         get_string("settingsdynamicregistration", "local_mcp"),
-        get_string("settingsdynamicregistration_desc", "local_mcp"), 1));
-    $settings->add(new admin_setting_configcheckbox("local_mcp/logmessages",
+        get_string("settingsdynamicregistration_desc", "local_mcp"), 1);
+    $settings->add($setting);
+    $setting = new admin_setting_configcheckbox("local_mcp/logmessages",
         get_string("settingslogmessages", "local_mcp"),
-        get_string("settingslogmessages_desc", "local_mcp"), 0));
-    $settings->add(new admin_setting_configtext("local_mcp/rateread",
-        get_string("settingsrateread", "local_mcp"), "", rate_limiter::DEFAULT_READ_PER_MINUTE, PARAM_INT));
-    $settings->add(new admin_setting_configtext("local_mcp/ratewrite",
-        get_string("settingsratewrite", "local_mcp"), "", rate_limiter::DEFAULT_WRITE_PER_MINUTE, PARAM_INT));
-    $settings->add(new admin_setting_configtext("local_mcp/rateoauth",
-        get_string("settingsrateoauth", "local_mcp"), "", rate_limiter::DEFAULT_OAUTH_PER_MINUTE, PARAM_INT));
-    $settings->add(new admin_setting_configtext("local_mcp/auditretention",
-        get_string("settingsauditretention", "local_mcp"), "", 180, PARAM_INT));
+        get_string("settingslogmessages_desc", "local_mcp"), 0);
+    $settings->add($setting);
+    $setting = new admin_setting_configtext("local_mcp/rateread",
+        get_string("settingsrateread", "local_mcp"), "", rate_limiter::DEFAULT_READ_PER_MINUTE, PARAM_INT);
+    $settings->add($setting);
+    $setting = new admin_setting_configtext("local_mcp/ratewrite",
+        get_string("settingsratewrite", "local_mcp"), "", rate_limiter::DEFAULT_WRITE_PER_MINUTE, PARAM_INT);
+    $settings->add($setting);
+    $setting = new admin_setting_configtext("local_mcp/rateoauth",
+        get_string("settingsrateoauth", "local_mcp"), "", rate_limiter::DEFAULT_OAUTH_PER_MINUTE, PARAM_INT);
+    $settings->add($setting);
+    $setting = new admin_setting_configtext("local_mcp/auditretention",
+        get_string("settingsauditretention", "local_mcp"), "", 180, PARAM_INT);
+    $settings->add($setting);
     $ADMIN->add('local_mcp_category', $settings);
 }
