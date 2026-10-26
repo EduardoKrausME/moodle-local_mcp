@@ -54,7 +54,7 @@ final class token_resolver {
             if (!hash_equals($rec->tokenhash, $hash)) {
                 continue;
             }
-            if (!$resource || !hash_equals((string)$rec->resource, $resource)) {
+            if (!$resource || !isset($rec->resource) || !hash_equals((string)$rec->resource, $resource)) {
                 self::reject('access_token_wrong_audience', 'invalid_token_audience');
             }
             if ($rec->revokedat || $rec->expiresat < time()) {
