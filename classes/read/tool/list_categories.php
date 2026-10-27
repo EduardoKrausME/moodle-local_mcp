@@ -102,12 +102,16 @@ final class list_categories extends base_tool {
 
         // A category manager can administer just one branch of the tree.
         // Resolve one authorized category, then filter every result separately.
-        $categories = $DB->get_records("course_categories", [], "sortorder ASC", "id");
-        foreach ($categories as $category) {
-            $context = context_coursecat::instance((int)$category->id, IGNORE_MISSING);
-            if ($context && has_capability("moodle/category:manage", $context, (int)$USER->id)) {
-                return $context;
+        $categories = $DB->get_recordset("course_categories", [], "sortorder ASC", "id");
+        try {
+            foreach ($categories as $category) {
+                $context = context_coursecat::instance((int)$category->id, IGNORE_MISSING);
+                if ($context && has_capability("moodle/category:manage", $context, (int)$USER->id)) {
+                    return $context;
+                }
             }
+        } finally {
+            $categories->close();
         }
         return context_system::instance();
     }
@@ -133,34 +137,43 @@ final class list_categories extends base_tool {
                       FROM {course}
                      WHERE id <> :siteid
                   GROUP BY category";
-            foreach ($DB->get_records_sql($sql, ['siteid' => SITEID]) as $count) {
-                $counts[(int)$count->category] = (int)$count->total;
+            $courserecordset = $DB->get_recordset_sql($sql, ['siteid' => SITEID]);
+            try {
+                foreach ($courserecordset as $count) {
+                    $counts[(int)$count->category] = (int)$count->total;
+                }
+            } finally {
+                $courserecordset->close();
             }
         }
 
-        $categories = $DB->get_records('course_categories', [], 'depth ASC, sortorder ASC',
+        $categories = $DB->get_recordset('course_categories', [], 'depth ASC, sortorder ASC',
             'id, name, parent, depth, path, visible, idnumber');
         $out = [];
-        foreach ($categories as $category) {
-            $context = context_coursecat::instance((int)$category->id, IGNORE_MISSING);
-            if (!$context || !has_capability('moodle/category:manage', $context, $identity->userid)) {
-                continue;
+        try {
+            foreach ($categories as $category) {
+                $context = context_coursecat::instance((int)$category->id, IGNORE_MISSING);
+                if (!$context || !has_capability('moodle/category:manage', $context, $identity->userid)) {
+                    continue;
+                }
+                if (!$includehidden && !(bool)$category->visible) {
+                    continue;
+                }
+                $out[] = [
+                    'id' => (int)$category->id,
+                    'name' => $category->name,
+                    'parent' => (int)$category->parent,
+                    'parentid' => (int)$category->parent,
+                    'visible' => (bool)$category->visible,
+                    'coursecount' => $includecoursecount
+                        ? ($counts[(int)$category->id] ?? 0) : null,
+                    'depth' => (int)$category->depth,
+                    'path' => $category->path,
+                    'idnumber' => $category->idnumber,
+                ];
             }
-            if (!$includehidden && !(bool)$category->visible) {
-                continue;
-            }
-            $out[] = [
-                'id' => (int)$category->id,
-                'name' => $category->name,
-                'parent' => (int)$category->parent,
-                'parentid' => (int)$category->parent,
-                'visible' => (bool)$category->visible,
-                'coursecount' => $includecoursecount
-                    ? ($counts[(int)$category->id] ?? 0) : null,
-                'depth' => (int)$category->depth,
-                'path' => $category->path,
-                'idnumber' => $category->idnumber,
-            ];
+        } finally {
+            $categories->close();
         }
         return ['count' => count($out), 'categories' => $out];
     }
