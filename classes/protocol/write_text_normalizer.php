@@ -49,7 +49,7 @@ final class write_text_normalizer {
         } else if ($value instanceof \stdClass) {
             $value = clone $value;
             foreach ($value as $key => $item) {
-                $value->{$key} = self::normalize($item);
+                $value->{$key} = self::normalize($item, (string)$key);
             }
         }
         return $value;
