@@ -62,6 +62,29 @@ confirmation token, and use Moodle's `set_config()` rather than SQL.
 An audit entry records the names of modified settings without logging values.
 When the Moodle server is updated, refresh the custom MCP connection to discover the new tools.
 
+## Password policy and verified password changes
+
+Before generating a Moodle account password, call the READ tool `get_password_policy`.
+It reports the current site's enabled state, minimum length and required digits,
+lowercase letters, uppercase letters and non-alphanumeric characters. The same
+current policy is advertised in the `create_user` and `update_user` descriptions.
+
+The `create_user` WRITE tool accepts an optional `password` for accounts with
+`auth: manual`; `update_user` also accepts `password` to set a new password on an
+existing manual-authentication account. Passwords for external identity providers
+are intentionally unsupported. Both tools use Moodle's own password policy
+validation before any confirmation is issued and revalidate immediately before
+writing. Invalid passwords yield the structured error `password_policy_violation`
+with non-secret `policy` and `violations` details, not a misleading success.
+
+Passwords are redacted from confirmation previews, results and MCP diagnostic
+logs; ordinary text normalization must not rewrite any password bytes. Confirmed
+writes are verified against the stored password using Moodle's internal password
+verification API. The result includes `password_set` or `password_changed` only
+after persistence is checked. No existing password or password hash is returned.
+READ/WRITE scopes, Moodle permissions and one-time WRITE confirmation still apply.
+Refresh the ChatGPT MCP connection's tool discovery after updating the plugin.
+
 ## MCP JSON request/response diagnostics
 
 PHP diagnostic logging is disabled by default, including full JSON-RPC request
