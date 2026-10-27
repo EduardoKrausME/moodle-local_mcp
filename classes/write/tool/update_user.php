@@ -26,89 +26,174 @@ namespace local_mcp\write\tool;
 
 use context;
 use context_user;
+use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
+use local_mcp\security\password_policy;
+use stdClass;
 
 /**
- * Class update_user.
+ * Update a user, optionally changing a locally managed password.
  */
 final class update_user extends base_tool {
-    /**
-     * Method get_name.
-     *
-     * @return string Return value.
-     */
+    /** @return string */
     public function get_name(): string {
         return 'update_user';
     }
 
-    /**
-     * Method get_title.
-     *
-     * @return string Return value.
-     */
+    /** @return string */
     public function get_title(): string {
         return 'Update user';
     }
 
-    /**
-     * Method get_description.
-     *
-     * @return string Return value.
-     */
+    /** @return string */
     public function get_description(): string {
-        return 'Update a Moodle user using the core user API.';
+        return 'Update a Moodle user and optionally set a password for a manual-authentication account. '
+            . 'Call get_password_policy before generating a password. A password is checked against '
+            . 'Moodle policy before confirmation and again before saving; failures return actionable errors. '
+            . 'The password is never included in previews, results or audit logs. '
+            . 'Current site password policy: ' . json_encode(password_policy::current());
     }
 
-    /**
-     * Method get_required_capability.
-     *
-     * @return string Return value.
-     */
+    /** @return string */
     public function get_required_capability(): string {
         return 'moodle/user:update';
     }
 
-    /**
-     * Method get_input_schema.
-     *
-     * @return array Return value.
-     */
+    /** @return array */
     public function get_input_schema(): array {
         return $this->object_schema([
-            'userid' => ['type' => 'integer', 'minimum' => 1], 'firstname' => ['type' => 'string'], 'lastname' => ['type' => 'string'], 'email' => ['type' => 'string']
+            'userid' => ['type' => 'integer', 'minimum' => 1],
+            'firstname' => ['type' => 'string'],
+            'lastname' => ['type' => 'string'],
+            'email' => ['type' => 'string'],
+            'password' => [
+                'type' => 'string',
+                'minLength' => 1,
+                'description' => 'New manual-account password. Read get_password_policy first. '
+                    . 'Never send an existing hash or include the password in a summary.',
+            ],
         ], ['userid']);
     }
 
     /**
-     * Method resolve_context.
-     *
-     * @param array $arguments Parameter arguments.
-     * @return context Return value.
+     * @param array $arguments Tool arguments.
+     * @return context
      */
     public function resolve_context(array $arguments): context {
         return context_user::instance((int)$arguments['userid'], MUST_EXIST);
     }
 
     /**
-     * Method execute.
+     * Guard password updates from accidentally modifying externally managed accounts.
      *
-     * @param array $arguments Parameter arguments.
-     * @param authenticated_identity $identity Parameter identity.
-     * @return array Return value.
+     * @param int $userid Target account.
+     * @param authenticated_identity $identity Actor.
+     * @return stdClass
+     * @throws api_exception
+     */
+    private function password_target(int $userid, authenticated_identity $identity): stdClass {
+        global $DB;
+        $user = $DB->get_record('user', ['id' => $userid, 'deleted' => 0],
+            'id,auth,password', MUST_EXIST);
+        if ($user->auth !== 'manual') {
+            throw new api_exception('password_auth_unsupported', 400,
+                'Passwords for this authentication method must be changed in its identity provider.');
+        }
+        if (is_siteadmin($userid) && !is_siteadmin($identity->userid)) {
+            throw new api_exception('permission_denied', 403,
+                'Only a site administrator may change an administrator password.');
+        }
+        return $user;
+    }
+
+    /**
+     * Password validation and redaction happen before the confirmation token is issued.
+     *
+     * @param array $arguments Tool arguments.
+     * @param authenticated_identity $identity Actor.
+     * @return array
+     */
+    public function preview(array $arguments, authenticated_identity $identity): array {
+        $fields = array_values(array_intersect(['firstname', 'lastname', 'email'], array_keys($arguments)));
+        $preview = ['userid' => (int)$arguments['userid'], 'fields' => $fields];
+        if (array_key_exists('password', $arguments)) {
+            $user = $this->password_target((int)$arguments['userid'], $identity);
+            password_policy::validate($arguments['password'], $user);
+            $preview['password_change_requested'] = true;
+            $preview['password_valid'] = true;
+            $preview['password_policy'] = password_policy::current();
+            $preview['password_redacted'] = true;
+        }
+        return $preview;
+    }
+
+    /**
+     * Update the profile and password using Moodle APIs and verify saved values.
+     *
+     * @param array $arguments Tool arguments.
+     * @param authenticated_identity $identity Actor.
+     * @return array
+     * @throws api_exception
      */
     public function execute(array $arguments, authenticated_identity $identity): array {
-        global $CFG;
+        global $CFG, $DB;
         require_once($CFG->dirroot . '/user/lib.php');
-        $user = (object)['id' => (int)$arguments['userid']];
-        foreach (['firstname', 'lastname'] as $f) {
-            if (isset($arguments[$f])) {
-                $user->$f = clean_param($arguments[$f], PARAM_TEXT);
+        $userid = (int)$arguments['userid'];
+        $changepassword = array_key_exists('password', $arguments);
+        if ($changepassword) {
+            $target = $this->password_target($userid, $identity);
+            password_policy::validate($arguments['password'], $target);
+        }
+        $user = (object)['id' => $userid];
+        $fields = [];
+        foreach (['firstname', 'lastname'] as $field) {
+            if (array_key_exists($field, $arguments)) {
+                $user->{$field} = clean_param($arguments[$field], PARAM_TEXT);
+                $fields[] = $field;
             }
         }
-        if (isset($arguments['email'])) {
+        if (array_key_exists('email', $arguments)) {
             $user->email = clean_param($arguments['email'], PARAM_EMAIL);
+            $fields[] = 'email';
         }
-        user_update_user($user, false, false);
-        return ['updated' => true, 'userid' => $user->id];
+        if (!$fields && !$changepassword) {
+            throw new api_exception('no_changes_requested', 400);
+        }
+
+        $transaction = $DB->start_delegated_transaction();
+        if ($fields) {
+            if (method_exists(\core\user::class, 'update_user')) {
+                \core\user::update_user($user, false, false);
+            } else {
+                user_update_user($user, false, false);
+            }
+        }
+        if ($changepassword) {
+            $auth = get_auth_plugin('manual');
+            if (!$auth->user_update_password($target, $arguments['password'])) {
+                throw new api_exception('password_update_failed', 500,
+                    'Moodle did not accept the password update.');
+            }
+        }
+        $saved = $DB->get_record('user', ['id' => $userid, 'deleted' => 0],
+            'id,firstname,lastname,email,password', MUST_EXIST);
+        foreach ($fields as $field) {
+            if ($saved->{$field} !== $user->{$field}) {
+                throw new api_exception('user_update_not_persisted', 500,
+                    'Moodle did not persist all requested profile changes.');
+            }
+        }
+        if ($changepassword && !validate_internal_user_password($saved, $arguments['password'])) {
+            throw new api_exception('password_update_not_persisted', 500,
+                'The new password could not be verified after saving.');
+        }
+        $transaction->allow_commit();
+        return [
+            'updated' => true,
+            'userid' => $userid,
+            'updated_fields' => $fields,
+            'password_changed' => $changepassword,
+            'password_verified' => $changepassword,
+        ];
     }
 }
