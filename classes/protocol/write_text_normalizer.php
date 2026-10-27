@@ -34,13 +34,17 @@ final class write_text_normalizer {
      * @param mixed $value A decoded JSON value.
      * @return mixed The normalized value.
      */
-    public static function normalize(mixed $value): mixed {
+    public static function normalize(mixed $value, string $key = ''): mixed {
         if (is_string($value)) {
+            // Credentials are opaque. Never modify their bytes, even for typography cleanup.
+            if (preg_match('/(?:^|_)(?:password|passwd|secret|token)$/i', $key)) {
+                return $value;
+            }
             return str_replace("\u{2014}", '-', $value);
         }
         if (is_array($value)) {
             foreach ($value as $key => $item) {
-                $value[$key] = self::normalize($item);
+                $value[$key] = self::normalize($item, (string)$key);
             }
         } else if ($value instanceof \stdClass) {
             $value = clone $value;
