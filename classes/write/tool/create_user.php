@@ -93,7 +93,15 @@ final class create_user extends base_tool {
             throw new api_exception('password_auth_unsupported', 400,
                 'Only accounts using manual authentication can receive a local password.');
         }
-        password_policy::validate($arguments['password']);
+        // Supply account fields so site-specific password callbacks can reject
+        // passwords containing a new user's name or other profile data.
+        $candidateuser = (object)[
+            'username' => clean_param($arguments['username'], PARAM_USERNAME),
+            'firstname' => clean_param($arguments['firstname'], PARAM_TEXT),
+            'lastname' => clean_param($arguments['lastname'], PARAM_TEXT),
+            'email' => clean_param($arguments['email'], PARAM_EMAIL),
+        ];
+        password_policy::validate($arguments['password'], $candidateuser);
     }
 
     /**
