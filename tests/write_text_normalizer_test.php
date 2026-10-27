@@ -79,4 +79,26 @@ final class write_text_normalizer_test extends advanced_testcase {
         $this->assertSame('A—B', $original->title);
         $this->assertSame('C—D', $original->nested[0]->text);
     }
+    /**
+     * Passwords and access tokens are opaque and must not undergo typography conversion.
+     */
+    public function test_secret_values_preserve_exact_characters(): void {
+        $password = 'Strong!Pass123—exact';
+        $value = [
+            'title' => 'Normal — title',
+            'password' => $password,
+            'nested' => (object)[
+                'newpassword' => $password,
+                'api_token' => 'token—exact',
+                'text' => 'Other — text',
+            ],
+        ];
+        $normalized = write_text_normalizer::normalize($value);
+        $this->assertSame('Normal - title', $normalized['title']);
+        $this->assertSame($password, $normalized['password']);
+        $this->assertSame($password, $normalized['nested']->newpassword);
+        $this->assertSame('token—exact', $normalized['nested']->api_token);
+        $this->assertSame('Other - text', $normalized['nested']->text);
+    }
+
 }
