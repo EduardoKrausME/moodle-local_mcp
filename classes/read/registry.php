@@ -49,6 +49,7 @@ use local_mcp\read\tool\get_attempts;
 use local_mcp\read\tool\get_calendar_events;
 use local_mcp\read\tool\get_course;
 use local_mcp\read\tool\get_site_config;
+use local_mcp\read\tool\get_password_policy;
 use local_mcp\read\tool\get_site_status;
 use local_mcp\read\tool\get_course_activities;
 use local_mcp\read\tool\get_course_contents;
@@ -96,6 +97,7 @@ final class registry {
             new get_activity_restrictions(),
             new get_activity_completion(),
             new get_site_config(),
+            new get_password_policy(),
             new get_site_status(),
             new get_course_image(),
             new get_course_activities(),
