@@ -156,7 +156,7 @@ final class create_user extends base_tool {
         }
         if ($withpassword) {
             $saved = $DB->get_record('user', ['id' => (int)$id],
-                'id,password', MUST_EXIST);
+                'id,auth,password', MUST_EXIST);
             if (!validate_internal_user_password($saved, $arguments['password'])) {
                 throw new api_exception('password_update_not_persisted', 500,
                     'The new account password could not be verified after saving.');
