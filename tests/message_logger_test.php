@@ -128,4 +128,25 @@ final class message_logger_test extends advanced_testcase {
         $this->assertSame(count($lines), $first['parts']);
         $this->assertFalse($first['truncated']);
     }
+
+    /**
+     * Alternative password field names must be redacted in tool arguments and JSON text.
+     */
+    public function test_password_variants_are_redacted_in_nested_payloads(): void {
+        $newpassword = 'ReallySecret!12—value';
+        $lines = message_logger::format('incoming', 'server', [
+            'params' => ['arguments' => [
+                'newpassword' => $newpassword,
+                'passwordconfirmation' => $newpassword,
+                'nested' => ['oldpassword' => $newpassword],
+            ]],
+            'content' => [['type' => 'text', 'text' => json_encode([
+                'newpassword' => $newpassword,
+                'passwordconfirmation' => $newpassword,
+            ])]],
+        ]);
+        $serialized = implode("\n", $lines);
+        $this->assertStringNotContainsString($newpassword, $serialized);
+        $this->assertStringContainsString('[REDACTED]', $serialized);
+    }
 }
