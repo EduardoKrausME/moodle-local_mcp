@@ -176,7 +176,7 @@ final class update_user extends base_tool {
             }
         }
         $saved = $DB->get_record('user', ['id' => $userid, 'deleted' => 0],
-            'id,firstname,lastname,email,password', MUST_EXIST);
+            'id,firstname,lastname,email,auth,password', MUST_EXIST);
         foreach ($fields as $field) {
             if ($saved->{$field} !== $user->{$field}) {
                 throw new api_exception('user_update_not_persisted', 500,
