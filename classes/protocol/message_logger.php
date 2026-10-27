@@ -120,9 +120,8 @@ final class message_logger {
             $result = [];
             foreach ($value as $childkey => $child) {
                 $name = (string)$childkey;
-                if (preg_match('/(?:^|_)(?:access_token|refresh_token|confirmation_token|id_token|'
-                    . 'client_secret|api_key|password|passwd|secret|authorization|cookie|code_verifier|'
-                    . 'private_key|image_base64|file_base64|audio_base64|credentials|token)$/i', $name)) {
+                if (preg_match('/(?:password|passwd|passphrase|secret|token|authorization|cookie|'
+                    . 'code_verifier|private_key|api_key|image_base64|file_base64|audio_base64|credentials)/i', $name)) {
                     $result[$childkey] = '[REDACTED]';
                 } else {
                     $result[$childkey] = self::redact($child, $name, $depth + 1);
@@ -146,8 +145,8 @@ final class message_logger {
         $value = preg_replace('~data:(?:image|audio|video|application)/[^\s"<>]+~i', '[binary omitted]', $value);
         $value = preg_replace('/\bBearer\s+[^\s"\\\\]+/i', 'Bearer [REDACTED]', $value);
         $value = preg_replace('/\bmcp_[A-Za-z0-9_-]{12,}\b/', '[REDACTED]', $value);
-        $value = preg_replace('/("(?:access_token|refresh_token|confirmation_token|id_token|'
-            . 'client_secret|api_key|password|secret|authorization|token)"\s*:\s*")[^"]*/i',
+        $value = preg_replace('/("[a-z0-9_]*(?:password|passwd|passphrase|secret|token|authorization|api_key)'
+            . '[a-z0-9_]*"\s*:\s*")[^"]*/i',
             '$1[REDACTED]', $value);
         $value = preg_replace('~(https?://[^\s?"<>]+)\?[^\s"<>]+~i', '$1?[query redacted]', $value);
         $value = preg_replace('~[A-Za-z0-9+/]{128,}={0,2}~', '[base64 omitted]', $value);
