@@ -37,7 +37,7 @@ final class write_text_normalizer {
     public static function normalize(mixed $value, string $key = ''): mixed {
         if (is_string($value)) {
             // Credentials are opaque. Never modify their bytes, even for typography cleanup.
-            if (preg_match('/(?:^|_)(?:password|passwd|secret|token)$/i', $key)) {
+            if (preg_match('/(?:password|passwd|passphrase|secret|token)$/i', $key)) {
                 return $value;
             }
             return str_replace("\u{2014}", '-', $value);
