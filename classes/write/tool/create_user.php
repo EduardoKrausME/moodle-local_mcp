@@ -26,92 +26,140 @@ namespace local_mcp\write\tool;
 
 use context;
 use context_system;
+use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
+use local_mcp\security\password_policy;
 
 /**
- * Class create_user.
+ * Create Moodle accounts with optional policy-validated local passwords.
  */
 final class create_user extends base_tool {
-    /**
-     * Method get_name.
-     *
-     * @return string Return value.
-     */
+    /** @return string */
     public function get_name(): string {
         return 'create_user';
     }
 
-    /**
-     * Method get_title.
-     *
-     * @return string Return value.
-     */
+    /** @return string */
     public function get_title(): string {
         return 'Create user';
     }
 
-    /**
-     * Method get_description.
-     *
-     * @return string Return value.
-     */
+    /** @return string */
     public function get_description(): string {
-        return 'Create a Moodle user using the core user API.';
+        return 'Create a Moodle user using the core user API. A password is optional for manual '
+            . 'authentication accounts. Before generating a password call get_password_policy; '
+            . 'any supplied password is validated by Moodle and verified after creation. '
+            . 'Never include the password in a preview or result. Current site password policy: '
+            . json_encode(password_policy::current());
     }
 
-    /**
-     * Method get_required_capability.
-     *
-     * @return string Return value.
-     */
+    /** @return string */
     public function get_required_capability(): string {
         return 'moodle/user:create';
     }
 
-    /**
-     * Method get_input_schema.
-     *
-     * @return array Return value.
-     */
+    /** @return array */
     public function get_input_schema(): array {
         return $this->object_schema([
-            'username' => ['type' => 'string'], 'firstname' => ['type' => 'string'], 'lastname' => ['type' => 'string'], 'email' => ['type' => 'string'], 'auth' => ['type' => 'string']
+            'username' => ['type' => 'string'],
+            'firstname' => ['type' => 'string'],
+            'lastname' => ['type' => 'string'],
+            'email' => ['type' => 'string'],
+            'auth' => ['type' => 'string'],
+            'password' => [
+                'type' => 'string',
+                'minLength' => 1,
+                'description' => 'Optional local password for manual authentication. '
+                    . 'Read get_password_policy before generating the password.',
+            ],
         ], ['username', 'firstname', 'lastname', 'email']);
     }
 
-    /**
-     * Method resolve_context.
-     *
-     * @param array $arguments Parameter arguments.
-     * @return context Return value.
-     */
+    /** @return context */
     public function resolve_context(array $arguments): context {
         return context_system::instance();
     }
 
     /**
-     * Method execute.
+     * @param array $arguments Tool arguments.
+     * @return void
+     * @throws api_exception
+     */
+    private function validate_password_request(array $arguments): void {
+        if (!array_key_exists('password', $arguments)) {
+            return;
+        }
+        if (clean_param($arguments['auth'] ?? 'manual', PARAM_PLUGIN) !== 'manual') {
+            throw new api_exception('password_auth_unsupported', 400,
+                'Only accounts using manual authentication can receive a local password.');
+        }
+        password_policy::validate($arguments['password']);
+    }
+
+    /**
+     * Suppress password from the confirmation preview.
      *
-     * @param array $arguments Parameter arguments.
-     * @param authenticated_identity $identity Parameter identity.
-     * @return array Return value.
+     * @param array $arguments Tool arguments.
+     * @param authenticated_identity $identity Actor.
+     * @return array
+     */
+    public function preview(array $arguments, authenticated_identity $identity): array {
+        $this->validate_password_request($arguments);
+        $safe = $arguments;
+        unset($safe['password']);
+        $preview = ['tool' => $this->get_name(), 'arguments' => $safe];
+        if (array_key_exists('password', $arguments)) {
+            $preview['password_change_requested'] = true;
+            $preview['password_valid'] = true;
+            $preview['password_redacted'] = true;
+            $preview['password_policy'] = password_policy::current();
+        }
+        return $preview;
+    }
+
+    /**
+     * @param array $arguments Tool arguments.
+     * @param authenticated_identity $identity Actor.
+     * @return array
+     * @throws api_exception
      */
     public function execute(array $arguments, authenticated_identity $identity): array {
-        global $CFG;
+        global $CFG, $DB;
         require_once($CFG->dirroot . '/user/lib.php');
+        $this->validate_password_request($arguments);
         $user = (object)[
             'username' => clean_param($arguments['username'], PARAM_USERNAME),
             'firstname' => clean_param($arguments['firstname'], PARAM_TEXT),
             'lastname' => clean_param($arguments['lastname'], PARAM_TEXT),
             'email' => clean_param($arguments['email'], PARAM_EMAIL),
             'auth' => clean_param($arguments['auth'] ?? 'manual', PARAM_PLUGIN),
-            'confirmed' => 1, 'mnethostid' => $CFG->mnet_localhost_id
+            'confirmed' => 1,
+            'mnethostid' => $CFG->mnet_localhost_id,
         ];
+        $withpassword = array_key_exists('password', $arguments);
+        if ($withpassword) {
+            $user->password = $arguments['password'];
+        }
+        $transaction = $DB->start_delegated_transaction();
         if (method_exists(\core\user::class, 'create_user')) {
             $id = \core\user::create_user($user, true, false);
         } else {
             $id = user_create_user($user, true, false);
         }
-        return ['id' => (int)$id, 'username' => $user->username, 'email' => $user->email];
+        if ($withpassword) {
+            $saved = $DB->get_record('user', ['id' => (int)$id],
+                'id,password', MUST_EXIST);
+            if (!validate_internal_user_password($saved, $arguments['password'])) {
+                throw new api_exception('password_update_not_persisted', 500,
+                    'The new account password could not be verified after saving.');
+            }
+        }
+        $transaction->allow_commit();
+        return [
+            'id' => (int)$id,
+            'username' => $user->username,
+            'email' => $user->email,
+            'password_set' => $withpassword,
+        ];
     }
 }
