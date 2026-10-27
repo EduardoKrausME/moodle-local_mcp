@@ -42,7 +42,9 @@ final class quiz_extension_tools_test extends advanced_testcase {
         $provider = new provider();
         $read = $provider->get_read_tools();
         $write = $provider->get_write_tools();
-        $this->assertCount(6, $read);
+        $this->assertCount(7, $read);
+        $readnames = array_map(static fn($tool): string => $tool->get_name(), $read);
+        $this->assertContains('quiz_get_proctoring_status', $readnames);
         $this->assertCount(6, $write);
         $names = [];
         foreach (array_merge($read, $write) as $tool) {
