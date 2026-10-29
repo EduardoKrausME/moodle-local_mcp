@@ -155,6 +155,7 @@ final class service {
             "descriptionformat" => (int)$cohort->descriptionformat,
             "timemodified" => (int)$cohort->timemodified,
             "membercount" => $DB->count_records("cohort_members", ["cohortid" => $cohort->id]),
+            "members_sha256" => self::members_revision((int)$cohort->id),
             "linkedcourses" => self::linked_count((int)$cohort->id),
             "revision" => self::revision($cohort),
         ];
@@ -203,7 +204,9 @@ final class service {
         $users = $DB->get_records_sql($sql, ["cohortid" => $cohort->id], $offset, $limit);
         return [
             "cohortid" => (int)$cohort->id,
-            "total" => $DB->count_records("cohort_members", ["cohortid" => $cohort->id]),
+            "total" => $DB->count_records_sql(
+                "SELECT COUNT(1) FROM {cohort_members} cm JOIN {user} u ON u.id = cm.userid
+                  WHERE cm.cohortid = :cohortid AND u.deleted = 0", ["cohortid" => $cohort->id]),
             "limit" => $limit, "offset" => $offset, "members_sha256" => self::members_revision((int)$cohort->id),
             "members" => array_values(array_map(static function($user): array {
                 return ["userid" => (int)$user->id, "username" => $user->username,
@@ -302,10 +305,10 @@ final class service {
     }
 
     private static function deletable(array $arguments): \stdClass {
-        global $DB;
         $cohort = self::cohort((int)$arguments["cohortid"], "moodle/cohort:manage");
         self::editable($cohort);
         self::expected_revision($cohort, $arguments);
+        self::expected_members($cohort, $arguments);
         if (self::linked_count((int)$cohort->id) !== 0) {
             throw new api_exception("Unlink all cohort enrolment instances before deletion", 409);
         }
@@ -339,7 +342,7 @@ final class service {
         }
         foreach ($ids as $userid) {
             $user = $DB->get_record("user", ["id" => (int)$userid], "id,deleted");
-            if (!$user || $user->deleted || isguestuser((int)$userid)) {
+            if (!$user || (!$remove && ($user->deleted || isguestuser((int)$userid)))) {
                 throw new api_exception("Invalid or deleted user: " . $userid, 400);
             }
             $exists = $DB->record_exists("cohort_members",
