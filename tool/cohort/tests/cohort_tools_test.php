@@ -108,7 +108,8 @@ final class cohort_tools_test extends advanced_testcase {
         }
 
         $delete = new delete_cohort();
-        $deleteargs = ["cohortid" => $id, "expected_revision" => $updated["revision"]];
+        $deleteargs = ["cohortid" => $id, "expected_revision" => $updated["revision"],
+            "expected_members_sha256" => $updated["members_sha256"]];
         $this->assertTrue($delete->preview($deleteargs, $identity)["requires_explicit_confirmation"]);
         $this->assertTrue($delete->execute($deleteargs, $identity)["deleted"]);
         $this->assertFalse($DB->record_exists("cohort", ["id" => $id]));
@@ -129,7 +130,7 @@ final class cohort_tools_test extends advanced_testcase {
         $args = ["cohortid" => $id, "userids" => [(int)$user1->id, (int)$user2->id],
             "expected_members_sha256" => $initial["members_sha256"]];
         $add = new add_cohort_members();
-        $this->assertSame(2, $add->preview($args, $identity)["userids"] ? count($args["userids"]) : 0);
+        $this->assertCount(2, $add->preview($args, $identity)["userids"]);
         $this->assertSame(2, $add->execute($args, $identity)["affected"]);
         $this->assertSame(2, $DB->count_records("cohort_members", ["cohortid" => $id]));
 
@@ -167,4 +168,25 @@ final class cohort_tools_test extends advanced_testcase {
             $this->assertNotEmpty($exception->getMessage());
         }
     }
+    public function test_delete_rejects_changed_memberships(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $identity = $this->identity();
+        $cohort = (new create_cohort())->execute(["name" => "Fleet operations"], $identity);
+        $user = $this->getDataGenerator()->create_user();
+        $deleteargs = ["cohortid" => $cohort["cohortid"],
+            "expected_revision" => $cohort["revision"],
+            "expected_members_sha256" => $cohort["members_sha256"]];
+        $this->assertTrue((new delete_cohort())->preview($deleteargs, $identity)["requires_explicit_confirmation"]);
+        $addargs = ["cohortid" => $cohort["cohortid"], "userids" => [(int)$user->id],
+            "expected_members_sha256" => $cohort["members_sha256"]];
+        (new add_cohort_members())->execute($addargs, $identity);
+        try {
+            (new delete_cohort())->execute($deleteargs, $identity);
+            $this->fail("Deletion must reject an out-of-date membership preview.");
+        } catch (api_exception $exception) {
+            $this->assertNotEmpty($exception->getMessage());
+        }
+    }
+
 }

@@ -142,9 +142,9 @@ final class service {
         return $DB->count_records("enrol", ["enrol" => "cohort", "customint1" => $cohortid]);
     }
 
-    private static function overview(\stdClass $cohort): array {
+    private static function overview(\stdClass $cohort, bool $withdigest = true): array {
         global $DB;
-        return [
+        $result = [
             "cohortid" => (int)$cohort->id,
             "name" => $cohort->name,
             "idnumber" => $cohort->idnumber ?? "",
@@ -155,10 +155,13 @@ final class service {
             "descriptionformat" => (int)$cohort->descriptionformat,
             "timemodified" => (int)$cohort->timemodified,
             "membercount" => $DB->count_records("cohort_members", ["cohortid" => $cohort->id]),
-            "members_sha256" => self::members_revision((int)$cohort->id),
             "linkedcourses" => self::linked_count((int)$cohort->id),
             "revision" => self::revision($cohort),
         ];
+        if ($withdigest) {
+            $result["members_sha256"] = self::members_revision((int)$cohort->id);
+        }
+        return $result;
     }
 
     public static function search(array $arguments, authenticated_identity $identity): array {
@@ -183,7 +186,8 @@ final class service {
         return [
             "contextid" => $context->id, "total" => (int)$total,
             "offset" => $offset, "limit" => $limit,
-            "cohorts" => array_values(array_map([self::class, "overview"], $rows)),
+            "cohorts" => array_values(array_map(
+                static fn($cohort): array => self::overview($cohort, false), $rows)),
         ];
     }
 
