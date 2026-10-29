@@ -49,7 +49,7 @@ final class delete_cohort extends \local_mcp\write\tool\base_tool {
     }
 
     public function get_input_schema(): array {
-        return $this->object_schema(["cohortid" => ["type" => "integer", "minimum" => 1], "expected_revision" => ["type" => "string", "pattern" => "^[a-f0-9]{64}$"]], ["cohortid", "expected_revision"]);
+        return $this->object_schema(["cohortid" => ["type" => "integer", "minimum" => 1], "expected_revision" => ["type" => "string", "pattern" => "^[a-f0-9]{64}$"], "expected_members_sha256" => ["type" => "string", "pattern" => "^[a-f0-9]{64}$"]], ["cohortid", "expected_revision", "expected_members_sha256"]);
     }
 
     public function resolve_context(array $arguments): context {
