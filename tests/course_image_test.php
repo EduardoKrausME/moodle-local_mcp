@@ -107,7 +107,7 @@ final class course_image_test extends advanced_testcase {
         $first = image_service::read($course->id);
         $this->assertTrue($first['hasimage']);
         $this->assertSame($result['image']['url'], $first['image']['url']);
-        $this->assertSame(0, image_service::images($course->id)[0]->get_itemid());
+        $this->assertSame(0, (int)image_service::images($course->id)[0]->get_itemid());
         $this->assertCount(1, $first['images']);
         $this->assertCount(1, $first['_mcp_content']);
         $this->assertSame(self::png(), base64_decode($first['_mcp_content'][0]['data']));
