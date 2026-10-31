@@ -105,7 +105,7 @@ final class image_service {
      */
     public static function metadata(stored_file $file): array {
         $url = moodle_url::make_pluginfile_url(
-            $file->get_contextid(), 'course', 'overviewfiles', 0,
+            $file->get_contextid(), 'course', 'overviewfiles', null,
             $file->get_filepath(), $file->get_filename(), false
         );
         $width = null;
