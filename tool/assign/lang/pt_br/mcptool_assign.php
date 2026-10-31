@@ -22,7 +22,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined("MOODLE_INTERNAL") || die;
+defined('MOODLE_INTERNAL') || die;
 
 $string['pluginname'] = 'Ferramentas MCP para tarefas';
 $string['privacy:metadata'] = 'A integração MCP de tarefas não armazena dados pessoais. Ela consulta os registros do Moodle mediante solicitações autorizadas.';
