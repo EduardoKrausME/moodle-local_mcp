@@ -27,6 +27,7 @@ namespace local_mcp\write\tool;
 use context;
 use context_course;
 use context_coursecat;
+use local_mcp\course\file_url_normalizer;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\security\capability_guard;
@@ -126,7 +127,7 @@ final class update_course extends base_tool {
         }
         if (array_key_exists('summary', $arguments)) {
             capability_guard::check('moodle/course:changesummary', $context, $identity->userid);
-            $data->summary = clean_param((string)$arguments['summary'], PARAM_CLEANHTML);
+            $data->summary = clean_param(file_url_normalizer::normalize((string)$arguments['summary']), PARAM_CLEANHTML);
         }
         if (array_key_exists('summary', $arguments) || array_key_exists('summaryformat', $arguments)) {
             $data->summaryformat = FORMAT_HTML;
