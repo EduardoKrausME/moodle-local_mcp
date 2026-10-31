@@ -27,6 +27,7 @@ namespace local_mcp\write\tool;
 use context;
 use context_coursecat;
 use local_mcp\security\authenticated_identity;
+use local_mcp\course\file_url_normalizer;
 use local_mcp\course\image_service;
 use local_mcp\exception\api_exception;
 
@@ -198,7 +199,7 @@ final class create_course extends base_tool {
             $record->idnumber = clean_param((string)$arguments['idnumber'], PARAM_TEXT);
         }
         if (array_key_exists('summary', $arguments)) {
-            $record->summary = clean_param((string)$arguments['summary'], PARAM_CLEANHTML);
+            $record->summary = clean_param(file_url_normalizer::normalize((string)$arguments['summary']), PARAM_CLEANHTML);
         }
         if (array_key_exists('summary', $arguments) || array_key_exists('summaryformat', $arguments)) {
             $record->summaryformat = FORMAT_HTML;
