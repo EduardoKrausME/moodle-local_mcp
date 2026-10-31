@@ -106,6 +106,7 @@ final class bulk_create_courses_test extends advanced_testcase {
         $tool = new bulk_create_courses();
         $arguments = ['courses' => [$this->course($category->id, 'A'),
             $this->course($category->id, 'B')]];
+        $arguments['courses'][0]['summary'] .= '<img src="/pluginfile.php/23/course/overviewfiles/0/cover.png">';
         $preview = $tool->preview($arguments, $identity);
         $this->assertSame(2, $preview['to_create']);
         $this->assertSame(0, $preview['already_existing']);
@@ -116,10 +117,13 @@ final class bulk_create_courses_test extends advanced_testcase {
         $result = $tool->execute($arguments, $identity);
         $this->assertSame(2, $result['created_count']);
         $this->assertSame(0, $result['skipped_count']);
+        $this->assertStringContainsString('/course/overviewfiles/cover.png',
+            $DB->get_field('course', 'summary', ['id' => $result['created'][0]['id']]));
         foreach ($result['created'] as $course) {
             $record = $DB->get_record('course', ['id' => $course['id']], '*', MUST_EXIST);
             $this->assertSame((int)FORMAT_HTML, (int)$record->summaryformat);
             $this->assertStringContainsString('<strong>Cidades Inteligentes</strong>', $record->summary);
+            $this->assertStringNotContainsString('/course/overviewfiles/0/', $record->summary);
             $this->assertSame(0, (int)$record->visible);
             $this->assertSame((int)$category->id, (int)$record->category);
         }
