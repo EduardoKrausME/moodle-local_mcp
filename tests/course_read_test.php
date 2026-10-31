@@ -135,12 +135,18 @@ final class course_read_test extends advanced_testcase {
         ]);
         $result = (new update_course())->execute([
             'courseid' => (int)$course->id,
-            'summary' => '<p><strong>Updated HTML</strong></p>',
+            'summary' => '<p><strong>Updated HTML</strong></p>'
+                . '<img src="/pluginfile.php/23/course/overviewfiles/0/cover.png">'
+                . '<a href="/pluginfile.php/23/course/summary/0/guide.pdf">Guide</a>',
             'summaryformat' => 1,
             'categoryid' => (int)$destination->id,
         ], $identity);
         $this->assertSame((int)$destination->id, $result['categoryid']);
         $this->assertSame((int)FORMAT_HTML, $result['summaryformat']);
+        $this->assertStringContainsString('/course/overviewfiles/cover.png', $result['summary']);
+        $this->assertStringContainsString('/course/summary/guide.pdf', $result['summary']);
+        $this->assertStringNotContainsString('/course/overviewfiles/0/', $result['summary']);
+        $this->assertStringNotContainsString('/course/summary/0/', $result['summary']);
         $this->assertStringContainsString('<strong>Updated HTML</strong>', $result['summary']);
         $this->assertSame((int)$destination->id,
             (int)$DB->get_field('course', 'category', ['id' => $course->id]));
