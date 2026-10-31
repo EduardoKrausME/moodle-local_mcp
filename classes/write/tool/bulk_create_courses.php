@@ -28,6 +28,7 @@ use context;
 use context_coursecat;
 use dml_transaction_exception;
 use local_mcp\course\image_service;
+use local_mcp\course\file_url_normalizer;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\security\capability_guard;
@@ -181,7 +182,7 @@ final class bulk_create_courses extends base_tool {
             $fullname = trim(clean_param((string)$course['fullname'], PARAM_TEXT));
             $shortname = trim(clean_param((string)$course['shortname'], PARAM_TEXT));
             $idnumber = trim(clean_param((string)($course['idnumber'] ?? ''), PARAM_TEXT));
-            $summary = clean_param((string)$course['summary'], PARAM_CLEANHTML);
+            $summary = clean_param(file_url_normalizer::normalize((string)$course['summary']), PARAM_CLEANHTML);
             $categoryid = (int)$course['categoryid'];
             if ($fullname === ''
                 || $shortname === ''
