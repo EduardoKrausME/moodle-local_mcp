@@ -2,8 +2,9 @@
 
 **Documentation:** [Moodle MCP website](https://eduardokrausme.github.io/moodle-local_mcp/)
 
-Moodle MCP turns a Moodle installation into an extensible Model Context Protocol server with a deliberately separated
-READ and WRITE architecture.
+Connect your Moodle to **ChatGPT or Claude** through the **Model Context Protocol (MCP)**. Ask the AI to find courses, users, activities and grades, manage enrolments or prepare administrative changes. The plugin enforces Moodle permissions and requires an explicit preview and approval before WRITE operations.
+
+Under the hood, Moodle MCP exposes an extensible server with separate READ and WRITE tool registries.
 
 This is a **local plugin**: `local_mcp`. It does not use Moodle's traditional `wstoken` mechanism as its primary
 authentication layer.
@@ -526,10 +527,9 @@ Sensitive secrets are explicitly excluded from audit metadata.
 - 401 responses advertise Protected Resource Metadata.
 - READ and WRITE rate limits are independent.
 
-## ChatGPT and other MCP clients
+## ChatGPT, Claude and other AI tools using MCP
 
-The plugin contains no ChatGPT-specific authentication code. ChatGPT is expected to behave like any other
-standards-based MCP/OAuth client.
+The plugin contains no ChatGPT- or Claude-specific authentication code. Supported AI applications connect using the standard MCP/OAuth flow; availability and setup screens depend on each application's MCP support.
 
 The integration flow is:
 
