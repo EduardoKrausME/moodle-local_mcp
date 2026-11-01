@@ -36,6 +36,11 @@ use local_mcp\security\authenticated_identity;
  * @covers \mcptool_quiz\question_usage_service
  */
 final class quiz_tools_test extends advanced_testcase {
+    /**
+     * Method test_registration_and_write_confirmation.
+     *
+     * @return void Return value.
+     */
     public function test_registration_and_write_confirmation(): void {
         $p = new provider();
         $read = $p->get_read_tools();
@@ -102,6 +107,11 @@ final class quiz_tools_test extends advanced_testcase {
         $tool->execute(['cmid' => $module->cmid], $identity);
     }
 
+    /**
+     * Method test_student_cannot_manage_quiz_slots.
+     *
+     * @return void Return value.
+     */
     public function test_student_cannot_manage_quiz_slots(): void {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course();
@@ -114,6 +124,11 @@ final class quiz_tools_test extends advanced_testcase {
         quiz_service::slots(["cmid" => $module->cmid], $identity);
     }
 
+    /**
+     * Method test_updating_quiz_does_not_change_unrelated_settings.
+     *
+     * @return void Return value.
+     */
     public function test_updating_quiz_does_not_change_unrelated_settings(): void {
         global $DB, $USER;
         $this->resetAfterTest();

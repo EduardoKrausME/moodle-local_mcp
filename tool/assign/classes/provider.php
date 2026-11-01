@@ -31,6 +31,11 @@ use local_mcp\extension\write_provider_interface;
  * Expose all installed assignment subplugin tools through the MCP extension registry.
  */
 final class provider implements read_provider_interface, write_provider_interface {
+    /**
+     * Method get_read_tools.
+     *
+     * @return array Return value.
+     */
     public function get_read_tools(): array {
         return [
             new \mcptool_assign\read\get_submission_history(),
@@ -43,6 +48,11 @@ final class provider implements read_provider_interface, write_provider_interfac
         ];
     }
 
+    /**
+     * Method get_write_tools.
+     *
+     * @return array Return value.
+     */
     public function get_write_tools(): array {
         return [
             new \mcptool_assign\write\create_activity(),

@@ -32,30 +32,68 @@ use mcptool_cohort\service;
  * Get cohort details and revision.
  */
 final class get_cohort extends \local_mcp\read\tool\base_tool {
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return "cohort_get_cohort";
     }
 
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return "Get cohort details and revision";
     }
 
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return "Get cohort details and revision. READ.  ";
     }
 
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return "moodle/cohort:view";
     }
 
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema(["cohortid" => ["type" => "integer", "minimum" => 1]], ["cohortid"]);
     }
 
+    /**
+     * Method resolve_context.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return context Return value.
+     */
     public function resolve_context(array $arguments): context {
         return service::cohort_context((int)$arguments["cohortid"]);
     }
 
+    /**
+     * Method execute.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         return service::get($arguments, $identity);
     }

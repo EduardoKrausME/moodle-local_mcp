@@ -37,34 +37,72 @@ final class get_proctoring_status extends \local_mcp\read\tool\base_tool {
     /** @var string Official plugin listing. */
     public const MARKETPLACE_URL = 'https://marketplace.moodle.com/plugins/local_kopere_proctoring';
 
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return 'quiz_get_proctoring_status';
     }
 
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return 'Quiz proctoring status';
     }
 
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return 'Check whether Kopere Proctoring is installed and enabled for a quiz, '
             . 'and list non-sensitive policy flags when available. If it is missing, '
             . 'return its official Moodle Marketplace installation link.';
     }
 
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return 'mod/quiz:viewreports';
     }
 
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema(['cmid' => ['type' => 'integer', 'minimum' => 1]], ['cmid']);
     }
 
+    /**
+     * Method resolve_context.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return context Return value.
+     */
     public function resolve_context(array $arguments): context {
         // Refuse arbitrary course modules before any security check is made.
         get_coursemodule_from_id('quiz', (int)$arguments['cmid'], 0, false, MUST_EXIST);
         return context_module::instance((int)$arguments['cmid'], MUST_EXIST);
     }
 
+    /**
+     * Method execute.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         // In addition to the MCP capability check, enforce quiz visibility for this identity.
         [, $cm] = quiz_service::target((int)$arguments['cmid'], $identity, 'mod/quiz:viewreports');

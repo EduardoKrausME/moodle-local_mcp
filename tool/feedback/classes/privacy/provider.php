@@ -30,6 +30,11 @@ use core_privacy\local\metadata\null_provider;
  * The MCP integration adds no persistent personal data of its own.
  */
 final class provider implements null_provider {
+    /**
+     * Method get_reason.
+     *
+     * @return string Return value.
+     */
     public static function get_reason(): string {
         return "privacy:metadata";
     }

@@ -39,6 +39,11 @@ use local_mcp\security\authenticated_identity;
  * @covers \mcptool_lesson\write\create_activity
  */
 final class feedback_lesson_tools_test extends advanced_testcase {
+    /**
+     * Method test_both_providers_expose_confirmed_reads_and_writes.
+     *
+     * @return void Return value.
+     */
     public function test_both_providers_expose_confirmed_reads_and_writes(): void {
         foreach ([
             new \mcptool_feedback\provider(),
@@ -60,6 +65,11 @@ final class feedback_lesson_tools_test extends advanced_testcase {
         }
     }
 
+    /**
+     * Method test_feedback_creation_questions_and_anonymous_report_suppression.
+     *
+     * @return void Return value.
+     */
     public function test_feedback_creation_questions_and_anonymous_report_suppression(): void {
         global $USER;
         $this->resetAfterTest();
@@ -93,6 +103,11 @@ final class feedback_lesson_tools_test extends advanced_testcase {
         $this->assertTrue($responses["suppressed_small_cohort"]);
     }
 
+    /**
+     * Method test_lesson_creation_and_conditional_page_navigation.
+     *
+     * @return void Return value.
+     */
     public function test_lesson_creation_and_conditional_page_navigation(): void {
         global $USER;
         $this->resetAfterTest();
@@ -121,6 +136,11 @@ final class feedback_lesson_tools_test extends advanced_testcase {
         $this->assertStringContainsString("Select a route", $detail["content"]);
     }
 
+    /**
+     * Method test_student_cannot_read_feedback_responses.
+     *
+     * @return void Return value.
+     */
     public function test_student_cannot_read_feedback_responses(): void {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course();

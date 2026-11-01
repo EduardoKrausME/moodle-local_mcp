@@ -32,6 +32,11 @@ namespace mcptool_assign;
  * @covers \mcptool_assign\write\update_activity
  */
 final class assignment_tools_test extends \advanced_testcase {
+    /**
+     * Method test_registers_unique_read_write_tools.
+     *
+     * @return void Return value.
+     */
     public function test_registers_unique_read_write_tools(): void {
         $provider = new provider();
         $read = $provider->get_read_tools();
@@ -89,6 +94,11 @@ final class assignment_tools_test extends \advanced_testcase {
         $this->assertTrue($assignment->get_submission_plugin_by_type("onlinetext")->is_enabled());
     }
 
+    /**
+     * Method test_assignment_creation_has_supported_moodle_capability.
+     *
+     * @return void Return value.
+     */
     public function test_assignment_creation_has_supported_moodle_capability(): void {
         $tool = new \mcptool_assign\write\create_activity();
         $this->assertSame("assign_create_activity", $tool->get_name());

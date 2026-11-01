@@ -33,40 +33,90 @@ use mcptool_quiz\quiz_service;
  * Remove a quiz question slot before any real attempts exist.
  */
 final class remove_question extends \local_mcp\write\tool\base_tool {
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return "quiz_remove_question";
     }
 
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return "Remove quiz question slot";
     }
 
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return "Remove a quiz question slot before any real attempts exist.";
     }
 
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return "mod/quiz:manage";
     }
 
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema(["cmid" => ["type" => "integer", "minimum" => 1], "slotid" => ["type" => "integer", "minimum" => 1], "expected_layout_sha256" => ["type" => "string", "pattern" => "^[a-f0-9]{64}$"]], ["cmid", "slotid", "expected_layout_sha256"]);
     }
 
+    /**
+     * Method resolve_context.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return context Return value.
+     */
     public function resolve_context(array $arguments): context {
         return context_module::instance((int)$arguments["cmid"], MUST_EXIST);
     }
 
+    /**
+     * Method supports_dry_run.
+     *
+     * @return bool Return value.
+     */
     public function supports_dry_run(): bool {
         return true;
     }
 
+    /**
+     * Method preview.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function preview(array $arguments, authenticated_identity $identity): array {
         \mcptool_quiz\quiz_service::target((int)$arguments["cmid"], $identity, "mod/quiz:manage");
         return ["operation" => $this->get_name(), "arguments" => $arguments,
             "requires_confirmation" => true];
     }
 
+    /**
+     * Method execute.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         return quiz_service::remove($arguments, $identity);
     }

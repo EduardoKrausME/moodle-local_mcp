@@ -33,31 +33,69 @@ use local_mcp\security\authenticated_identity;
  * Read authorized group members and a membership fingerprint.
  */
 final class get_group_members extends base_tool {
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return "get_group_members";
     }
 
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return "List group members";
     }
 
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return "Read authorized group members and a membership fingerprint.";
     }
 
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return "moodle/course:managegroups";
     }
 
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema(["courseid" => ["type" => "integer", "minimum" => 1], "groupid" => ["type" => "integer", "minimum" => 1], "limit" => ["type" => "integer", "minimum" => 1, "maximum" => 50], "offset" => ["type" => "integer", "minimum" => 0]], ["courseid", "groupid"]);
     }
 
+    /**
+     * Method resolve_context.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return context Return value.
+     */
     public function resolve_context(array $arguments): context {
         return context_course::instance(
             (int)$arguments["courseid"], MUST_EXIST);
     }
 
+    /**
+     * Method execute.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         return group_service::members($arguments, $identity);
     }

@@ -33,31 +33,69 @@ use local_mcp\security\authenticated_identity;
  * Read activity completion mode, rules and existing completion records.
  */
 final class get_activity_completion extends base_tool {
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return "get_activity_completion";
     }
 
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return "Get activity completion rules";
     }
 
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return "Read activity completion mode, rules and existing completion records.";
     }
 
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return "moodle/course:manageactivities";
     }
 
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema(["cmid" => ["type" => "integer", "minimum" => 1]], ["cmid"]);
     }
 
+    /**
+     * Method resolve_context.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return context Return value.
+     */
     public function resolve_context(array $arguments): context {
         return context_module::instance(
             (int)$arguments["cmid"], MUST_EXIST);
     }
 
+    /**
+     * Method execute.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         return activity_settings_service::completion($arguments, $identity);
     }

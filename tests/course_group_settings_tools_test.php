@@ -39,6 +39,11 @@ use local_mcp\security\authenticated_identity;
  * @covers \local_mcp\write\registry
  */
 final class course_group_settings_tools_test extends advanced_testcase {
+    /**
+     * Method test_all_tools_registered_and_writes_confirmable.
+     *
+     * @return void Return value.
+     */
     public function test_all_tools_registered_and_writes_confirmable(): void {
         $reads = \local_mcp\read\registry::get_tools();
         $writes = \local_mcp\write\registry::get_tools();
@@ -57,6 +62,11 @@ final class course_group_settings_tools_test extends advanced_testcase {
         }
     }
 
+    /**
+     * Method test_groups_create_add_and_remove_with_snapshot_check.
+     *
+     * @return void Return value.
+     */
     public function test_groups_create_add_and_remove_with_snapshot_check(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
@@ -95,6 +105,11 @@ final class course_group_settings_tools_test extends advanced_testcase {
             "groupid" => $created["groupid"]], $identity)["total"]);
     }
 
+    /**
+     * Method test_module_groupmode_availability_and_completion.
+     *
+     * @return void Return value.
+     */
     public function test_module_groupmode_availability_and_completion(): void {
         global $CFG, $DB;
         $this->resetAfterTest();
@@ -146,6 +161,11 @@ final class course_group_settings_tools_test extends advanced_testcase {
             ["id" => $module->cmid]));
     }
 
+    /**
+     * Method test_student_cannot_manage_groups_or_module_settings.
+     *
+     * @return void Return value.
+     */
     public function test_student_cannot_manage_groups_or_module_settings(): void {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course();

@@ -35,22 +35,47 @@ use local_mcp\write\tool\base_tool;
  * Activate an unissued course badge only after checking its activity criteria.
  */
 final class enable_badge extends base_tool {
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return "badges_enable";
     }
 
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return "Badges: enable automatic awarding";
     }
 
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return "Enable an inactive course badge only after verifying it has ALL-of activity criteria and every required module still tracks completion. Enabling may cause awards through Moodle's regular events/cron. Requires explicit confirmation.";
     }
 
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return "moodle/badges:configurecriteria";
     }
 
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema([
             "badgeid" => ["type" => "integer", "minimum" => 1],
@@ -58,6 +83,12 @@ final class enable_badge extends base_tool {
         ], ["badgeid", "expected_timemodified"]);
     }
 
+    /**
+     * Method resolve_context.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return context Return value.
+     */
     public function resolve_context(array $arguments): context {
         global $DB;
         $row = $DB->get_record("badge", ["id" => (int)$arguments["badgeid"]], "courseid");
@@ -68,6 +99,12 @@ final class enable_badge extends base_tool {
             : context_system::instance();
     }
 
+    /**
+     * Method checked.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return array Return value.
+     */
     private function checked(array $arguments): array {
         global $DB, $CFG;
         require_once($CFG->libdir . "/badgeslib.php");
@@ -126,6 +163,13 @@ final class enable_badge extends base_tool {
         return [$badge, $ids];
     }
 
+    /**
+     * Method preview.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function preview(array $arguments, authenticated_identity $identity): array {
         [$badge, $ids] = $this->checked($arguments);
         return ["action" => "enable_badge", "badgeid" => (int)$badge->id,
@@ -135,6 +179,13 @@ final class enable_badge extends base_tool {
             "requires_explicit_confirmation" => true];
     }
 
+    /**
+     * Method execute.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         [$badge, $ids] = $this->checked($arguments);
         $badge->set_status(BADGE_STATUS_ACTIVE);

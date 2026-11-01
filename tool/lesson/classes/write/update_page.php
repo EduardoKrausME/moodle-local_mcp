@@ -33,38 +33,88 @@ use mcptool_lesson\service;
  * Update Lesson page through the native Moodle Lesson APIs.
  */
 final class update_page extends \local_mcp\write\tool\base_tool {
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return "lesson_update_page";
     }
 
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return "Update Lesson page";
     }
 
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return "Confirm Lesson page changes while preserving student attempts and navigation concurrency.";
     }
 
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return "mod/lesson:edit";
     }
 
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema(["cmid" => ["type" => "integer", "minimum" => 1], "pageid" => ["type" => "integer", "minimum" => 1], "title" => ["type" => "string", "minLength" => 1, "maxLength" => 255], "content" => ["type" => "string", "maxLength" => 100000], "expected_navigation_sha256" => ["type" => "string", "pattern" => "^[a-f0-9]{64}$"]], ["cmid", "pageid", "title", "content", "expected_navigation_sha256"]);
     }
 
+    /**
+     * Method resolve_context.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return context Return value.
+     */
     public function resolve_context(array $arguments): context {
         return context_module::instance((int)$arguments["cmid"], MUST_EXIST);
     }
 
+    /**
+     * Method supports_dry_run.
+     *
+     * @return bool Return value.
+     */
     public function supports_dry_run(): bool {
         return true;
     }
 
+    /**
+     * Method preview.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function preview(array $arguments, authenticated_identity $identity): array {
         return service::update_preview($arguments, $identity);
     }
 
+    /**
+     * Method execute.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         return service::update($arguments, $identity);
     }

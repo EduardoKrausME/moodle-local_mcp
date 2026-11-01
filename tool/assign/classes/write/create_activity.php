@@ -33,18 +33,38 @@ use stdClass;
  * Create individual assignments with supported submission and feedback plugins.
  */
 final class create_activity extends activity_create_base {
+    /**
+     * Method module_name.
+     *
+     * @return string Return value.
+     */
     protected function module_name(): string {
         return "assign";
     }
 
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return "Create assignment activity";
     }
 
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return "Create a Moodle assignment with submission plugins, dates, grade and optional marking workflow.";
     }
 
+    /**
+     * Method extra_properties.
+     *
+     * @return array Return value.
+     */
     protected function extra_properties(): array {
         return [
             "allowsubmissionsfromdate" => ["type" => "integer", "minimum" => 0],
@@ -156,6 +176,13 @@ final class create_activity extends activity_create_base {
         }
     }
 
+    /**
+     * Method preview.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function preview(array $arguments, authenticated_identity $identity): array {
         $preview = parent::preview($arguments, $identity);
         $this->validate_assignment_options($arguments);

@@ -33,30 +33,68 @@ use local_mcp\security\authenticated_identity;
  * Read course completion, criterion timestamps and visible activity states for a specific enrollee.
  */
 final class get_course_completion_status extends base_tool {
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return "get_course_completion_status";
     }
 
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return "Get user course completion status";
     }
 
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return "Read course completion, criterion timestamps and visible activity states for a specific enrollee.";
     }
 
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return "moodle/course:view";
     }
 
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema(["courseid" => ["type" => "integer", "minimum" => 1], "userid" => ["type" => "integer", "minimum" => 1]], ["courseid", "userid"]);
     }
 
+    /**
+     * Method resolve_context.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return context Return value.
+     */
     public function resolve_context(array $arguments): context {
         return context_course::instance((int)$arguments["courseid"], MUST_EXIST);
     }
 
+    /**
+     * Method execute.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         return completion_report_service::user_status($arguments, $identity);
     }

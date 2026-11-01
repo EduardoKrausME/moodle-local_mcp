@@ -38,6 +38,11 @@ use mcptool_quiz\quiz_service;
  * @covers \mcptool_quiz\write\update_activity
  */
 final class quiz_extension_tools_test extends advanced_testcase {
+    /**
+     * Method test_quiz_tools_and_confirmable_mutations_are_registered.
+     *
+     * @return void Return value.
+     */
     public function test_quiz_tools_and_confirmable_mutations_are_registered(): void {
         $provider = new provider();
         $read = $provider->get_read_tools();
@@ -57,6 +62,11 @@ final class quiz_extension_tools_test extends advanced_testcase {
         }
     }
 
+    /**
+     * Method test_quiz_update_preserves_grading_configuration.
+     *
+     * @return void Return value.
+     */
     public function test_quiz_update_preserves_grading_configuration(): void {
         global $DB, $USER;
         $this->resetAfterTest();
@@ -83,6 +93,11 @@ final class quiz_extension_tools_test extends advanced_testcase {
         $this->assertContains("expected_layout_sha256", $removal->get_input_schema()["required"]);
     }
 
+    /**
+     * Method test_student_cannot_access_question_structure.
+     *
+     * @return void Return value.
+     */
     public function test_student_cannot_access_question_structure(): void {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course();

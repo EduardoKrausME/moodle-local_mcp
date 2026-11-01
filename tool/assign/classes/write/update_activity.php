@@ -34,22 +34,47 @@ use local_mcp\write\tool\base_tool;
  * Update selected assignment metadata, preserving other existing settings.
  */
 final class update_activity extends base_tool {
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return "assign_update_activity";
     }
 
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return "Update assignment settings";
     }
 
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return "Update an existing assignment name, instructions and dates; preserve all unrelated settings.";
     }
 
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return "moodle/course:manageactivities";
     }
 
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema([
             "cmid" => ["type" => "integer", "minimum" => 1],
@@ -62,10 +87,21 @@ final class update_activity extends base_tool {
         ], ["cmid"]);
     }
 
+    /**
+     * Method resolve_context.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return context Return value.
+     */
     public function resolve_context(array $arguments): context {
         return context_module::instance((int)$arguments["cmid"], MUST_EXIST);
     }
 
+    /**
+     * Method supports_dry_run.
+     *
+     * @return bool Return value.
+     */
     public function supports_dry_run(): bool {
         return true;
     }
@@ -90,6 +126,13 @@ final class update_activity extends base_tool {
         ];
     }
 
+    /**
+     * Method execute.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         global $CFG, $DB;
         require_once($CFG->dirroot . "/mod/assign/locallib.php");

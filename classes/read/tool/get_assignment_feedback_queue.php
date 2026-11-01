@@ -33,23 +33,48 @@ use local_mcp\security\authenticated_identity;
  * List small batches of eligible submissions without leaking learner content.
  */
 final class get_assignment_feedback_queue extends base_tool {
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return "get_assignment_feedback_queue";
     }
 
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return "List submitted work for feedback";
     }
 
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return "List submitted work and existing feedback state for a limited set of students. "
             . "Per-student group and anonymous-grading restrictions apply.";
     }
 
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return "mod/assign:grade";
     }
 
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema([
             "cmid" => ["type" => "integer", "minimum" => 1],
@@ -58,10 +83,23 @@ final class get_assignment_feedback_queue extends base_tool {
         ], ["cmid"]);
     }
 
+    /**
+     * Method resolve_context.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return context Return value.
+     */
     public function resolve_context(array $arguments): context {
         return context_module::instance((int)$arguments["cmid"], MUST_EXIST);
     }
 
+    /**
+     * Method execute.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         global $DB, $CFG;
         require_once($CFG->dirroot . "/mod/assign/locallib.php");

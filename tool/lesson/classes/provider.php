@@ -31,6 +31,11 @@ use local_mcp\extension\write_provider_interface;
  * The Lesson extension is discovered by the MCP tool manager.
  */
 final class provider implements read_provider_interface, write_provider_interface {
+    /**
+     * Method get_read_tools.
+     *
+     * @return array Return value.
+     */
     public function get_read_tools(): array {
         return [
             new \mcptool_lesson\read\get_navigation(),
@@ -38,6 +43,11 @@ final class provider implements read_provider_interface, write_provider_interfac
         ];
     }
 
+    /**
+     * Method get_write_tools.
+     *
+     * @return array Return value.
+     */
     public function get_write_tools(): array {
         return [
             new \mcptool_lesson\write\create_activity(),

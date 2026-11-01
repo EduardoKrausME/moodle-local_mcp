@@ -33,10 +33,20 @@ use stdClass;
  * Create a feedback survey without publishing student answers.
  */
 final class create_activity extends activity_create_base {
+    /**
+     * Method module_name.
+     *
+     * @return string Return value.
+     */
     protected function module_name(): string {
         return "feedback";
     }
 
+    /**
+     * Method extra_properties.
+     *
+     * @return array Return value.
+     */
     protected function extra_properties(): array {
         return [
             "anonymous" => ["type" => "boolean"],
@@ -46,6 +56,14 @@ final class create_activity extends activity_create_base {
         ];
     }
 
+    /**
+     * Method configure.
+     *
+     * @param stdClass $info Parameter info.
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return void Return value.
+     */
     protected function configure(stdClass $info, array $arguments, authenticated_identity $identity): void {
         global $CFG;
         require_once($CFG->dirroot . "/mod/feedback/lib.php");
@@ -68,6 +86,13 @@ final class create_activity extends activity_create_base {
         $info->introeditor = ["text" => $info->intro, "format" => FORMAT_HTML, "itemid" => 0];
     }
 
+    /**
+     * Method preview.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function preview(array $arguments, authenticated_identity $identity): array {
         $preview = parent::preview($arguments, $identity);
         $preview["anonymous"] = !empty($arguments["anonymous"]);

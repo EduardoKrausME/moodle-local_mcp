@@ -35,22 +35,47 @@ use local_mcp\write\tool\base_tool;
  * Configure all-of activity criteria using Moodle's native award criteria API.
  */
 final class set_criteria extends base_tool {
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return "badges_set_criteria";
     }
 
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return "Badges: require completion of every selected activity";
     }
 
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return "Set ALL-of native activity-completion criteria on a course badge that is inactive and has no awards or criteria. Activity completion must already be automatic. Does not enable or issue the badge. Requires preview and confirmation.";
     }
 
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return "moodle/badges:configurecriteria";
     }
 
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema([
             "badgeid" => ["type" => "integer", "minimum" => 1],
@@ -60,6 +85,12 @@ final class set_criteria extends base_tool {
         ], ["badgeid", "expected_timemodified", "cmids"]);
     }
 
+    /**
+     * Method resolve_context.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return context Return value.
+     */
     public function resolve_context(array $arguments): context {
         global $DB;
         $badge = $DB->get_record("badge", ["id" => (int)$arguments["badgeid"]], "courseid");
@@ -70,6 +101,12 @@ final class set_criteria extends base_tool {
             ? context_course::instance((int)$badge->courseid, MUST_EXIST) : context_system::instance();
     }
 
+    /**
+     * Method checked.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return array Return value.
+     */
     private function checked(array $arguments): array {
         global $CFG, $DB;
         require_once($CFG->libdir . "/badgeslib.php");
@@ -116,6 +153,13 @@ final class set_criteria extends base_tool {
         return [$badge, $activities];
     }
 
+    /**
+     * Method preview.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function preview(array $arguments, authenticated_identity $identity): array {
         [$badge, $activities] = $this->checked($arguments);
         return ["action" => "set_badge_activity_criteria",
@@ -125,6 +169,13 @@ final class set_criteria extends base_tool {
             "will_enable_or_award" => false, "requires_explicit_confirmation" => true];
     }
 
+    /**
+     * Method execute.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         global $DB, $PAGE, $CFG;
         [$badge, $activities] = $this->checked($arguments);

@@ -33,38 +33,88 @@ use mcptool_lesson\service;
  * Set Lesson branch navigation through the native Moodle Lesson APIs.
  */
 final class set_jumps extends \local_mcp\write\tool\base_tool {
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return "lesson_set_jumps";
     }
 
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return "Set Lesson branch navigation";
     }
 
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return "Confirm Lesson page changes while preserving student attempts and navigation concurrency.";
     }
 
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return "mod/lesson:edit";
     }
 
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema(["cmid" => ["type" => "integer", "minimum" => 1], "pageid" => ["type" => "integer", "minimum" => 1], "routes" => ["type" => "array", "minItems" => 1, "maxItems" => 10, "items" => ["type" => "object", "properties" => ["answerid" => ["type" => "integer", "minimum" => 1], "jump" => ["anyOf" => [["type" => "string", "enum" => ["next", "previous", "end"]], ["type" => "integer", "minimum" => 1]]]], "required" => ["answerid", "jump"], "additionalProperties" => false]], "expected_navigation_sha256" => ["type" => "string", "pattern" => "^[a-f0-9]{64}$"]], ["cmid", "pageid", "routes", "expected_navigation_sha256"]);
     }
 
+    /**
+     * Method resolve_context.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return context Return value.
+     */
     public function resolve_context(array $arguments): context {
         return context_module::instance((int)$arguments["cmid"], MUST_EXIST);
     }
 
+    /**
+     * Method supports_dry_run.
+     *
+     * @return bool Return value.
+     */
     public function supports_dry_run(): bool {
         return true;
     }
 
+    /**
+     * Method preview.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function preview(array $arguments, authenticated_identity $identity): array {
         return service::jumps_preview($arguments, $identity);
     }
 
+    /**
+     * Method execute.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         return service::set_jumps($arguments, $identity);
     }

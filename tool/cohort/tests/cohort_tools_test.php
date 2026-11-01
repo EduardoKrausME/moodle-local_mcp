@@ -44,11 +44,21 @@ use mcptool_cohort\write\update_cohort;
  * @covers \mcptool_cohort\service
  */
 final class cohort_tools_test extends advanced_testcase {
+    /**
+     * Method identity.
+     *
+     * @return authenticated_identity Return value.
+     */
     private function identity(): authenticated_identity {
         global $USER;
         return new authenticated_identity((int)$USER->id, "test", ["mcp:read", "mcp:write"]);
     }
 
+    /**
+     * Method test_provider_registers_tools_and_confirms_writes.
+     *
+     * @return void Return value.
+     */
     public function test_provider_registers_tools_and_confirms_writes(): void {
         $provider = new provider();
         $read = array_map(static fn($tool) => $tool->get_name(), $provider->get_read_tools());
@@ -69,6 +79,11 @@ final class cohort_tools_test extends advanced_testcase {
         $this->assertTrue((new remove_cohort_members())->is_destructive());
     }
 
+    /**
+     * Method test_create_search_update_and_delete_using_native_api.
+     *
+     * @return void Return value.
+     */
     public function test_create_search_update_and_delete_using_native_api(): void {
         global $DB;
         $this->resetAfterTest();
@@ -115,6 +130,11 @@ final class cohort_tools_test extends advanced_testcase {
         $this->assertFalse($DB->record_exists("cohort", ["id" => $id]));
     }
 
+    /**
+     * Method test_add_and_remove_members_check_whole_cohort_fingerprint.
+     *
+     * @return void Return value.
+     */
     public function test_add_and_remove_members_check_whole_cohort_fingerprint(): void {
         global $DB;
         $this->resetAfterTest();
@@ -151,6 +171,11 @@ final class cohort_tools_test extends advanced_testcase {
         $this->assertSame(1, $DB->count_records("cohort_members", ["cohortid" => $id]));
     }
 
+    /**
+     * Method test_component_owned_cohort_is_read_only.
+     *
+     * @return void Return value.
+     */
     public function test_component_owned_cohort_is_read_only(): void {
         global $DB;
         $this->resetAfterTest();
@@ -168,6 +193,11 @@ final class cohort_tools_test extends advanced_testcase {
             $this->assertNotEmpty($exception->getMessage());
         }
     }
+    /**
+     * Method test_delete_rejects_changed_memberships.
+     *
+     * @return void Return value.
+     */
     public function test_delete_rejects_changed_memberships(): void {
         $this->resetAfterTest();
         $this->setAdminUser();

@@ -36,18 +36,43 @@ use mcptool_badges\image;
  * Only an inactive and unissued badge may have its image replaced.
  */
 final class replace_image extends base_tool {
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return "badges_replace_image";
     }
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return "Badges: replace an inactive badge image";
     }
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return "Replace a badge image using PNG from image_url or image_base64 (never both). Requires the badge to be inactive and have no awards; use badges_get for expected_timemodified. Transparent PNG edges required by default. WRITE preview/confirmation enforced.";
     }
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return "moodle/badges:configuredetails";
     }
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema([
             "badgeid" => ["type" => "integer", "minimum" => 1],
@@ -57,6 +82,12 @@ final class replace_image extends base_tool {
             "require_transparency" => ["type" => "boolean"],
         ], ["badgeid", "expected_timemodified"]);
     }
+    /**
+     * Method resolve_context.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return context Return value.
+     */
     public function resolve_context(array $arguments): context {
         global $DB;
         $badge = $DB->get_record("badge", ["id" => (int)$arguments["badgeid"]], "id,courseid");
@@ -66,6 +97,12 @@ final class replace_image extends base_tool {
         return $badge->courseid ? context_course::instance((int)$badge->courseid)
             : context_system::instance();
     }
+    /**
+     * Method checked_badge.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return \badge Return value.
+     */
     private function checked_badge(array $arguments): \badge {
         global $CFG, $DB;
         require_once($CFG->libdir . "/badgeslib.php");
@@ -79,6 +116,13 @@ final class replace_image extends base_tool {
         }
         return $badge;
     }
+    /**
+     * Method preview.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function preview(array $arguments, authenticated_identity $identity): array {
         $badge = $this->checked_badge($arguments);
         if (empty($arguments["image_url"]) === empty($arguments["image_base64"])) {
@@ -93,6 +137,13 @@ final class replace_image extends base_tool {
             "requires_explicit_confirmation" => true,
         ];
     }
+    /**
+     * Method execute.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         global $DB;
         $badge = $this->checked_badge($arguments);

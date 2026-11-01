@@ -43,6 +43,11 @@ use local_mcp\write\registry as write_registry;
  * @covers \local_mcp\write\registry
  */
 final class assignment_feedback_tools_test extends advanced_testcase {
+    /**
+     * Method test_tools_are_discoverable_and_write_requires_confirmation.
+     *
+     * @return void Return value.
+     */
     public function test_tools_are_discoverable_and_write_requires_confirmation(): void {
         $read = read_registry::get_tools();
         $write = write_registry::get_tools();
@@ -58,6 +63,11 @@ final class assignment_feedback_tools_test extends advanced_testcase {
         $this->assertContains("expected_feedback_sha256", $schema["required"]);
     }
 
+    /**
+     * Method test_student_cannot_read_other_students_submission.
+     *
+     * @return void Return value.
+     */
     public function test_student_cannot_read_other_students_submission(): void {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course();

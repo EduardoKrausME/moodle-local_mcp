@@ -28,6 +28,11 @@ use core_privacy\local\metadata\null_provider;
 
 /** No additional personal data is persisted by this MCP subplugin. */
 final class provider implements null_provider {
+    /**
+     * Method get_reason.
+     *
+     * @return string Return value.
+     */
     public static function get_reason(): string {
         return "privacy:metadata";
     }

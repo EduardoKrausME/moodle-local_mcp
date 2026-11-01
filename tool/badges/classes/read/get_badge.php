@@ -36,21 +36,52 @@ use moodle_url;
  * Return a single badge's descriptive metadata and current image location.
  */
 final class get_badge extends base_tool {
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return "badges_get";
     }
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return "Badges: details";
     }
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return "Read badge metadata, image URL, status, award count and last modification timestamp.";
     }
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return "moodle/badges:viewbadges";
     }
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema(["badgeid" => ["type" => "integer", "minimum" => 1]], ["badgeid"]);
     }
+    /**
+     * Method resolve_context.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return context Return value.
+     */
     public function resolve_context(array $arguments): context {
         global $DB;
         $badge = $DB->get_record("badge", ["id" => (int)$arguments["badgeid"]], "id,courseid");
@@ -78,6 +109,13 @@ final class get_badge extends base_tool {
         return $result;
     }
 
+    /**
+     * Method execute.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         global $DB, $CFG;
         require_once($CFG->libdir . "/badgeslib.php");

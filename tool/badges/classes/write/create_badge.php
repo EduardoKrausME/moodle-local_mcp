@@ -37,18 +37,43 @@ use moodle_url;
  * Creates an inactive native badge; criteria and activation are deliberate later steps.
  */
 final class create_badge extends base_tool {
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return "badges_create";
     }
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return "Badges: create with PNG from URL or Base64";
     }
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return "Create a native site/course badge with a transparent square PNG from image_url (public HTTPS) or image_base64 (raw Base64 or PNG data URI). One source only, maximum 256 KiB, 256-1024 square, real alpha transparency on edges by default. First use badges_image_guide for detailed art instructions. WRITE requires preview and explicit confirmation. Creates an INACTIVE badge: criteria/activation must be configured in Moodle after creation.";
     }
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return "moodle/badges:createbadge";
     }
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema([
             "courseid" => ["type" => "integer", "minimum" => 0],
@@ -65,11 +90,23 @@ final class create_badge extends base_tool {
             "badge_version" => ["type" => "string"],
         ], ["name", "description"]);
     }
+    /**
+     * Method resolve_context.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return context Return value.
+     */
     public function resolve_context(array $arguments): context {
         return !empty($arguments["courseid"])
             ? context_course::instance((int)$arguments["courseid"], MUST_EXIST)
             : context_system::instance();
     }
+    /**
+     * Method validate.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return void Return value.
+     */
     private function validate(array $arguments): void {
         global $CFG;
         if (empty($CFG->enablebadges) ||
@@ -84,6 +121,13 @@ final class create_badge extends base_tool {
             throw new api_exception("Provide exactly one image_url or image_base64", 400);
         }
     }
+    /**
+     * Method preview.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function preview(array $arguments, authenticated_identity $identity): array {
         $this->validate($arguments);
         return [
@@ -96,6 +140,13 @@ final class create_badge extends base_tool {
             "requires_explicit_confirmation" => true,
         ];
     }
+    /**
+     * Method execute.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         global $CFG, $DB;
         require_once($CFG->libdir . "/badgeslib.php");

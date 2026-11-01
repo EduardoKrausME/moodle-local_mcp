@@ -33,24 +33,49 @@ use local_mcp\security\authenticated_identity;
  * Expose authorized assignment image submissions as native MCP image content.
  */
 final class get_assignment_submission_image extends base_tool {
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return "get_assignment_submission_image";
     }
 
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return "Get assignment submission image";
     }
 
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return "Return a PNG, JPEG, GIF or WebP image submitted to an assignment as visual MCP "
             . "content, limited to 3 MB. File id comes from get_assignment_feedback_context. "
             . "The grader must have access to the exact student's submission.";
     }
 
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return "mod/assign:grade";
     }
 
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema([
             "cmid" => ["type" => "integer", "minimum" => 1],
@@ -59,10 +84,23 @@ final class get_assignment_submission_image extends base_tool {
         ], ["cmid", "userid", "fileid"]);
     }
 
+    /**
+     * Method resolve_context.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return context Return value.
+     */
     public function resolve_context(array $arguments): context {
         return context_module::instance((int)$arguments["cmid"], MUST_EXIST);
     }
 
+    /**
+     * Method execute.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         return feedback_service::submission_image((int)$arguments["cmid"], (int)$arguments["userid"],
             (int)$arguments["fileid"], $identity);

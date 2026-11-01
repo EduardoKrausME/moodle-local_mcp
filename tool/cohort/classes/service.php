@@ -35,6 +35,11 @@ use moodle_url;
  * Keeps cohort operations, privacy checks, and concurrency guards in one place.
  */
 final class service {
+    /**
+     * Method load_api.
+     *
+     * @return void Return value.
+     */
     private static function load_api(): void {
         global $CFG;
         require_once($CFG->dirroot . "/cohort/lib.php");
@@ -63,6 +68,13 @@ final class service {
         return self::scope((int)$contextid);
     }
 
+    /**
+     * Method cohort.
+     *
+     * @param int $cohortid Parameter cohortid.
+     * @param string $capability Parameter capability.
+     * @return \stdClass Return value.
+     */
     private static function cohort(int $cohortid, string $capability = "moodle/cohort:view"): \stdClass {
         global $DB;
         $cohort = $DB->get_record("cohort", ["id" => $cohortid]);
@@ -73,12 +85,24 @@ final class service {
         return $cohort;
     }
 
+    /**
+     * Method editable.
+     *
+     * @param \stdClass $cohort Parameter cohort.
+     * @return void Return value.
+     */
     private static function editable(\stdClass $cohort): void {
         if ($cohort->component !== "") {
             throw new api_exception("Component-owned cohorts cannot be modified here", 409);
         }
     }
 
+    /**
+     * Method clean_name.
+     *
+     * @param string $name Parameter name.
+     * @return string Return value.
+     */
     private static function clean_name(string $name): string {
         $name = trim(clean_param($name, PARAM_TEXT));
         if ($name === "") {
@@ -87,6 +111,13 @@ final class service {
         return $name;
     }
 
+    /**
+     * Method unique_idnumber.
+     *
+     * @param string $idnumber Parameter idnumber.
+     * @param int $exclude Parameter exclude.
+     * @return void Return value.
+     */
     private static function unique_idnumber(string $idnumber, int $exclude = 0): void {
         global $DB;
         if ($idnumber !== "") {
@@ -97,6 +128,12 @@ final class service {
         }
     }
 
+    /**
+     * Method revision.
+     *
+     * @param \stdClass $cohort Parameter cohort.
+     * @return string Return value.
+     */
     private static function revision(\stdClass $cohort): string {
         return hash("sha256", implode("|", [
             $cohort->id, $cohort->contextid, $cohort->component, $cohort->name,
@@ -105,6 +142,13 @@ final class service {
         ]));
     }
 
+    /**
+     * Method expected_revision.
+     *
+     * @param \stdClass $cohort Parameter cohort.
+     * @param array $arguments Parameter arguments.
+     * @return void Return value.
+     */
     private static function expected_revision(\stdClass $cohort, array $arguments): void {
         if (!hash_equals(self::revision($cohort), $arguments["expected_revision"])) {
             throw new api_exception("revision_conflict", 409);
@@ -131,17 +175,37 @@ final class service {
         return hash_final($hash);
     }
 
+    /**
+     * Method expected_members.
+     *
+     * @param \stdClass $cohort Parameter cohort.
+     * @param array $arguments Parameter arguments.
+     * @return void Return value.
+     */
     private static function expected_members(\stdClass $cohort, array $arguments): void {
         if (!hash_equals(self::members_revision((int)$cohort->id), $arguments["expected_members_sha256"])) {
             throw new api_exception("cohort_membership_changed", 409);
         }
     }
 
+    /**
+     * Method linked_count.
+     *
+     * @param int $cohortid Parameter cohortid.
+     * @return int Return value.
+     */
     private static function linked_count(int $cohortid): int {
         global $DB;
         return $DB->count_records("enrol", ["enrol" => "cohort", "customint1" => $cohortid]);
     }
 
+    /**
+     * Method overview.
+     *
+     * @param \stdClass $cohort Parameter cohort.
+     * @param bool $withdigest Parameter withdigest.
+     * @return array Return value.
+     */
     private static function overview(\stdClass $cohort, bool $withdigest = true): array {
         global $DB;
         $result = [
@@ -164,6 +228,13 @@ final class service {
         return $result;
     }
 
+    /**
+     * Method search.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public static function search(array $arguments, authenticated_identity $identity): array {
         global $DB;
         $context = self::scope((int)($arguments["contextid"] ?? 0));
@@ -191,10 +262,24 @@ final class service {
         ];
     }
 
+    /**
+     * Method get.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public static function get(array $arguments, authenticated_identity $identity): array {
         return self::overview(self::cohort((int)$arguments["cohortid"]));
     }
 
+    /**
+     * Method members.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public static function members(array $arguments, authenticated_identity $identity): array {
         global $DB;
         $cohort = self::cohort((int)$arguments["cohortid"], "moodle/cohort:assign");
@@ -219,6 +304,13 @@ final class service {
         ];
     }
 
+    /**
+     * Method courses.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public static function courses(array $arguments, authenticated_identity $identity): array {
         global $DB;
         $cohort = self::cohort((int)$arguments["cohortid"]);
@@ -244,6 +336,12 @@ final class service {
         return ["cohortid" => (int)$cohort->id, "courses" => $courses, "total_visible" => count($courses)];
     }
 
+    /**
+     * Method new_data.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return \stdClass Return value.
+     */
     private static function new_data(array $arguments): \stdClass {
         $context = self::scope((int)($arguments["contextid"] ?? 0));
         require_capability("moodle/cohort:manage", $context);
@@ -259,6 +357,13 @@ final class service {
         ];
     }
 
+    /**
+     * Method create_preview.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public static function create_preview(array $arguments, authenticated_identity $identity): array {
         $data = self::new_data($arguments);
         return ["action" => "create_cohort", "contextid" => (int)$data->contextid,
@@ -266,6 +371,13 @@ final class service {
             "visible" => (bool)$data->visible, "requires_explicit_confirmation" => true];
     }
 
+    /**
+     * Method create.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public static function create(array $arguments, authenticated_identity $identity): array {
         self::load_api();
         $data = self::new_data($arguments);
@@ -273,6 +385,12 @@ final class service {
         return self::overview(self::cohort($cohortid, "moodle/cohort:manage"));
     }
 
+    /**
+     * Method updated_data.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return \stdClass Return value.
+     */
     private static function updated_data(array $arguments): \stdClass {
         $cohort = self::cohort((int)$arguments["cohortid"], "moodle/cohort:manage");
         self::editable($cohort);
@@ -294,6 +412,13 @@ final class service {
         return $cohort;
     }
 
+    /**
+     * Method update_preview.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public static function update_preview(array $arguments, authenticated_identity $identity): array {
         $data = self::updated_data($arguments);
         return ["action" => "update_cohort", "cohortid" => (int)$data->id,
@@ -301,6 +426,13 @@ final class service {
             "visible" => (bool)$data->visible, "requires_explicit_confirmation" => true];
     }
 
+    /**
+     * Method update.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public static function update(array $arguments, authenticated_identity $identity): array {
         self::load_api();
         $data = self::updated_data($arguments);
@@ -308,6 +440,12 @@ final class service {
         return self::overview(self::cohort((int)$data->id, "moodle/cohort:manage"));
     }
 
+    /**
+     * Method deletable.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return \stdClass Return value.
+     */
     private static function deletable(array $arguments): \stdClass {
         $cohort = self::cohort((int)$arguments["cohortid"], "moodle/cohort:manage");
         self::editable($cohort);
@@ -319,6 +457,13 @@ final class service {
         return $cohort;
     }
 
+    /**
+     * Method delete_preview.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public static function delete_preview(array $arguments, authenticated_identity $identity): array {
         $cohort = self::deletable($arguments);
         global $DB;
@@ -328,6 +473,13 @@ final class service {
             "requires_explicit_confirmation" => true];
     }
 
+    /**
+     * Method delete.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public static function delete(array $arguments, authenticated_identity $identity): array {
         self::load_api();
         $cohort = self::deletable($arguments);
@@ -335,6 +487,13 @@ final class service {
         return ["cohortid" => (int)$cohort->id, "deleted" => true];
     }
 
+    /**
+     * Method membership_target.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param bool $remove Parameter remove.
+     * @return \stdClass Return value.
+     */
     private static function membership_target(array $arguments, bool $remove): \stdClass {
         global $DB;
         $cohort = self::cohort((int)$arguments["cohortid"], "moodle/cohort:assign");
@@ -358,6 +517,14 @@ final class service {
         return $cohort;
     }
 
+    /**
+     * Method members_preview.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @param bool $remove Parameter remove.
+     * @return array Return value.
+     */
     public static function members_preview(array $arguments, authenticated_identity $identity, bool $remove): array {
         $cohort = self::membership_target($arguments, $remove);
         return ["action" => $remove ? "remove_cohort_members" : "add_cohort_members",
@@ -366,6 +533,14 @@ final class service {
             "requires_explicit_confirmation" => true];
     }
 
+    /**
+     * Method change_members.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @param bool $remove Parameter remove.
+     * @return array Return value.
+     */
     public static function change_members(array $arguments, authenticated_identity $identity, bool $remove): array {
         global $DB;
         self::load_api();
@@ -383,6 +558,12 @@ final class service {
             "members_sha256" => self::members_revision((int)$cohort->id)];
     }
 
+    /**
+     * Method enrol_target.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return array Return value.
+     */
     private static function enrol_target(array $arguments): array {
         global $DB, $CFG;
         self::load_api();
@@ -414,6 +595,13 @@ final class service {
         return [$course, $cohort, $plugin];
     }
 
+    /**
+     * Method enrol_preview.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public static function enrol_preview(array $arguments, authenticated_identity $identity): array {
         [$course, $cohort] = self::enrol_target($arguments);
         return ["action" => "link_cohort_to_course", "cohortid" => (int)$cohort->id,
@@ -422,6 +610,13 @@ final class service {
             "requires_explicit_confirmation" => true];
     }
 
+    /**
+     * Method enrol.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public static function enrol(array $arguments, authenticated_identity $identity): array {
         [$course, $cohort, $plugin] = self::enrol_target($arguments);
         $id = $plugin->add_instance($course, [

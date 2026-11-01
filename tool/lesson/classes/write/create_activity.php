@@ -33,10 +33,20 @@ use stdClass;
  * Create a real Lesson with conservative defaults.
  */
 final class create_activity extends activity_create_base {
+    /**
+     * Method module_name.
+     *
+     * @return string Return value.
+     */
     protected function module_name(): string {
         return "lesson";
     }
 
+    /**
+     * Method extra_properties.
+     *
+     * @return array Return value.
+     */
     protected function extra_properties(): array {
         return [
             "grade" => ["type" => "integer", "minimum" => 0, "maximum" => 100],
@@ -46,6 +56,14 @@ final class create_activity extends activity_create_base {
         ];
     }
 
+    /**
+     * Method configure.
+     *
+     * @param stdClass $info Parameter info.
+     * @param array $a Parameter a.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return void Return value.
+     */
     protected function configure(stdClass $info, array $a, authenticated_identity $identity): void {
         $start = (int)($a["available"] ?? 0);
         $end = (int)($a["deadline"] ?? 0);
@@ -72,6 +90,13 @@ final class create_activity extends activity_create_base {
         $info->minquestions = 0;
     }
 
+    /**
+     * Method preview.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function preview(array $arguments, authenticated_identity $identity): array {
         $preview = parent::preview($arguments, $identity);
         $preview["maxanswers"] = (int)($arguments["maxanswers"] ?? 5);

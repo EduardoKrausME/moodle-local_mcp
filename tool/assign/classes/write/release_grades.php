@@ -33,34 +33,77 @@ use mcptool_assign\service;
  * Release one previously graded assignment through Moodle marking workflow.
  */
 final class release_grades extends \local_mcp\write\tool\base_tool {
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return "assign_release_grades";
     }
 
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return "Release reviewed grade";
     }
 
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return "Release one previously graded assignment through Moodle marking workflow.";
     }
 
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return "mod/assign:releasegrades";
     }
 
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema(["cmid" => ["type" => "integer", "minimum" => 1], "userid" => ["type" => "integer", "minimum" => 1], "expected_state" => ["type" => "string"]], ["cmid", "userid", "expected_state"]);
     }
 
+    /**
+     * Method resolve_context.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return context Return value.
+     */
     public function resolve_context(array $arguments): context {
         return context_module::instance((int)$arguments["cmid"], MUST_EXIST);
     }
 
+    /**
+     * Method supports_dry_run.
+     *
+     * @return bool Return value.
+     */
     public function supports_dry_run(): bool {
         return true;
     }
 
+    /**
+     * Method preview.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function preview(array $arguments, authenticated_identity $identity): array {
         service::student((int)$arguments["cmid"],
             (int)$arguments["userid"], $identity);
@@ -68,6 +111,13 @@ final class release_grades extends \local_mcp\write\tool\base_tool {
             "requires_confirmation" => true];
     }
 
+    /**
+     * Method execute.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         $arguments["state"] = "released";
         return service::workflow($arguments, $identity);

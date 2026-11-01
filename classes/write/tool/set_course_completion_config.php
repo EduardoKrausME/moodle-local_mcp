@@ -33,22 +33,47 @@ use local_mcp\security\authenticated_identity;
  * Enable completion tracking without disabling or rewriting any student progress.
  */
 final class set_course_completion_config extends base_tool {
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return "set_course_completion_config";
     }
 
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return "Enable course completion tracking";
     }
 
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return "Enable Moodle course completion tracking using core course update API, with optimistic concurrency, preview and explicit confirmation. Never disables completion or resets student history.";
     }
 
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return "moodle/course:update";
     }
 
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema([
             "courseid" => ["type" => "integer", "minimum" => 2],
@@ -56,10 +81,22 @@ final class set_course_completion_config extends base_tool {
         ], ["courseid", "expected_enablecompletion"]);
     }
 
+    /**
+     * Method resolve_context.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return context Return value.
+     */
     public function resolve_context(array $arguments): context {
         return context_course::instance((int)$arguments["courseid"], MUST_EXIST);
     }
 
+    /**
+     * Method checked.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return \stdClass Return value.
+     */
     private function checked(array $arguments): \stdClass {
         global $CFG;
         $course = get_course((int)$arguments["courseid"]);
@@ -72,6 +109,13 @@ final class set_course_completion_config extends base_tool {
         return $course;
     }
 
+    /**
+     * Method preview.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function preview(array $arguments, authenticated_identity $identity): array {
         $course = $this->checked($arguments);
         return ["action" => "enable_course_completion_tracking", "courseid" => (int)$course->id,
@@ -79,6 +123,13 @@ final class set_course_completion_config extends base_tool {
             "existing_progress_preserved" => true, "requires_explicit_confirmation" => true];
     }
 
+    /**
+     * Method execute.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         global $CFG;
         $course = $this->checked($arguments);

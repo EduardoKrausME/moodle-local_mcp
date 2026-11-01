@@ -36,26 +36,64 @@ use moodle_url;
  * List only badges in the scope for which the user has permission.
  */
 final class list_badges extends base_tool {
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return "badges_list";
     }
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return "Badges: list";
     }
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return "List existing Moodle site badges (courseid=0) or badges for a specified course before creating duplicates.";
     }
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return "moodle/badges:viewbadges";
     }
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema(["courseid" => ["type" => "integer", "minimum" => 0]]);
     }
+    /**
+     * Method resolve_context.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return context Return value.
+     */
     public function resolve_context(array $arguments): context {
         return !empty($arguments["courseid"])
             ? context_course::instance((int)$arguments["courseid"], MUST_EXIST)
             : context_system::instance();
     }
+    /**
+     * Method execute.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         global $DB, $CFG;
         require_once($CFG->libdir . "/badgeslib.php");

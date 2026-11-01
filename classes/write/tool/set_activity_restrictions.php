@@ -33,39 +33,89 @@ use local_mcp\security\authenticated_identity;
  * Replace or clear AND conditions for dates, group, completion and grade.
  */
 final class set_activity_restrictions extends base_tool {
+    /**
+     * Method get_name.
+     *
+     * @return string Return value.
+     */
     public function get_name(): string {
         return "set_activity_restrictions";
     }
 
+    /**
+     * Method get_title.
+     *
+     * @return string Return value.
+     */
     public function get_title(): string {
         return "Set activity access restrictions";
     }
 
+    /**
+     * Method get_description.
+     *
+     * @return string Return value.
+     */
     public function get_description(): string {
         return "Replace or clear AND conditions for dates, group, completion and grade.";
     }
 
+    /**
+     * Method get_required_capability.
+     *
+     * @return string Return value.
+     */
     public function get_required_capability(): string {
         return "moodle/course:manageactivities";
     }
 
+    /**
+     * Method get_input_schema.
+     *
+     * @return array Return value.
+     */
     public function get_input_schema(): array {
         return $this->object_schema(["cmid" => ["type" => "integer", "minimum" => 1], "mode" => ["type" => "string", "enum" => ["replace", "clear"]], "expected_availability_sha256" => ["type" => "string", "pattern" => "^[a-f0-9]{64}$"], "conditions" => ["type" => "array", "minItems" => 1, "maxItems" => 20, "items" => ["type" => "object", "properties" => ["type" => ["type" => "string", "enum" => ["date", "group", "completion", "grade"]], "direction" => ["type" => "string", "enum" => ["from", "until"]], "timestamp" => ["type" => "integer", "minimum" => 1], "groupid" => ["type" => "integer", "minimum" => 1], "cmid" => ["type" => "integer", "minimum" => 1], "state" => ["type" => "string", "enum" => ["complete", "incomplete", "passed", "failed"]], "gradeitemid" => ["type" => "integer", "minimum" => 1], "min" => ["type" => "number", "minimum" => 0, "maximum" => 100], "max" => ["type" => "number", "minimum" => 0, "maximum" => 100]], "required" => ["type"], "additionalProperties" => false]]], ["cmid", "mode", "expected_availability_sha256"]);
     }
 
+    /**
+     * Method resolve_context.
+     *
+     * @param array $arguments Parameter arguments.
+     * @return context Return value.
+     */
     public function resolve_context(array $arguments): context {
         return context_module::instance(
             (int)$arguments["cmid"], MUST_EXIST);
     }
 
+    /**
+     * Method supports_dry_run.
+     *
+     * @return bool Return value.
+     */
     public function supports_dry_run(): bool {
         return true;
     }
 
+    /**
+     * Method preview.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function preview(array $arguments, authenticated_identity $identity): array {
         return activity_settings_service::restrictions_preview($arguments, $identity);
     }
 
+    /**
+     * Method execute.
+     *
+     * @param array $arguments Parameter arguments.
+     * @param authenticated_identity $identity Parameter identity.
+     * @return array Return value.
+     */
     public function execute(array $arguments, authenticated_identity $identity): array {
         return activity_settings_service::set_restrictions($arguments, $identity);
     }
