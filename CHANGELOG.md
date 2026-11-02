@@ -12,6 +12,19 @@
 
 **Deployment:** updating this repository does not install the plugin on a Moodle site. Deploy the files, run Moodle's plugin upgrade, and refresh MCP tool discovery before using the new APIs.
 
+## 1.4.1 - 2026-10-31
+
+- Added persistent, sequential Moodle workflows with step validation, cancellation, status tracking, optional MCP UI resources and explicit confirmation for each write step.
+- Added native Moodle badge management, including transparent PNG handling, badge criteria, issuance controls and course-completion integration.
+- Added cohort management and enrolment tools with membership-aware safeguards for destructive operations.
+- Exposed Moodle password-policy requirements and validated account passwords while preserving opaque credentials and redacting secrets from diagnostics.
+- Fixed OAuth resource-column migrations and rejected credentials lacking the required resource; improved bounded pagination for OAuth clients and course categories.
+- Improved typed MCP errors, H5P archive validation during previews and input checks before write confirmations.
+- Corrected course overview image URLs and normalized legacy file URLs in MCP-submitted HTML.
+- Fixed assignment creation, activity deletion, HTML editor persistence and Forum defaults for Moodle 4.5 and 5.3; added optional Kopere Proctoring status discovery.
+
+**Full comparison:** [1.4.0...1.4.1](https://github.com/EduardoKrausME/moodle-local_mcp/compare/1.4.0...1.4.1)
+
 ## 1.4.0 - 2026-10-23
 
 - Added permission-scoped Assignment activity management, submissions, grading, feedback and progress tools; protected anonymous and group-scoped reporting.
