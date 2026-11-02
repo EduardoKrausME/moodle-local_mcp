@@ -27,6 +27,6 @@ defined('MOODLE_INTERNAL') || die;
 $plugin->version = 2026102900;
 $plugin->release = "1.0.0";
 $plugin->component = "mcptool_cohort";
-$plugin->requires = 2024100700;
+$plugin->requires = 2024042212;
 $plugin->dependencies = ["local_mcp" => 2026102600];
 $plugin->maturity = MATURITY_STABLE;
