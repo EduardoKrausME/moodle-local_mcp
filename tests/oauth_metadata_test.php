@@ -64,14 +64,12 @@ final class oauth_metadata_test extends advanced_testcase {
         global $CFG;
 
         $this->resetAfterTest();
-        set_config('dynamicregistration', 1, 'local_mcp');
         $data = metadata::authorization_server('/.well-known/oauth-authorization-server/local/mcp');
         $base = $CFG->wwwroot . '/local/mcp';
         $this->assertSame($base . '/oauth/authorize.php', $data['authorization_endpoint']);
         $this->assertSame($base . '/oauth/token.php', $data['token_endpoint']);
         $this->assertSame($base . '/oauth/register.php', $data['registration_endpoint']);
         $this->assertSame(['S256'], $data['code_challenge_methods_supported']);
-        set_config('dynamicregistration', 0, 'local_mcp');
         $this->assertArrayNotHasKey('registration_endpoint', metadata::authorization_server());
     }
 

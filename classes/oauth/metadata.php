@@ -72,7 +72,7 @@ final class metadata {
             $issuer = $base . '/' . $matches[1] . '.php';
         }
 
-        $result = [
+        return [
             'issuer' => $issuer,
             'authorization_endpoint' => $base . '/oauth/authorize.php',
             'token_endpoint' => $base . '/oauth/token.php',
@@ -82,11 +82,8 @@ final class metadata {
             'code_challenge_methods_supported' => ['S256'],
             'resource_indicators_supported' => true,
             'token_endpoint_auth_methods_supported' => ['none'],
+            'registration_endpoint' => $base . '/oauth/register.php',
         ];
-        if (get_config('local_mcp', 'dynamicregistration')) {
-            $result['registration_endpoint'] = $base . '/oauth/register.php';
-        }
-        return $result;
     }
 
     /**

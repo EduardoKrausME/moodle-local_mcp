@@ -55,7 +55,6 @@ $data = [
     'mcpserverurl' => new moodle_url('/local/mcp/server.php'),
     'settingsurl' => new moodle_url('/admin/settings.php', ['section' => 'local_mcp_settings']),
     'discoveryurl' => new moodle_url('/.well-known/oauth-authorization-server/local/mcp'),
-    'registrationdisabled' => !get_config('local_mcp', 'dynamicregistration'),
     'httpsdisabled' => stripos($CFG->wwwroot, 'https://') !== 0,
     'connectionguidenameexample' => "Moodle-{$SITE->shortname}",
     'connectiondocumentationurl' => 'https://eduardokrausme.github.io/moodle-local_mcp/' .

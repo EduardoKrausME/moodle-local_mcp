@@ -25,7 +25,6 @@
         "mcpserverurl": "https://moodle.example.org/local/mcp/server.php",
         "settingsurl": "https://moodle.example.org/admin/settings.php?section=local_mcp_settings",
         "discoveryurl": "https://moodle.example.org/.well-known/oauth-authorization-server/local/mcp",
-        "registrationdisabled": false,
         "httpsdisabled": false
     }
 }}
@@ -37,12 +36,10 @@
             <h3 class="h4" id="local-mcp-chatgpt-title">{{#str}}chatgptsetuptitle, local_mcp{{/str}}</h3>
             <p>{{#str}}chatgptsetupintro, local_mcp{{/str}}</p>
 
-            {{#registrationdisabled}}
-                <div class="alert alert-warning" role="alert">
-                    {{#str}}chatgptsetupdcrdisabled, local_mcp{{/str}}
-                    <a href="{{{settingsurl}}}">{{#str}}chatgptsetupopensettings, local_mcp{{/str}}</a>
-                </div>
-            {{/registrationdisabled}}
+            <div class="alert alert-warning" role="alert">
+                {{#str}}chatgptsetupdcrdisabled, local_mcp{{/str}}
+                <a href="{{{settingsurl}}}">{{#str}}chatgptsetupopensettings, local_mcp{{/str}}</a>
+            </div>
             {{#httpsdisabled}}
                 <div class="alert alert-warning" role="alert">
                     {{#str}}chatgptsetuphttpsdisabled, local_mcp{{/str}}

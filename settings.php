@@ -63,11 +63,6 @@ if ($hassiteconfig) {
         get_string("settingsconfirmationttl_desc", "local_mcp"), 1800, 30);
     $settings->add($setting);
 
-    $setting = new admin_setting_configcheckbox("local_mcp/dynamicregistration",
-        get_string("settingsdynamicregistration", "local_mcp"),
-        get_string("settingsdynamicregistration_desc", "local_mcp"), 1);
-    $settings->add($setting);
-
     $setting = new admin_setting_configcheckbox("local_mcp/logmessages",
         get_string("settingslogmessages", "local_mcp"),
         get_string("settingslogmessages_desc", "local_mcp"), 0);
