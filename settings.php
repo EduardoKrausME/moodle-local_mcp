@@ -63,6 +63,11 @@ if ($hassiteconfig) {
         get_string("settingsconfirmationttl_desc", "local_mcp"), 1800, 30);
     $settings->add($setting);
 
+    $setting = new admin_setting_configcheckbox("local_mcp/debuglogging",
+        get_string("settingsdebuglogging", "local_mcp"),
+        get_string("settingsdebuglogging_desc", "local_mcp"), 0);
+    $settings->add($setting);
+
     $setting = new admin_setting_configcheckbox("local_mcp/logmessages",
         get_string("settingslogmessages", "local_mcp"),
         get_string("settingslogmessages_desc", "local_mcp"), 0);
