@@ -49,157 +49,171 @@
          aria-label="{{#str}}connectionguidetablabel, local_mcp{{/str}}">
         <button type="button" class="local-mcp-connection-guide__tab is-active"
                 id="mcp-guide-tab-chatgpt" role="tab" aria-selected="true"
-                aria-controls="mcp-guide-panel-chatgpt" tabindex="0">ChatGPT</button>
+                aria-controls="mcp-guide-panel-chatgpt" tabindex="0">ChatGPT
+        </button>
         <button type="button" class="local-mcp-connection-guide__tab"
                 id="mcp-guide-tab-claude" role="tab" aria-selected="false"
-                aria-controls="mcp-guide-panel-claude" tabindex="-1">Claude</button>
+                aria-controls="mcp-guide-panel-claude" tabindex="-1">Claude
+        </button>
         <button type="button" class="local-mcp-connection-guide__tab"
                 id="mcp-guide-tab-other" role="tab" aria-selected="false"
-                aria-controls="mcp-guide-panel-other" tabindex="-1">{{#str}}connectionguidetabother, local_mcp{{/str}}</button>
+                aria-controls="mcp-guide-panel-other" tabindex="-1">{{#str}}
+            connectionguidetabother, local_mcp{{/str}}</button>
     </nav>
 
     <div id="mcp-guide-panel-chatgpt" class="local-mcp-connection-guide__panel is-active"
          role="tabpanel" aria-labelledby="mcp-guide-tab-chatgpt" tabindex="0">
-    <section class="local-mcp-connection-guide__dialog" aria-labelledby="mcp-connection-dialog-title">
-        <header class="local-mcp-connection-guide__header">
-            <h2 id="mcp-connection-dialog-title">{{#str}}connectionguideformtitle, local_mcp{{/str}}</h2>
-            <p>{{#str}}connectionguidepreviewnotice, local_mcp{{/str}}</p>
-        </header>
 
-        <div class="local-mcp-connection-guide__body">
-            {{^showchatgptsetup}}
-                <p class="local-mcp-connection-guide__connected" role="status">
-                    {{#str}}connectionguideconnected, local_mcp{{/str}}
-                </p>
-            {{/showchatgptsetup}}
-            {{#httpsdisabled}}
-                <p class="local-mcp-connection-guide__warning" role="alert">
-                    {{#str}}chatgptsetuphttpsdisabled, local_mcp{{/str}}
-                </p>
-            {{/httpsdisabled}}
+        <p class="local-mcp-connection-guide__open">
+            Acesse a página https://chatgpt.com/plugins, depois clique em <span class="btn">Adicionar</span>
+            no canto superior diretor e depois em <span>Adicionar servidor MCP personalizado</span>.
+        </p>
+        <p><a href="{{{connectiondocumentationurl}}}"
+              target="_blank">{{#str}}connectionguidedocumentation, local_mcp{{/str}}</a></p>
+        {{^showchatgptsetup}}
+            <p class="local-mcp-connection-guide__connected" role="status">
+                {{#str}}connectionguideconnected, local_mcp{{/str}}
+            </p>
+        {{/showchatgptsetup}}
 
-            <div class="local-mcp-connection-guide__field">
-                <div class="local-mcp-connection-guide__label">{{#str}}connectionguideicon, local_mcp{{/str}}</div>
-                <div class="local-mcp-connection-guide__iconrow">
-                    <span class="local-mcp-connection-guide__iconplaceholder" aria-hidden="true">+</span>
-                    <span class="local-mcp-connection-guide__hint">{{#str}}connectionguideiconhint, local_mcp{{/str}}</span>
+        <section class="local-mcp-connection-guide__dialog" aria-labelledby="mcp-connection-dialog-title">
+            <header class="local-mcp-connection-guide__header">
+                <h2 id="mcp-connection-dialog-title">{{#str}}connectionguideformtitle, local_mcp{{/str}}</h2>
+                <p>{{#str}}connectionguidepreviewnotice, local_mcp{{/str}}</p>
+            </header>
+            <div class="local-mcp-connection-guide__body">
+                {{#httpsdisabled}}
+                    <p class="local-mcp-connection-guide__warning" role="alert">
+                        {{#str}}chatgptsetuphttpsdisabled, local_mcp{{/str}}
+                    </p>
+                {{/httpsdisabled}}
+
+                <div class="local-mcp-connection-guide__field">
+                    <div class="local-mcp-connection-guide__label">{{#str}}connectionguideicon, local_mcp{{/str}}</div>
+                    <div class="local-mcp-connection-guide__iconrow">
+                        <span class="local-mcp-connection-guide__iconplaceholder" aria-hidden="true">+</span>
+                        <span class="local-mcp-connection-guide__hint">{{#str}}
+                            connectionguideiconhint, local_mcp{{/str}}</span>
+                    </div>
                 </div>
-            </div>
 
-            <div class="local-mcp-connection-guide__field">
-                <label for="mcp-connection-guide-name">{{#str}}connectionguidename, local_mcp{{/str}}</label>
-                <input type="text" id="mcp-connection-guide-name" class="form-control"
-                       value="{{connectionguidenameexample}}" readonly>
-            </div>
+                <div class="local-mcp-connection-guide__field">
+                    <label for="mcp-connection-guide-name">{{#str}}connectionguidename, local_mcp{{/str}}</label>
+                    <input type="text" id="mcp-connection-guide-name" class="form-control"
+                           value="{{connectionguidenameexample}}" readonly>
+                </div>
 
-            <div class="local-mcp-connection-guide__field">
-                <label for="mcp-connection-guide-description">{{#str}}connectionguidedescription, local_mcp{{/str}}</label>
-                <input type="text" id="mcp-connection-guide-description" class="form-control"
-                       value="{{#str}}connectionguidedescriptionexample, local_mcp{{/str}}" readonly>
-            </div>
+                <div class="local-mcp-connection-guide__field">
+                    <label for="mcp-connection-guide-description">{{#str}}
+                        connectionguidedescription, local_mcp{{/str}}</label>
+                    <input type="text" id="mcp-connection-guide-description" class="form-control"
+                           value="{{#str}}connectionguidedescriptionexample, local_mcp{{/str}}" readonly>
+                </div>
 
-            <div class="local-mcp-connection-guide__field">
-                <div class="local-mcp-connection-guide__fieldheader">
-                    <label for="mcp-connection-guide-url">{{#str}}connectionguideconnection, local_mcp{{/str}}</label>
-                    <div class="local-mcp-connection-guide__mode" aria-label="{{#str}}connectionguideconnection, local_mcp{{/str}}">
+                <div class="local-mcp-connection-guide__field">
+                    <div class="local-mcp-connection-guide__fieldheader">
+                        <label for="mcp-connection-guide-url">{{#str}}
+                            connectionguideconnection, local_mcp{{/str}}</label>
+                        <div class="local-mcp-connection-guide__mode"
+                             aria-label="{{#str}}connectionguideconnection, local_mcp{{/str}}">
                         <span class="local-mcp-connection-guide__mode-selected">
                             {{#str}}connectionguideurlmode, local_mcp{{/str}}
                         </span>
-                        <span class="local-mcp-connection-guide__mode-disabled">
-                            {{#str}}connectionguidetunnelmode, local_mcp{{/str}}
-                        </span>
+                            <span class="local-mcp-connection-guide__mode-disabled">
+                                {{#str}}connectionguidetunnelmode, local_mcp{{/str}}
+                            </span>
+                        </div>
                     </div>
-                </div>
-                <div class="local-mcp-connection-guide__urlrow">
-                    <input type="text" id="mcp-connection-guide-url" class="form-control"
-                           value="{{mcpserverurl}}" readonly spellcheck="false">
-                    <button type="button" class="btn local-mcp-connection-guide__copy"
-                            data-action="copy-mcp-url">{{#str}}chatgptsetupcopy, local_mcp{{/str}}</button>
-                </div>
-                <span class="local-mcp-connection-guide__copy-status" role="status" aria-live="polite"
-                      data-role="copy-status"></span>
-            </div>
-
-            <div class="local-mcp-connection-guide__field">
-                <label for="mcp-connection-guide-auth">{{#str}}connectionguideauthentication, local_mcp{{/str}}</label>
-                <input type="text" id="mcp-connection-guide-auth" class="form-control"
-                       value="OAuth" readonly>
-            </div>
-
-            <details class="local-mcp-connection-guide__advanced">
-                <summary>
-                    <strong>{{#str}}connectionguideadvanced, local_mcp{{/str}}</strong>
-                    <span class="local-mcp-connection-guide__hint">
-                        {{#str}}connectionguideadvancedpreview, local_mcp{{/str}}
-                    </span>
-                    <span class="local-mcp-connection-guide__chevron" aria-hidden="true"></span>
-                </summary>
-                <div class="local-mcp-connection-guide__advanced-content">
-                    <p>{{#str}}connectionguideadvancedhelp, local_mcp{{/str}}</p>
-                    <div class="local-mcp-connection-guide__field">
-                        <label for="mcp-connection-guide-authorize">{{#str}}connectionguideoauthauthorizeurl, local_mcp{{/str}}</label>
-                        <input type="text" id="mcp-connection-guide-authorize" class="form-control"
-                               value="{{oauthauthorizeurl}}" readonly spellcheck="false">
-                    </div>
-                    <div class="local-mcp-connection-guide__field">
-                        <label for="mcp-connection-guide-token">{{#str}}connectionguideoauthtokenurl, local_mcp{{/str}}</label>
-                        <input type="text" id="mcp-connection-guide-token" class="form-control"
-                               value="{{oauthtokenurl}}" readonly spellcheck="false">
-                    </div>
-                    <div class="local-mcp-connection-guide__field">
-                        <label for="mcp-connection-guide-register">{{#str}}connectionguideoauthregisterurl, local_mcp{{/str}}</label>
-                        <input type="text" id="mcp-connection-guide-register" class="form-control"
-                               value="{{oauthregisterurl}}" readonly spellcheck="false">
-                    </div>
-                    <div class="local-mcp-connection-guide__field">
-                        <label for="mcp-connection-guide-base">{{#str}}connectionguideoauthserverbase, local_mcp{{/str}}</label>
-                        <input type="text" id="mcp-connection-guide-base" class="form-control"
-                               value="{{authorizationserverbase}}" readonly spellcheck="false">
-                    </div>
-                    <div class="local-mcp-connection-guide__field">
-                        <label for="mcp-connection-guide-resource">{{#str}}connectionguideoauthresource, local_mcp{{/str}}</label>
-                        <input type="text" id="mcp-connection-guide-resource" class="form-control"
+                    <div class="local-mcp-connection-guide__urlrow">
+                        <input type="text" id="mcp-connection-guide-url" class="form-control"
                                value="{{mcpserverurl}}" readonly spellcheck="false">
+                        <button type="button" class="btn local-mcp-connection-guide__copy"
+                                data-action="copy-mcp-url">{{#str}}chatgptsetupcopy, local_mcp{{/str}}</button>
                     </div>
-                    <p class="local-mcp-connection-guide__discovery">
-                        {{#str}}chatgptsetupdiscoveryhelp, local_mcp{{/str}}
-                        <code>{{discoveryurl}}</code>
-                    </p>
+                    <span class="local-mcp-connection-guide__copy-status" role="status" aria-live="polite"
+                          data-role="copy-status"></span>
                 </div>
-            </details>
 
-            <p class="local-mcp-connection-guide__security-note" role="note">
-                <span aria-hidden="true">&#9888;</span>
-                {{#str}}connectionguiderisknotice, local_mcp{{/str}}
-            </p>
+                <div class="local-mcp-connection-guide__field">
+                    <label for="mcp-connection-guide-auth">{{#str}}
+                        connectionguideauthentication, local_mcp{{/str}}</label>
+                    <input type="text" id="mcp-connection-guide-auth" class="form-control"
+                           value="OAuth" readonly>
+                </div>
 
-            <div class="local-mcp-connection-guide__acknowledgement">
-                <span class="local-mcp-connection-guide__checkboxsample" aria-hidden="true"></span>
-                <div>
-                    <strong>{{#str}}connectionguideacknowledgement, local_mcp{{/str}}</strong>
-                    <p>{{#str}}connectionguideacknowledgementhelp, local_mcp{{/str}}</p>
+                <details class="local-mcp-connection-guide__advanced">
+                    <summary>
+                        <strong>{{#str}}connectionguideadvanced, local_mcp{{/str}}</strong>
+                        <span class="local-mcp-connection-guide__hint">
+                            {{#str}}connectionguideadvancedpreview, local_mcp{{/str}}
+                        </span>
+                        <span class="local-mcp-connection-guide__chevron" aria-hidden="true"></span>
+                    </summary>
+                    <div class="local-mcp-connection-guide__advanced-content">
+                        <p>{{#str}}connectionguideadvancedhelp, local_mcp{{/str}}</p>
+                        <div class="local-mcp-connection-guide__field">
+                            <label for="mcp-connection-guide-authorize">{{#str}}
+                                connectionguideoauthauthorizeurl, local_mcp{{/str}}</label>
+                            <input type="text" id="mcp-connection-guide-authorize" class="form-control"
+                                   value="{{oauthauthorizeurl}}" readonly spellcheck="false">
+                        </div>
+                        <div class="local-mcp-connection-guide__field">
+                            <label for="mcp-connection-guide-token">{{#str}}
+                                connectionguideoauthtokenurl, local_mcp{{/str}}</label>
+                            <input type="text" id="mcp-connection-guide-token" class="form-control"
+                                   value="{{oauthtokenurl}}" readonly spellcheck="false">
+                        </div>
+                        <div class="local-mcp-connection-guide__field">
+                            <label for="mcp-connection-guide-register">{{#str}}
+                                connectionguideoauthregisterurl, local_mcp{{/str}}</label>
+                            <input type="text" id="mcp-connection-guide-register" class="form-control"
+                                   value="{{oauthregisterurl}}" readonly spellcheck="false">
+                        </div>
+                        <div class="local-mcp-connection-guide__field">
+                            <label for="mcp-connection-guide-base">{{#str}}
+                                connectionguideoauthserverbase, local_mcp{{/str}}</label>
+                            <input type="text" id="mcp-connection-guide-base" class="form-control"
+                                   value="{{authorizationserverbase}}" readonly spellcheck="false">
+                        </div>
+                        <div class="local-mcp-connection-guide__field">
+                            <label for="mcp-connection-guide-resource">{{#str}}
+                                connectionguideoauthresource, local_mcp{{/str}}</label>
+                            <input type="text" id="mcp-connection-guide-resource" class="form-control"
+                                   value="{{mcpserverurl}}" readonly spellcheck="false">
+                        </div>
+                        <p class="local-mcp-connection-guide__discovery">
+                            {{#str}}chatgptsetupdiscoveryhelp, local_mcp{{/str}}
+                            <code>{{discoveryurl}}</code>
+                        </p>
+                    </div>
+                </details>
+
+                <p class="local-mcp-connection-guide__security-note" role="note">
+                    <span aria-hidden="true">&#9888;</span>
+                    {{#str}}connectionguiderisknotice, local_mcp{{/str}}
+                </p>
+
+                <div class="local-mcp-connection-guide__acknowledgement">
+                    <span class="local-mcp-connection-guide__checkboxsample" aria-hidden="true"></span>
+                    <div>
+                        <strong>{{#str}}connectionguideacknowledgement, local_mcp{{/str}}</strong>
+                        <p>{{#str}}connectionguideacknowledgementhelp, local_mcp{{/str}}</p>
+                    </div>
                 </div>
             </div>
-        </div>
-
-        <footer class="local-mcp-connection-guide__footer">
-            <a href="{{{connectiondocumentationurl}}}" target="_blank" rel="noopener noreferrer">
-                {{#str}}connectionguidedocumentation, local_mcp{{/str}}
-                <span class="sr-only">({{#str}}chatgptsetupnewtab, local_mcp{{/str}})</span>
-            </a>
-            <div class="local-mcp-connection-guide__footer-actions">
-                <a href="https://chatgpt.com/plugins" class="btn local-mcp-connection-guide__open"
-                   target="_blank" rel="noopener noreferrer">
-                    {{#str}}chatgptsetupopenchatgpt, local_mcp{{/str}}
-                    <span class="sr-only">({{#str}}chatgptsetupnewtab, local_mcp{{/str}})</span>
-                </a>
-            </div>
-        </footer>
-    </section>
+        </section>
     </div>
 
     <section id="mcp-guide-panel-claude" class="local-mcp-connection-guide__panel"
              role="tabpanel" aria-labelledby="mcp-guide-tab-claude" tabindex="0" hidden>
+
+        <p class="local-mcp-connection-guide__open">
+            Acesse a página https://claude.ai/, depois clique em <span class="btn">Adicionar</span>
+            no canto superior diretor e depois em <span>Adicionar servidor MCP personalizado</span>.
+        </p>
+        <p><a href="{{{claudedocumentationurl}}}"
+              target="_blank">{{#str}}connectionguideclaudedocs, local_mcp{{/str}}</a></p>
+
         <div class="local-mcp-connection-guide__provider">
             <h3>{{#str}}connectionguideclaudetitle, local_mcp{{/str}}</h3>
             <p>{{#str}}connectionguideclaudeintro, local_mcp{{/str}}</p>
@@ -227,16 +241,6 @@
             </ol>
             <div class="local-mcp-connection-guide__notice" role="note">
                 {{#str}}connectionguideclaudenote, local_mcp{{/str}}
-            </div>
-            <div class="local-mcp-connection-guide__provider-actions">
-                <a class="btn local-mcp-connection-guide__open" href="https://claude.ai/"
-                   target="_blank" rel="noopener noreferrer">
-                    {{#str}}connectionguideopenclaude, local_mcp{{/str}}
-                </a>
-                <a href="{{{claudedocumentationurl}}}"
-                   target="_blank" rel="noopener noreferrer">
-                    {{#str}}connectionguideclaudedocs, local_mcp{{/str}}
-                </a>
             </div>
         </div>
     </section>
@@ -271,27 +275,32 @@
             <details class="local-mcp-connection-guide__advanced">
                 <summary>
                     <strong>{{#str}}connectionguideadvanced, local_mcp{{/str}}</strong>
-                    <span class="local-mcp-connection-guide__hint">{{#str}}connectionguideotheradvanced, local_mcp{{/str}}</span>
+                    <span class="local-mcp-connection-guide__hint">{{#str}}
+                        connectionguideotheradvanced, local_mcp{{/str}}</span>
                     <span class="local-mcp-connection-guide__chevron" aria-hidden="true"></span>
                 </summary>
                 <div class="local-mcp-connection-guide__advanced-content">
                     <div class="local-mcp-connection-guide__field">
-                        <label for="mcp-guide-other-base">{{#str}}connectionguideoauthserverbase, local_mcp{{/str}}</label>
+                        <label for="mcp-guide-other-base">{{#str}}
+                            connectionguideoauthserverbase, local_mcp{{/str}}</label>
                         <input id="mcp-guide-other-base" class="form-control" type="text"
                                value="{{authorizationserverbase}}" readonly spellcheck="false">
                     </div>
                     <div class="local-mcp-connection-guide__field">
-                        <label for="mcp-guide-other-auth">{{#str}}connectionguideoauthauthorizeurl, local_mcp{{/str}}</label>
+                        <label for="mcp-guide-other-auth">{{#str}}
+                            connectionguideoauthauthorizeurl, local_mcp{{/str}}</label>
                         <input id="mcp-guide-other-auth" class="form-control" type="text"
                                value="{{oauthauthorizeurl}}" readonly spellcheck="false">
                     </div>
                     <div class="local-mcp-connection-guide__field">
-                        <label for="mcp-guide-other-token">{{#str}}connectionguideoauthtokenurl, local_mcp{{/str}}</label>
+                        <label for="mcp-guide-other-token">{{#str}}
+                            connectionguideoauthtokenurl, local_mcp{{/str}}</label>
                         <input id="mcp-guide-other-token" class="form-control" type="text"
                                value="{{oauthtokenurl}}" readonly spellcheck="false">
                     </div>
                     <div class="local-mcp-connection-guide__field">
-                        <label for="mcp-guide-other-register">{{#str}}connectionguideoauthregisterurl, local_mcp{{/str}}</label>
+                        <label for="mcp-guide-other-register">{{#str}}
+                            connectionguideoauthregisterurl, local_mcp{{/str}}</label>
                         <input id="mcp-guide-other-register" class="form-control" type="text"
                                value="{{oauthregisterurl}}" readonly spellcheck="false">
                     </div>
@@ -309,67 +318,67 @@
 </div>
 {{#js}}
     require(['jquery'], function($) {
-        var guide = $('.local-mcp-connection-guide');
-        var tabs = guide.find('[role="tab"]');
-        var panels = guide.find('[role="tabpanel"]');
+    var guide = $('.local-mcp-connection-guide');
+    var tabs = guide.find('[role="tab"]');
+    var panels = guide.find('[role="tabpanel"]');
 
-        function activateTab(tab, focus) {
-            var target = tab.attr('aria-controls');
-            tabs.each(function() {
-                var active = this === tab[0];
-                $(this).attr('aria-selected', active ? 'true' : 'false')
-                    .attr('tabindex', active ? '0' : '-1')
-                    .toggleClass('is-active', active);
-            });
-            panels.each(function() {
-                var active = this.id === target;
-                $(this).prop('hidden', !active).toggleClass('is-active', active);
-            });
-            if (focus) {
-                tab.trigger('focus');
-            }
-        }
-        tabs.on('click', function() {
-            activateTab($(this), false);
-        });
-        tabs.on('keydown', function(e) {
-            var current = tabs.index(this);
-            var next = current;
-            if (e.key === 'ArrowRight') {
-                next = (current + 1) % tabs.length;
-            } else if (e.key === 'ArrowLeft') {
-                next = (current - 1 + tabs.length) % tabs.length;
-            } else if (e.key === 'Home') {
-                next = 0;
-            } else if (e.key === 'End') {
-                next = tabs.length - 1;
-            } else {
-                return;
-            }
-            e.preventDefault();
-            activateTab(tabs.eq(next), true);
-        });
+    function activateTab(tab, focus) {
+    var target = tab.attr('aria-controls');
+    tabs.each(function() {
+    var active = this === tab[0];
+    $(this).attr('aria-selected', active ? 'true' : 'false')
+    .attr('tabindex', active ? '0' : '-1')
+    .toggleClass('is-active', active);
+    });
+    panels.each(function() {
+    var active = this.id === target;
+    $(this).prop('hidden', !active).toggleClass('is-active', active);
+    });
+    if (focus) {
+    tab.trigger('focus');
+    }
+    }
+    tabs.on('click', function() {
+    activateTab($(this), false);
+    });
+    tabs.on('keydown', function(e) {
+    var current = tabs.index(this);
+    var next = current;
+    if (e.key === 'ArrowRight') {
+    next = (current + 1) % tabs.length;
+    } else if (e.key === 'ArrowLeft') {
+    next = (current - 1 + tabs.length) % tabs.length;
+    } else if (e.key === 'Home') {
+    next = 0;
+    } else if (e.key === 'End') {
+    next = tabs.length - 1;
+    } else {
+    return;
+    }
+    e.preventDefault();
+    activateTab(tabs.eq(next), true);
+    });
 
-        guide.find('[data-action="copy-mcp-url"]').on('click', function() {
-            var button = $(this);
-            var panel = button.closest('[role="tabpanel"]');
-            var inputid = button.attr('data-copy-input') || 'mcp-connection-guide-url';
-            var input = panel.find('input').filter(function() {
-                return this.id === inputid;
-            });
-            var status = button.closest('.local-mcp-connection-guide__field').find('[data-role="copy-status"]');
-            function fallback() {
-                input.trigger('focus');
-                input[0].select();
-                status.text(guide.attr('data-copy-fallback'));
-            }
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(input.val()).then(function() {
-                    status.text(guide.attr('data-copy-success'));
-                }, fallback);
-            } else {
-                fallback();
-            }
-        });
+    guide.find('[data-action="copy-mcp-url"]').on('click', function() {
+    var button = $(this);
+    var panel = button.closest('[role="tabpanel"]');
+    var inputid = button.attr('data-copy-input') || 'mcp-connection-guide-url';
+    var input = panel.find('input').filter(function() {
+    return this.id === inputid;
+    });
+    var status = button.closest('.local-mcp-connection-guide__field').find('[data-role="copy-status"]');
+    function fallback() {
+    input.trigger('focus');
+    input[0].select();
+    status.text(guide.attr('data-copy-fallback'));
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(input.val()).then(function() {
+    status.text(guide.attr('data-copy-success'));
+    }, fallback);
+    } else {
+    fallback();
+    }
+    });
     });
 {{/js}}
