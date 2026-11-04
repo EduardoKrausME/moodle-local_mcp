@@ -268,14 +268,126 @@
     line-height: 1.5;
 }
 .local-mcp-connection-guide__open {
-    .btn {
-        border: 1px solid #28282D;
-        border-radius: 22px;
-        color: #FFF;
-        background: #28282D;
-        font-size: 13px;
-        font-weight: 600;
-    }
+    margin: 0 0 22px;
+    padding: 21px 23px;
+    border: 1px solid #D6E3F3;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #F9FBFF, #F1F6FC);
+    box-shadow: 0 6px 22px rgba(28, 67, 114, .06);
+}
+.local-mcp-connection-guide__open-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+}
+.local-mcp-connection-guide__open-symbol {
+    display: flex;
+    flex: 0 0 36px;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid #C9D9EE;
+    border-radius: 11px;
+    color: #174E8B;
+    background: #E6F0FC;
+    font-size: 18px;
+    font-weight: 700;
+}
+.local-mcp-connection-guide__open-heading h3 {
+    margin: 0 0 5px;
+    color: #182F50;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+.local-mcp-connection-guide__open-heading p {
+    margin: 0;
+    color: #51647D;
+    font-size: 13px;
+    line-height: 1.55;
+}
+.local-mcp-connection-guide__open-steps {
+    counter-reset: mcp-guide-step;
+    list-style: none;
+    margin: 17px 0 18px;
+    padding: 0;
+}
+.local-mcp-connection-guide__open-steps li {
+    position: relative;
+    min-height: 26px;
+    padding: 3px 0 3px 35px;
+    margin: 0 0 8px;
+    color: #2D405B;
+    font-size: 13px;
+    line-height: 1.6;
+}
+.local-mcp-connection-guide__open-steps li::before {
+    counter-increment: mcp-guide-step;
+    content: counter(mcp-guide-step);
+    position: absolute;
+    top: 3px;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: 1px solid #C9D9EE;
+    border-radius: 50%;
+    color: #245A98;
+    background: #FFF;
+    font-size: 11px;
+    font-weight: 700;
+}
+.local-mcp-connection-guide__open-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+.local-mcp-connection-guide__open-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 39px;
+    padding: 9px 14px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1.4;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color .15s, border-color .15s, color .15s;
+}
+.local-mcp-connection-guide__open-link:hover {
+    text-decoration: none;
+}
+.local-mcp-connection-guide__open-link:focus-visible {
+    outline: 2px solid #175CB1;
+    outline-offset: 3px;
+}
+.local-mcp-connection-guide__open-link--primary {
+    border-color: #184C88;
+    color: #FFF;
+    background: #184C88;
+}
+.local-mcp-connection-guide__open-link--primary:hover {
+    border-color: #123966;
+    color: #FFF;
+    background: #123966;
+}
+.local-mcp-connection-guide__open-link--secondary {
+    border-color: #C3D4E9;
+    color: #21548E;
+    background: #FFF;
+}
+.local-mcp-connection-guide__open-link--secondary:hover {
+    border-color: #A4BDD9;
+    color: #173F6D;
+    background: #F1F6FC;
 }
 .local-mcp-connection-guide__download {
     border: 1px solid #C9C9CF;
@@ -330,6 +442,18 @@
     }
     .local-mcp-connection-guide__copy {
         min-height: 38px;
+    }
+}
+@media (max-width: 420px) {
+    .local-mcp-connection-guide__open {
+        padding: 18px 15px;
+    }
+    .local-mcp-connection-guide__open-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .local-mcp-connection-guide__open-link {
+        width: 100%;
     }
 }
 /* Existing OAuth connections remain administrative controls, not part of the preview. */
