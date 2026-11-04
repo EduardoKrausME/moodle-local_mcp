@@ -251,3 +251,6 @@ $string['connectionguideotherstep3'] = 'Na descoberta OAuth, utilize a URL base 
 $string['connectionguideotherstep4'] = 'Entre no Moodle, conceda os escopos mcp:read e, caso necessário, mcp:write. Verifique as ferramentas disponíveis e confirme separadamente cada operação de gravação.';
 $string['connectionguideotheradvanced'] = 'URLs para configurar clientes MCP sem descoberta automática.';
 $string['connectionguideothernote'] = 'A compatibilidade depende do suporte do cliente a MCP remoto, OAuth, PKCE e registro do cliente. O local_mcp não fornece autenticação por token na URL nem exige acesso ao servidor Nginx para configurar manualmente esses endereços.';
+
+$string['chatgptsetupdownloadplugin'] = 'Baixar plugin';
+$string['chatgptsetupdownloadpluginhelp'] = 'Baixar ZIP com a URL MCP deste Moodle e a configuração OAuth. A importação depende das funcionalidades disponíveis no cliente ChatGPT.';

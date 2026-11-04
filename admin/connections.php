@@ -52,6 +52,7 @@ $PAGE->add_body_class("mcp-connections-page");
 $data = [
     'showchatgptsetup' => !connection_service::has_active_chatgpt_connection(),
     'mcpserverurl' => new moodle_url('/local/mcp/server.php'),
+    'pluginzipurl' => new moodle_url('/local/mcp/admin/download_plugin.php', ['sesskey' => sesskey()]),
     'authorizationserverbase' => new moodle_url('/local/mcp/server.php'),
     'oauthauthorizeurl' => new moodle_url('/local/mcp/oauth/authorize.php'),
     'oauthtokenurl' => new moodle_url('/local/mcp/oauth/token.php'),

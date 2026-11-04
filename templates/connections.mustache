@@ -23,6 +23,7 @@
     Example context (json):
     {
         "mcpserverurl": "https://moodle.example.org/local/mcp/server.php",
+        "pluginzipurl": "https://moodle.example.org/local/mcp/admin/download_plugin.php?sesskey=example",
         "authorizationserverbase": "https://moodle.example.org/local/mcp/server.php",
         "oauthauthorizeurl": "https://moodle.example.org/local/mcp/oauth/authorize.php",
         "oauthtokenurl": "https://moodle.example.org/local/mcp/oauth/token.php",
@@ -186,11 +187,19 @@
                 {{#str}}connectionguidedocumentation, local_mcp{{/str}}
                 <span class="sr-only">({{#str}}chatgptsetupnewtab, local_mcp{{/str}})</span>
             </a>
-            <a href="https://chatgpt.com/plugins" class="btn local-mcp-connection-guide__open"
-               target="_blank" rel="noopener noreferrer">
-                {{#str}}chatgptsetupopenchatgpt, local_mcp{{/str}}
-                <span class="sr-only">({{#str}}chatgptsetupnewtab, local_mcp{{/str}})</span>
-            </a>
+            <div class="local-mcp-connection-guide__footer-actions">
+                <a href="https://chatgpt.com/plugins" class="btn local-mcp-connection-guide__open"
+                   target="_blank" rel="noopener noreferrer">
+                    {{#str}}chatgptsetupopenchatgpt, local_mcp{{/str}}
+                    <span class="sr-only">({{#str}}chatgptsetupnewtab, local_mcp{{/str}})</span>
+                </a>
+                {{^httpsdisabled}}
+                    <a href="{{pluginzipurl}}" class="btn local-mcp-connection-guide__download"
+                       title="{{#str}}chatgptsetupdownloadpluginhelp, local_mcp{{/str}}" download>
+                        {{#str}}chatgptsetupdownloadplugin, local_mcp{{/str}}
+                    </a>
+                {{/httpsdisabled}}
+            </div>
         </footer>
     </section>
     </div>
