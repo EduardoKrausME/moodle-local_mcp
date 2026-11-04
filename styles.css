@@ -379,14 +379,14 @@
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
-  padding-bottom: 10px;
   margin-bottom: 16px;
   border-bottom: 1px solid #DCE0E5;
 }
 .mcp-connections-page .local-mcp-connection-guide__tab {
   padding: 10px 16px;
   border: 1px solid transparent;
-  border-radius: 9px;
+  border-bottom: none;
+  border-radius: 9px 9px 0 0;
   color: #515865;
   background: transparent;
   font-size: 14px;
