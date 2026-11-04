@@ -23,7 +23,6 @@
  */
 
 use local_mcp\oauth\connection_service;
-use local_mcp\ui\chatgpt_setup;
 
 require_once(__DIR__ . '/../../../config.php');
 require_login();
@@ -53,6 +52,10 @@ $PAGE->add_body_class("mcp-connections-page");
 $data = [
     'showchatgptsetup' => !connection_service::has_active_chatgpt_connection(),
     'mcpserverurl' => new moodle_url('/local/mcp/server.php'),
+    'authorizationserverbase' => new moodle_url('/local/mcp/server.php'),
+    'oauthauthorizeurl' => new moodle_url('/local/mcp/oauth/authorize.php'),
+    'oauthtokenurl' => new moodle_url('/local/mcp/oauth/token.php'),
+    'oauthregisterurl' => new moodle_url('/local/mcp/oauth/register.php'),
     'settingsurl' => new moodle_url('/admin/settings.php', ['section' => 'local_mcp_settings']),
     'discoveryurl' => new moodle_url('/local/mcp/oauth-metadata.php'),
     'httpsdisabled' => stripos($CFG->wwwroot, 'https://') !== 0,
