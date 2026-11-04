@@ -64,17 +64,19 @@
     <div id="mcp-guide-panel-chatgpt" class="local-mcp-connection-guide__panel is-active"
          role="tabpanel" aria-labelledby="mcp-guide-tab-chatgpt" tabindex="0">
 
-        <p class="local-mcp-connection-guide__open">
-            Acesse a página https://chatgpt.com/plugins, depois clique em <span class="btn">Adicionar</span>
-            no canto superior diretor e depois em <span>Adicionar servidor MCP personalizado</span>.
-        </p>
-        <p><a href="{{{connectiondocumentationurl}}}"
-              target="_blank">{{#str}}connectionguidedocumentation, local_mcp{{/str}}</a></p>
-        {{^showchatgptsetup}}
-            <p class="local-mcp-connection-guide__connected" role="status">
-                {{#str}}connectionguideconnected, local_mcp{{/str}}
+        <div class="local-mcp-connection-guide__open">
+            <p>
+                Acesse a página https://chatgpt.com/plugins, depois clique em <span class="btn">Adicionar</span>
+                no canto superior diretor e depois em <span>Adicionar servidor MCP personalizado</span>.
             </p>
-        {{/showchatgptsetup}}
+            <p><a href="{{{connectiondocumentationurl}}}"
+                  target="_blank">{{#str}}connectionguidedocumentation, local_mcp{{/str}}</a></p>
+            {{^showchatgptsetup}}
+                <p class="local-mcp-connection-guide__connected" role="status">
+                    {{#str}}connectionguideconnected, local_mcp{{/str}}
+                </p>
+            {{/showchatgptsetup}}
+        </div>
 
         <section class="local-mcp-connection-guide__dialog" aria-labelledby="mcp-connection-dialog-title">
             <header class="local-mcp-connection-guide__header">
@@ -206,13 +208,15 @@
 
     <section id="mcp-guide-panel-claude" class="local-mcp-connection-guide__panel"
              role="tabpanel" aria-labelledby="mcp-guide-tab-claude" tabindex="0" hidden>
-
-        <p class="local-mcp-connection-guide__open">
-            Acesse a página https://claude.ai/, depois clique em <span class="btn">Adicionar</span>
-            no canto superior diretor e depois em <span>Adicionar servidor MCP personalizado</span>.
-        </p>
-        <p><a href="{{{claudedocumentationurl}}}"
-              target="_blank">{{#str}}connectionguideclaudedocs, local_mcp{{/str}}</a></p>
+        
+        <div class="local-mcp-connection-guide__open">
+            <p>
+                Acesse a página https://claude.ai/, depois clique em <span class="btn">Adicionar</span>
+                no canto superior diretor e depois em <span>Adicionar servidor MCP personalizado</span>.
+            </p>
+            <p><a href="{{{claudedocumentationurl}}}"
+                  target="_blank">{{#str}}connectionguideclaudedocs, local_mcp{{/str}}</a></p>
+        </div>
 
         <div class="local-mcp-connection-guide__provider">
             <h3>{{#str}}connectionguideclaudetitle, local_mcp{{/str}}</h3>
