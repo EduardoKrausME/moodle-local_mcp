@@ -23,7 +23,6 @@
  */
 
 use local_mcp\oauth\connection_service;
-use local_mcp\ui\chatgpt_setup;
 
 require_once(__DIR__ . '/../../../config.php');
 require_login();
@@ -53,12 +52,22 @@ $PAGE->add_body_class("mcp-connections-page");
 $data = [
     'showchatgptsetup' => !connection_service::has_active_chatgpt_connection(),
     'mcpserverurl' => new moodle_url('/local/mcp/server.php'),
+    'pluginzipurl' => new moodle_url('/local/mcp/admin/download_plugin.php', ['sesskey' => sesskey()]),
+    'authorizationserverbase' => new moodle_url('/local/mcp/server.php'),
+    'oauthauthorizeurl' => new moodle_url('/local/mcp/oauth/authorize.php'),
+    'oauthtokenurl' => new moodle_url('/local/mcp/oauth/token.php'),
+    'oauthregisterurl' => new moodle_url('/local/mcp/oauth/register.php'),
     'settingsurl' => new moodle_url('/admin/settings.php', ['section' => 'local_mcp_settings']),
     'discoveryurl' => new moodle_url('/local/mcp/oauth-metadata.php'),
     'httpsdisabled' => stripos($CFG->wwwroot, 'https://') !== 0,
     'connectionguidenameexample' => "Moodle-{$SITE->shortname}",
     'connectiondocumentationurl' => 'https://eduardokrausme.github.io/moodle-local_mcp/' .
-        (strpos(current_language(), 'pt') === 0 ? 'pt_br' : 'en') . '/recursos/conexao-chatgpt.html'
+        (strpos(current_language(), 'pt') === 0 ? 'pt_br' : 'en') . '/recursos/conexao-chatgpt.html',
+    'claudedocumentationurl' => 'https://support.claude.com/' .
+        (strpos(current_language(), 'pt') === 0 ? 'pt' : 'en') .
+        '/articles/11175166-' . (strpos(current_language(), 'pt') === 0
+            ? 'comece-com-conectores-personalizados-usando-mcp-remoto'
+            : 'get-started-with-custom-connectors-using-remote-mcp')
 ];
 echo $OUTPUT->header();
 echo html_writer::link(new moodle_url('/local/mcp/admin/dashboard.php'),
