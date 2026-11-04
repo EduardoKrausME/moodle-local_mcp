@@ -14,9 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 //
-// @package   local_mcp
-// @copyright 2026 Eduardo Kraus {@link https://eduardokraus.com}
-// @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+/**
+ * @package   local_mcp
+ * @copyright 2026 Eduardo Kraus {@link https://eduardokraus.com}
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 use local_mcp\plugin\package_builder;
@@ -56,13 +57,14 @@ try {
             throw new \RuntimeException('Unable to add a plugin manifest to the ZIP.');
         }
     }
-    if (!$zip->close()) {
-        throw new \RuntimeException('Unable to finish the MCP plugin ZIP.');
-    }
 } catch (\Throwable $exception) {
     $zip->close();
     @unlink($temporaryfile);
     throw $exception;
+}
+if (!$zip->close()) {
+    @unlink($temporaryfile);
+    throw new \RuntimeException('Unable to finish the MCP plugin ZIP.');
 }
 
 header('Content-Type: application/zip');
