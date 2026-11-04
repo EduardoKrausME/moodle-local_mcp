@@ -101,6 +101,7 @@ $data = [
     'writeapisurl' => (new moodle_url('/local/mcp/admin/writeapis.php'))->out(false),
     'readapisurl' => (new moodle_url('/local/mcp/admin/readapis.php'))->out(false),
     'auditurl' => (new moodle_url('/local/mcp/admin/audit.php'))->out(false),
+    'settingsurl' => (new moodle_url('/admin/settings.php', ['section' => 'local_mcp_settings']))->out(false),
 ];
 
 echo $OUTPUT->header();
