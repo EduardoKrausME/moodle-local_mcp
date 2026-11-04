@@ -50,8 +50,9 @@ final class metadata {
     /**
      * Produce OAuth authorization-server metadata for the issuer being probed.
      *
-     * Some clients use the full server.php URL as a fallback issuer, while modern
-     * clients follow the protected resource document to the canonical /local/mcp issuer.
+     * The combined MCP endpoint is the advertised issuer so clients can discover
+     * OAuth without requiring host-root rewrite rules on supported PHP hosts.
+     * Older well-known issuer URLs remain accepted for existing clients.
      *
      * @param ?string $uri HTTP request target, or null for the current request.
      * @return array
@@ -62,10 +63,13 @@ final class metadata {
         $root = rtrim($CFG->wwwroot, '/');
         $base = $root . '/local/mcp';
         $path = self::request_path($uri);
-        $issuer = $base;
+        $issuer = $base . '/server.php';
 
         if (preg_match('~^/\.well-known/(?:oauth-authorization-server|openid-configuration)/?$~D', $path)) {
             $issuer = $root;
+        } else if (preg_match('~^/\.well-known/(?:oauth-authorization-server|openid-configuration)/local/mcp/?$~D', $path)) {
+            // Legacy issuer URL: keep its metadata self-consistent for existing clients.
+            $issuer = $base;
         } else if (preg_match('~^/\.well-known/(?:oauth-authorization-server|openid-configuration)/local/mcp/(server|read|write)\.php/?$~D',
                 $path, $matches) || preg_match('~^/local/mcp/(server|read|write)\.php/\.well-known/(?:oauth-authorization-server|openid-configuration)/?$~D',
                 $path, $matches)) {
@@ -106,7 +110,7 @@ final class metadata {
         }
         return [
             'resource' => resource::endpoint($side),
-            'authorization_servers' => [rtrim($CFG->wwwroot, '/') . '/local/mcp'],
+            'authorization_servers' => [rtrim($CFG->wwwroot, '/') . '/local/mcp/server.php'],
             'scopes_supported' => $side === 'read' ? ['mcp:read']
                 : ($side === 'write' ? ['mcp:write'] : ['mcp:read', 'mcp:write']),
             'bearer_methods_supported' => ['header'],
