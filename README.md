@@ -90,27 +90,21 @@ Refresh the ChatGPT MCP connection's tool discovery after updating the plugin.
 
 PHP diagnostic logging is disabled by default, including full JSON-RPC request
 and response bodies. To follow MCP calls and check whether they completed or
-failed, explicitly enable the server-side debugger in Moodle's `config.php`:
+failed, enable **Log MCP diagnostic events to PHP error_log** in the plugin's
+administration settings. There is no need to edit Moodle's `config.php`.
+The `local_mcp/debuglogging` option enables **metadata-only** events (request
+ID, tool name, outcome, duration and sanitized error information) for
+`server.php`, `read.php` and `write.php`. It does not require Moodle developer
+debugging or expose tool arguments by default.
 
-```php
-$CFG->local_mcp_debugger = true;
-```
-
-Add this after the Moodle `$CFG` object is initialized and before
-`require_once(__DIR__ . '/lib/setup.php');`. This enables **metadata-only**
-events (request ID, tool name, outcome, duration and safe error information)
-for `server.php`, `read.php` and `write.php`; it does not require
-Moodle developer debugging or expose tool arguments by default.
-
-For unusually difficult protocol problems, additionally enable the
-**Log MCP JSON messages to PHP error_log** setting in the plugin's administration
-settings. This separate checkbox defaults to off and is effective only while
-`$CFG->local_mcp_debugger` is true. It traces incoming and outgoing JSON-RPC
-bodies, with numbered fragments for large messages and best-effort redaction
-of recognized secrets and binaries. **Other personal Moodle data can still
-appear in these logs**, so restrict PHP log access and retention, use body
-tracing only for a limited troubleshooting session, then disable the checkbox
-and remove (or set to `false`) the `config.php` flag. OAuth token endpoints
+For unusually difficult protocol problems, also enable
+**Log MCP JSON messages to PHP error_log**. The separate `local_mcp/logmessages`
+checkbox defaults to off and works only while diagnostic event logging is
+enabled. It traces incoming and outgoing JSON-RPC bodies, with numbered
+fragments for large messages and best-effort redaction of recognized secrets
+and binaries. **Other personal Moodle data can still appear in these logs**,
+so restrict PHP log access and retention, use body tracing only for a limited
+troubleshooting session, then disable both options. OAuth token endpoints
 are never body-traced.
 
 ## Architecture
@@ -164,8 +158,8 @@ update_course accept summaryformat=1 (HTML), and update_course accepts categoryi
 Course changes check Moodle capabilities on the course and destination category.
 
 For unexpected tools/call exceptions, the server returns a generic error with
-a diagnostic reference. Only when `$CFG->local_mcp_debugger` is enabled does it
-also log the PHP exception class and sanitized source location under that
+a diagnostic reference. When the `local_mcp/debuglogging` setting is enabled, the server also
+logs the PHP exception class and sanitized source location under that
 reference, allowing failed MCP calls to be correlated with the PHP log.
 Metadata diagnostics never include bearer tokens or tool argument values.
 
@@ -272,7 +266,7 @@ request. Modern `tools/call` responses include `resultType: complete`. Existing 
 `2025-06-18` `initialize` handshake continue to receive the legacy layout.
 
 By default the plugin writes neither MCP request parameters nor complete
-JSON-RPC responses to PHP logs. With `$CFG->local_mcp_debugger` enabled,
+JSON-RPC responses to PHP logs. With `local_mcp/debuglogging` enabled,
 sanitized metadata and exception references can be inspected; the separate
 `local_mcp/logmessages` option is required to trace full message bodies
 and should only be enabled briefly in a protected environment.
@@ -470,9 +464,9 @@ Revoking a Connection immediately invalidates:
 
 ## Optional PHP error log diagnostics
 
-When `$CFG->local_mcp_debugger = true;` is set in Moodle's `config.php`,
-the MCP server records significant lifecycle events and errors through PHP
-`error_log()`; when it is absent or false, none of these diagnostic entries
+When the `local_mcp/debuglogging` option is enabled in Moodle's plugin
+settings, the MCP server records significant lifecycle events and errors through
+PHP `error_log()`; when disabled, none of these diagnostic entries
 are emitted. Each line starts with `[local_mcp]` followed by a single-line
 JSON object. The `request` field is a random 12-character correlation
 identifier shared by the request's log entries.
