@@ -799,3 +799,21 @@ flex-wrap: wrap;
   font-size: 13px;
   line-height: 1.6;
 }
+
+
+.mcp-connections-page .local-mcp-connections-admin {
+    max-width: 980px;
+    margin: 36px auto 0;
+}
+.mcp-connections-page .local-mcp-connections-admin h2 {
+    margin-bottom: 15px;
+    font-size: 20px;
+    font-weight: 700;
+}
+.mcp-connections-page .local-mcp-connections-admin .generaltable {
+    width: 100%;
+    font-size: 13px;
+}
+.mcp-connections-page .local-mcp-connections-admin .generaltable th, .mcp-connections-page .local-mcp-connections-admin .generaltable td {
+    padding: 10px 12px;
+}
