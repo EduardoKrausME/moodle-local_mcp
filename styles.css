@@ -817,3 +817,122 @@ flex-wrap: wrap;
 .mcp-connections-page .local-mcp-connections-admin .generaltable th, .mcp-connections-page .local-mcp-connections-admin .generaltable td {
     padding: 10px 12px;
 }
+
+.mcp-connections-page .local-mcp-connection-guide__hero {
+padding: 24px 27px;
+    margin-bottom: 18px;
+    border-radius: 16px;
+    color: #fff;
+    background: linear-gradient(120deg, #102746, #1d467c 65%, #2969bb);
+}
+.mcp-connections-page .local-mcp-connection-guide__hero h2 {
+margin: 0 0 8px;
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.25;
+}
+.mcp-connections-page .local-mcp-connection-guide__hero p {
+margin: 0;
+    color: #e6edf7;
+    font-size: 13px;
+    line-height: 1.6;
+}
+.mcp-connections-page .local-mcp-connection-guide__tabs {
+display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #dce0e5;
+}
+.mcp-connections-page .local-mcp-connection-guide__tab {
+padding: 10px 16px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    color: #515865;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.mcp-connections-page .local-mcp-connection-guide__tab:hover {
+color: #12325e;
+    background: #f0f4fa;
+}
+.mcp-connections-page .local-mcp-connection-guide__tab.is-active,
+.mcp-connections-page .local-mcp-connection-guide__tab[aria-selected="true"] {
+border-color: #cdddf3;
+    color: #15375f;
+    background: #eaf2fc;
+}
+.mcp-connections-page .local-mcp-connection-guide__tab:focus-visible {
+outline: 2px solid #265fc5;
+    outline-offset: 2px;
+}
+.mcp-connections-page .local-mcp-connection-guide__panel[hidden] {
+display: none !important;
+}
+.mcp-connections-page .local-mcp-connection-guide__provider {
+padding: 25px 28px;
+    border: 1px solid #e4e4e7;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 10px 34px rgba(20, 20, 25, .05);
+}
+.mcp-connections-page .local-mcp-connection-guide__provider h3 {
+margin: 0 0 10px;
+    color: #202024;
+    font-size: 21px;
+    font-weight: 700;
+}
+.mcp-connections-page .local-mcp-connection-guide__provider > p {
+margin: 0 0 17px;
+    color: #5f626a;
+    font-size: 13px;
+    line-height: 1.6;
+}
+.mcp-connections-page .local-mcp-connection-guide__steps {
+margin: 20px 0;
+    padding-left: 25px;
+    color: #2e3139;
+    font-size: 13px;
+    line-height: 1.65;
+}
+.mcp-connections-page .local-mcp-connection-guide__steps li {
+padding-left: 4px;
+    margin-bottom: 13px;
+}
+.mcp-connections-page .local-mcp-connection-guide__steps li::marker {
+color: #23579d;
+    font-weight: 700;
+}
+.mcp-connections-page .local-mcp-connection-guide__notice {
+padding: 13px 15px;
+    border: 1px solid #dce5f1;
+    border-radius: 10px;
+    color: #425773;
+    background: #f6f9fc;
+    font-size: 12px;
+    line-height: 1.65;
+}
+.mcp-connections-page .local-mcp-connection-guide__provider-actions {
+display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 20px;
+}
+.mcp-connections-page .local-mcp-connection-guide__provider-actions > a:not(.btn) {
+color: #255da1;
+    font-size: 12px;
+    text-decoration: underline;
+}
+@media (max-width: 680px) {
+.mcp-connections-page .local-mcp-connection-guide__hero {
+padding: 21px 18px;
+}
+.mcp-connections-page .local-mcp-connection-guide__provider {
+padding: 20px 18px;
+}
+}
