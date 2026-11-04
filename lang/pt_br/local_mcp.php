@@ -172,7 +172,6 @@ $string['oauthconsentfooter'] = 'Autorize somente aplicativos que você reconhec
 $string['oauthconsentpermissions'] = 'Permissões solicitadas';
 $string['oauthconsentpermissionsintro'] = 'Confira o que este aplicativo poderá fazer em seu nome.';
 $string['oauthconsentreadsummary'] = 'Permitir que o ChatGPT, Claude ou outro aplicativo conectado via MCP consulte informações disponíveis nas ferramentas de leitura do Moodle.';
-$string['oauthconsentredirecturi'] = 'URL de retorno (destino do código de autorização)';
 $string['oauthconsentsecuritybody'] = 'Esta conexão não pode ultrapassar as permissões da sua conta Moodle. Algumas operações sensíveis exigem confirmação adicional. Você poderá revogar o acesso depois.';
 $string['oauthconsentsecuritytitle'] = 'Suas permissões do Moodle continuam valendo';
 $string['oauthconsenttitle'] = 'Autorizar uma nova conexão';
