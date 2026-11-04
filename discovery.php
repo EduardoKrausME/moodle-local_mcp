@@ -37,8 +37,8 @@ http::json([
         'write' => $base . '/write.php',
     ],
     'oauth' => [
-        'issuer' => $base,
-        'authorization_server_metadata' => $base . '/.well-known/oauth-authorization-server.php',
-        'protected_resource_metadata' => $base . '/.well-known/oauth-protected-resource.php',
+        'issuer' => $base . '/server.php',
+        'authorization_server_metadata' => $base . '/oauth-metadata.php',
+        'protected_resource_metadata' => $base . '/oauth-resource.php?side=server',
     ],
 ]);
