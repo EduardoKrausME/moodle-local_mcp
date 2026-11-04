@@ -56,7 +56,7 @@ final class message_logger {
             return;
         }
         foreach (self::format($direction, $side, $payload, $httpstatus) as $line) {
-            // $CFG->local_mcp_debugger and local_mcp/logmessages are required to log JSON-RPC message bodies.
+            // Both local_mcp/debuglogging and local_mcp/logmessages must be enabled to trace bodies.
             // This helps diagnose protocol errors but can expose personal Moodle data in the PHP log.
             // phpcs:disable moodle.PHP.ForbiddenFunctions.FoundWithAlternative
             error_log($line);
