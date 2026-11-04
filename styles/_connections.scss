@@ -340,3 +340,22 @@
         flex-wrap: wrap;
     }
 }
+
+/* Existing OAuth connections remain administrative controls, not part of the preview. */
+.local-mcp-connections-admin {
+    max-width: 980px;
+    margin: 36px auto 0;
+}
+.local-mcp-connections-admin h2 {
+    margin-bottom: 15px;
+    font-size: 20px;
+    font-weight: 700;
+}
+.local-mcp-connections-admin .generaltable {
+    width: 100%;
+    font-size: 13px;
+}
+.local-mcp-connections-admin .generaltable th,
+.local-mcp-connections-admin .generaltable td {
+    padding: 10px 12px;
+}
