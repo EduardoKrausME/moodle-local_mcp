@@ -65,12 +65,28 @@
          role="tabpanel" aria-labelledby="mcp-guide-tab-chatgpt" tabindex="0">
 
         <div class="local-mcp-connection-guide__open">
-            <p>
-                Acesse a página https://chatgpt.com/plugins, depois clique em <span class="btn">Adicionar</span>
-                no canto superior diretor e depois em <span>Adicionar servidor MCP personalizado</span>.
-            </p>
-            <p><a href="{{{connectiondocumentationurl}}}"
-                  target="_blank">{{#str}}connectionguidedocumentation, local_mcp{{/str}}</a></p>
+            <div class="local-mcp-connection-guide__open-heading">
+                <span class="local-mcp-connection-guide__open-symbol" aria-hidden="true">&#8599;</span>
+                <div>
+                    <h3>{{#str}}connectionguidechatgptstarttitle, local_mcp{{/str}}</h3>
+                    <p>{{#str}}connectionguidechatgptstartintro, local_mcp{{/str}}</p>
+                </div>
+            </div>
+            <ol class="local-mcp-connection-guide__open-steps">
+                <li>{{#str}}connectionguidechatgptstartstep1, local_mcp{{/str}}</li>
+                <li>{{#str}}connectionguidechatgptstartstep2, local_mcp{{/str}}</li>
+                <li>{{#str}}connectionguidechatgptstartstep3, local_mcp{{/str}}</li>
+            </ol>
+            <div class="local-mcp-connection-guide__open-actions">
+                <a class="local-mcp-connection-guide__open-link local-mcp-connection-guide__open-link--primary"
+                   href="https://chatgpt.com/plugins" target="_blank" rel="noopener noreferrer">
+                    {{#str}}connectionguidechatgptstartaction, local_mcp{{/str}} <span aria-hidden="true">&#8599;</span>
+                </a>
+                <a class="local-mcp-connection-guide__open-link local-mcp-connection-guide__open-link--secondary"
+                   href="{{{connectiondocumentationurl}}}" target="_blank" rel="noopener noreferrer">
+                    {{#str}}connectionguidedocumentation, local_mcp{{/str}} <span aria-hidden="true">&#8599;</span>
+                </a>
+            </div>
         </div>
 
         {{^showchatgptsetup}}
@@ -211,12 +227,28 @@
              role="tabpanel" aria-labelledby="mcp-guide-tab-claude" tabindex="0" hidden>
 
         <div class="local-mcp-connection-guide__open">
-            <p>
-                Acesse a página https://claude.ai/, depois clique em <span class="btn">Adicionar</span>
-                no canto superior diretor e depois em <span>Adicionar servidor MCP personalizado</span>.
-            </p>
-            <p><a href="{{{claudedocumentationurl}}}"
-                  target="_blank">{{#str}}connectionguideclaudedocs, local_mcp{{/str}}</a></p>
+            <div class="local-mcp-connection-guide__open-heading">
+                <span class="local-mcp-connection-guide__open-symbol" aria-hidden="true">&#8599;</span>
+                <div>
+                    <h3>{{#str}}connectionguideclaudestarttitle, local_mcp{{/str}}</h3>
+                    <p>{{#str}}connectionguideclaudestartintro, local_mcp{{/str}}</p>
+                </div>
+            </div>
+            <ol class="local-mcp-connection-guide__open-steps">
+                <li>{{#str}}connectionguideclaudestartstep1, local_mcp{{/str}}</li>
+                <li>{{#str}}connectionguideclaudestartstep2, local_mcp{{/str}}</li>
+                <li>{{#str}}connectionguideclaudestartstep3, local_mcp{{/str}}</li>
+            </ol>
+            <div class="local-mcp-connection-guide__open-actions">
+                <a class="local-mcp-connection-guide__open-link local-mcp-connection-guide__open-link--primary"
+                   href="https://claude.ai/" target="_blank" rel="noopener noreferrer">
+                    {{#str}}connectionguideopenclaude, local_mcp{{/str}} <span aria-hidden="true">&#8599;</span>
+                </a>
+                <a class="local-mcp-connection-guide__open-link local-mcp-connection-guide__open-link--secondary"
+                   href="{{{claudedocumentationurl}}}" target="_blank" rel="noopener noreferrer">
+                    {{#str}}connectionguideclaudedocs, local_mcp{{/str}} <span aria-hidden="true">&#8599;</span>
+                </a>
+            </div>
         </div>
 
         <div class="local-mcp-connection-guide__provider">
