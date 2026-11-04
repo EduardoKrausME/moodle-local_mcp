@@ -61,7 +61,12 @@ $data = [
     'httpsdisabled' => stripos($CFG->wwwroot, 'https://') !== 0,
     'connectionguidenameexample' => "Moodle-{$SITE->shortname}",
     'connectiondocumentationurl' => 'https://eduardokrausme.github.io/moodle-local_mcp/' .
-        (strpos(current_language(), 'pt') === 0 ? 'pt_br' : 'en') . '/recursos/conexao-chatgpt.html'
+        (strpos(current_language(), 'pt') === 0 ? 'pt_br' : 'en') . '/recursos/conexao-chatgpt.html',
+    'claudedocumentationurl' => 'https://support.claude.com/' .
+        (strpos(current_language(), 'pt') === 0 ? 'pt' : 'en') .
+        '/articles/11175166-' . (strpos(current_language(), 'pt') === 0
+            ? 'comece-com-conectores-personalizados-usando-mcp-remoto'
+            : 'get-started-with-custom-connectors-using-remote-mcp')
 ];
 echo $OUTPUT->header();
 echo html_writer::link(new moodle_url('/local/mcp/admin/dashboard.php'),
