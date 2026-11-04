@@ -71,12 +71,13 @@
             </p>
             <p><a href="{{{connectiondocumentationurl}}}"
                   target="_blank">{{#str}}connectionguidedocumentation, local_mcp{{/str}}</a></p>
-            {{^showchatgptsetup}}
-                <p class="local-mcp-connection-guide__connected" role="status">
-                    {{#str}}connectionguideconnected, local_mcp{{/str}}
-                </p>
-            {{/showchatgptsetup}}
         </div>
+
+        {{^showchatgptsetup}}
+            <p class="local-mcp-connection-guide__connected" role="status">
+                {{#str}}connectionguideconnected, local_mcp{{/str}}
+            </p>
+        {{/showchatgptsetup}}
 
         <section class="local-mcp-connection-guide__dialog" aria-labelledby="mcp-connection-dialog-title">
             <header class="local-mcp-connection-guide__header">
@@ -208,7 +209,7 @@
 
     <section id="mcp-guide-panel-claude" class="local-mcp-connection-guide__panel"
              role="tabpanel" aria-labelledby="mcp-guide-tab-claude" tabindex="0" hidden>
-        
+
         <div class="local-mcp-connection-guide__open">
             <p>
                 Acesse a página https://claude.ai/, depois clique em <span class="btn">Adicionar</span>
