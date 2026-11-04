@@ -37,31 +37,21 @@ use stdClass;
 final class diagnostics_test extends advanced_testcase {
 
     /**
-     * Check that the debugger is off by default and requires explicit config.php opt-in.
+     * Check that diagnostic logging is disabled by default and uses a plugin setting.
      *
      * @return void
      */
-    public function test_debug_logging_requires_explicit_config_flag(): void {
-        global $CFG;
+    public function test_debug_logging_requires_explicit_plugin_setting(): void {
+        $this->resetAfterTest();
 
-        $wasdefined = property_exists($CFG, "local_mcp_debugger");
-        $previous = $CFG->local_mcp_debugger ?? null;
-        try {
-            unset($CFG->local_mcp_debugger);
-            $this->assertFalse(diagnostics::enabled());
+        unset_config('debuglogging', 'local_mcp');
+        $this->assertFalse(diagnostics::enabled());
 
-            $CFG->local_mcp_debugger = false;
-            $this->assertFalse(diagnostics::enabled());
+        set_config('debuglogging', 0, 'local_mcp');
+        $this->assertFalse(diagnostics::enabled());
 
-            $CFG->local_mcp_debugger = true;
-            $this->assertTrue(diagnostics::enabled());
-        } finally {
-            if ($wasdefined) {
-                $CFG->local_mcp_debugger = $previous;
-            } else {
-                unset($CFG->local_mcp_debugger);
-            }
-        }
+        set_config('debuglogging', 1, 'local_mcp');
+        $this->assertTrue(diagnostics::enabled());
     }
 
     /**
