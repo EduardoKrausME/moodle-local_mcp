@@ -576,38 +576,51 @@ A connection does not confer administrative permissions.
 
 ### Configure OAuth authorization-server discovery
 
-OAuth authorization servers with a path-based issuer need an RFC 8414 well-known URL.
-The issuer is `https://YOUR-MOODLE/local/mcp`, so the ChatGPT discovery URL for a Moodle
-installation at the domain root is:
+The combined MCP server advertises `https://YOUR-MOODLE/local/mcp/server.php` as its
+OAuth authorization server (issuer). Its RFC 9728 protected-resource metadata points to
+this same URL, so ChatGPT no longer needs to be manually told to use `server.php` as
+the authorization server base. The authorization, token and dynamic registration endpoints
+remain under `/local/mcp/oauth/`.
+
+The plugin exposes a directly accessible metadata document without server rewrites:
 
 ```text
-https://YOUR-MOODLE/.well-known/oauth-authorization-server/local/mcp
+https://YOUR-MOODLE/local/mcp/oauth-metadata.php
 ```
 
-The Moodle plugin cannot register a URL outside its own directory. Add **one**
-web-server rewrite before using OAuth clients. Examples for a root-installed Moodle:
+MCP clients that support URL-appended OAuth discovery may also use:
 
-Apache (in the Moodle site's existing root rewrite configuration):
+```text
+https://YOUR-MOODLE/local/mcp/server.php/.well-known/oauth-authorization-server
+https://YOUR-MOODLE/local/mcp/server.php/.well-known/openid-configuration
+```
+
+This fallback requires the hosting PHP configuration to route the path suffix after
+`server.php` to that script. It works for hosting environments that support
+`PATH_INFO`, but cannot be guaranteed on every Nginx/Apache shared host.
+
+Clients that require RFC 8414's host-root well-known location must still have a
+server-level rewrite to the existing PHP metadata endpoint. For example, with Moodle
+installed at the domain root:
 
 ```apache
-RewriteRule ^\.well-known/oauth-authorization-server/local/mcp$ local/mcp/.well-known/oauth-authorization-server.php [L]
+RewriteRule ^\.well-known/oauth-authorization-server/local/mcp/server\.php$ local/mcp/oauth-metadata.php [L]
 ```
 
-Nginx (inside the existing Moodle virtual host):
-
 ```nginx
-location = /.well-known/oauth-authorization-server/local/mcp {
-    rewrite ^ /local/mcp/.well-known/oauth-authorization-server.php last;
+location = /.well-known/oauth-authorization-server/local/mcp/server.php {
+    rewrite ^ /local/mcp/oauth-metadata.php last;
 }
 ```
 
-For a Moodle installed in a subdirectory, include the Moodle path in the left and right
-sides of the rewrite. Do not redirect to another issuer or expose this file with a different
-issuer URL. The JSON `issuer` value must remain identical to the discovery issuer.
+The previous issuer `https://YOUR-MOODLE/local/mcp` continues to be recognized
+when a client explicitly requests its legacy well-known URL, but new connections are
+advertised with the `server.php` issuer. Existing client tokens and grants are not
+revoked by changing the discovery metadata.
 
 Unauthenticated `POST` requests to the MCP endpoint return HTTP 401 with a
-`WWW-Authenticate` header that points to the appropriate protected-resource metadata.
-The `resource` value in those metadata is the exact endpoint URL.
+`WWW-Authenticate` header that points to protected-resource metadata. The
+`resource` indicator remains the exact MCP endpoint URL.
 
 ### WRITE confirmation with MCP clients
 
