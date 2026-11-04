@@ -43,8 +43,12 @@ final class oauth_metadata_test extends advanced_testcase {
 
         $this->resetAfterTest();
         $base = $CFG->wwwroot;
+        // Preserve the old issuer when a client explicitly requests the legacy path.
         $this->assertSame($base . '/local/mcp', metadata::authorization_server(
             '/.well-known/oauth-authorization-server/local/mcp')['issuer']);
+        // New clients use the combined server endpoint as the OAuth issuer.
+        $this->assertSame($base . '/local/mcp/server.php', metadata::authorization_server(
+            '/local/mcp/oauth-metadata.php')['issuer']);
         $this->assertSame($base . '/local/mcp/server.php', metadata::authorization_server(
             '/.well-known/oauth-authorization-server/local/mcp/server.php')['issuer']);
         $this->assertSame($base . '/local/mcp/server.php', metadata::authorization_server(
@@ -84,8 +88,13 @@ final class oauth_metadata_test extends advanced_testcase {
         $this->assertSame(resource::endpoint('write'),
             metadata::protected_resource('server', '/.well-known/oauth-protected-resource/local/mcp/write.php')['resource']);
         $this->assertSame(['mcp:write'], metadata::protected_resource('write')['scopes_supported']);
-        $this->assertSame([$CFG->wwwroot . '/local/mcp'],
-            metadata::protected_resource()['authorization_servers']);
+        foreach (['server', 'read', 'write'] as $side) {
+            $this->assertSame([$CFG->wwwroot . '/local/mcp/server.php'],
+                metadata::protected_resource($side)['authorization_servers']);
+        }
+        $issuer = metadata::protected_resource()['authorization_servers'][0];
+        $this->assertSame($issuer, metadata::authorization_server(
+            '/local/mcp/server.php/.well-known/oauth-authorization-server')['issuer']);
     }
 
     /**
