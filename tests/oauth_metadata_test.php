@@ -70,7 +70,7 @@ final class oauth_metadata_test extends advanced_testcase {
         $this->assertSame($base . '/oauth/token.php', $data['token_endpoint']);
         $this->assertSame($base . '/oauth/register.php', $data['registration_endpoint']);
         $this->assertSame(['S256'], $data['code_challenge_methods_supported']);
-        $this->assertArrayNotHasKey('registration_endpoint', metadata::authorization_server());
+        $this->assertSame($base . '/oauth/register.php', metadata::authorization_server()['registration_endpoint']);
     }
 
     /**
