@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 //
+
 /**
  * @package   local_mcp
  * @copyright 2026 Eduardo Kraus {@link https://eduardokraus.com}
@@ -64,7 +65,7 @@ final class plugin_package_builder_test extends advanced_testcase {
      * HTTPS is required before offering a remotely accessible MCP package.
      */
     public function test_http_endpoint_is_rejected(): void {
-        $this->expectException(\invalid_argument_exception::class);
+        $this->expectException(\InvalidArgumentException::class);
         package_builder::get_files('http://example.org/local/mcp/server.php', 'Test site');
     }
 
@@ -72,7 +73,7 @@ final class plugin_package_builder_test extends advanced_testcase {
      * A non-MCP URL should not be embedded as a downloadable server.
      */
     public function test_unrelated_endpoint_is_rejected(): void {
-        $this->expectException(\invalid_argument_exception::class);
+        $this->expectException(\InvalidArgumentException::class);
         package_builder::get_files('https://example.org/api/another-endpoint.php', 'Test site');
     }
 }

@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 //
+
 /**
  * @package   local_mcp
  * @copyright 2026 Eduardo Kraus {@link https://eduardokraus.com}
@@ -38,7 +39,7 @@ final class package_builder {
         if ($parts === false || ($parts['scheme'] ?? '') !== 'https' || empty($parts['host']) ||
                 isset($parts['user']) || isset($parts['pass']) || isset($parts['query']) ||
                 isset($parts['fragment']) || substr($serverurl, -11) !== '/server.php') {
-            throw new \invalid_argument_exception('A valid HTTPS Moodle MCP server URL is required.');
+            throw new \InvalidArgumentException('A valid HTTPS Moodle MCP server URL is required.');
         }
 
         $host = strtolower($parts['host']);
