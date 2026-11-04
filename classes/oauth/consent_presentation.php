@@ -50,7 +50,6 @@ final class consent_presentation {
         return [
             "origin" => $origin,
             "redirecturi" => $redirecturi,
-            "unverified" => !empty($client->dynamic),
         ];
     }
 }

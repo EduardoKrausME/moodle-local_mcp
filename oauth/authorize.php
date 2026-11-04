@@ -112,7 +112,6 @@ echo $OUTPUT->render_from_template('local_mcp/authorization_consent', [
     'clientname' => $client->name,
     "origin" => $consentdetails["origin"],
     "redirecturi" => $consentdetails["redirecturi"],
-    "unverified" => $consentdetails["unverified"],
     'sitename' => $SITE->fullname,
     'sitedomain' => (string)parse_url($CFG->wwwroot, PHP_URL_HOST),
     'read' => in_array('mcp:read', $scopes, true),
