@@ -76,14 +76,16 @@ echo $OUTPUT->render_from_template('local_mcp/connections', $data);
 
 // Allow administrators to revoke existing grants without changing OAuth settings.
 $sql = "SELECT c.id, c.scopes, c.timecreated, c.lastused,
-               u.firstname, u.lastname, cl.name AS clientname
+               u.firstname, u.lastname, cl.name AS clientname,
+               u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename
           FROM {local_mcp_connection} c
           JOIN {user} u ON u.id = c.userid
           JOIN {local_mcp_oauth_client} cl ON cl.id = c.clientid
          WHERE c.enabled = :enabled AND c.revokedat IS NULL
       ORDER BY c.timecreated DESC";
 $rows = [];
-foreach ($DB->get_records_sql($sql, ["enabled" => 1], 0, 100) as $record) {
+$records = $DB->get_records_sql($sql, ["enabled" => 1], 0, 100);
+foreach ($records as $record) {
     $rows[] = [
         "id" => (int)$record->id,
         "user" => fullname($record),
