@@ -1,0 +1,266 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * local_mcp.php
+ *
+ * @package   local_mcp
+ * @copyright 2026 Eduardo Kraus {@link https://eduardokraus.com}
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die;
+
+$string['audit'] = '审计日志';
+$string['auditclient'] = 'OAuth 客户端';
+$string['auditconfirmed'] = '已确认';
+$string['auditconnection'] = '连接 ID';
+$string['auditduration'] = '耗时（毫秒）';
+$string['auditevent'] = '事件';
+$string['auditexport'] = '导出筛选后的 CSV（最多 5,000 行）';
+$string['auditnone'] = '没有符合条件的审计记录。';
+$string['auditobjects'] = '字段名称 / 实体 ID / 数量';
+$string['auditonlychatgpt'] = '仅显示 ChatGPT 连接';
+$string['auditprivacy'] = '记录 ChatGPT、Claude 或其他 AI 应用通过 MCP 发起的工具调用，包括确认、失败以及安全的实体 ID。不存储对话文本、凭据或内容值。只能审计发送到此 Moodle 站点的操作。';
+$string['auditrequestid'] = '请求 ID';
+$string['auditresults'] = '符合条件的审计记录：{$a}';
+$string['auditside'] = '方向';
+$string['auditstatus'] = '状态';
+$string['audittool'] = '工具';
+$string['audituser'] = '用户';
+$string['audituserid'] = 'Moodle 用户 ID';
+$string['auditwhen'] = '时间';
+$string['authorizationdeniedbody'] = '请使用有效的 Moodle 账户登录，以授权 ChatGPT、Claude 或其他兼容 MCP 协议的 AI 应用。访客账户无法连接。';
+$string['authorizationdeniedtitle'] = '连接未获授权';
+$string['authorize'] = '授权连接';
+$string['authorizeheading'] = '将 {$a} 连接到 Moodle';
+$string['authorizeintro'] = '{$a} 正在请求访问此 Moodle 站点。';
+$string['backtodashboard'] = '返回控制面板';
+$string['cachedef_ratelimit'] = '速率限制缓存';
+$string['cachedef_tooldefinitions'] = '工具定义缓存';
+$string['cancel'] = '取消';
+$string['chatgptsetupcopied'] = '服务器 URL 已复制。';
+$string['chatgptsetupcopy'] = '复制 URL';
+$string['chatgptsetupcopyfallback'] = '请选择并复制高亮显示的 URL。';
+$string['chatgptsetupdcrdisabled'] = 'OAuth 动态客户端注册已禁用。连接 ChatGPT 前请先启用。';
+$string['chatgptsetupdiscoveryhelp'] = '如果 OAuth 自动发现失败，请检查 Moodle MCP 在此 URL 直接发布的元数据：';
+$string['chatgptsetupfinish'] = '完成授权后，请重新加载此页面。检测到有效的 ChatGPT 连接后，本指南将自动消失。';
+$string['chatgptsetuphttpsdisabled'] = '此 Moodle 站点尚未配置 HTTPS URL。要通过 MCP 协议连接 ChatGPT，服务器必须能通过互联网使用 HTTPS 访问。';
+$string['chatgptsetupintro'] = '通过 MCP 协议将此 Moodle 站点连接到 ChatGPT。目前尚无有效的 ChatGPT 连接，请按照以下步骤配置安全访问。';
+$string['chatgptsetupnewtab'] = '在新标签页中打开';
+$string['chatgptsetupopenchatgpt'] = '打开 ChatGPT';
+$string['chatgptsetupopensettings'] = '打开 Moodle MCP 设置';
+$string['chatgptsetupserverlabel'] = 'MCP 服务器 URL';
+$string['chatgptsetupstep1body'] = '点击下方按钮，在新标签页中打开 ChatGPT 并登录。';
+$string['chatgptsetupstep1title'] = '打开 ChatGPT';
+$string['chatgptsetupstep2body'] = '在 ChatGPT 网页版中打开 Plugins，点击 +，然后选择 Add custom MCP server。将其命名为 Moodle MCP，并选择采用动态客户端注册（DCR）的 OAuth 身份验证。';
+$string['chatgptsetupstep2title'] = '添加自定义 MCP 服务器';
+$string['chatgptsetupstep3body'] = '将以下地址粘贴到 ChatGPT 的 Server URL 字段中：';
+$string['chatgptsetupstep3title'] = '输入此 Moodle 服务器的 URL';
+$string['chatgptsetupstep4body'] = '阅读安全警告，选择 I understand and want to continue，然后点击 Create as a plugin。如有提示，请安装创建的插件。';
+$string['chatgptsetupstep4title'] = '创建并安装插件';
+$string['chatgptsetupstep5body'] = '在 ChatGPT 中打开对话并使用 Moodle MCP 集成。出现提示时，请使用有效的 Moodle 账户（非访客）登录，批准请求的读取和写入权限。工具仍受您的 Moodle 权限限制。';
+$string['chatgptsetupstep5title'] = '授权访问 Moodle';
+$string['chatgptsetuptitle'] = '将 Moodle 站点连接到 ChatGPT';
+$string['chatgptsetuptroubleshooting'] = '排查 OAuth 自动发现问题';
+$string['clientcolclientid'] = '客户端 ID';
+$string['clientcolcreated'] = '创建时间';
+$string['clientcoldynamic'] = '动态';
+$string['clientcolenabled'] = '已启用';
+$string['clientcollastused'] = '最近使用';
+$string['clientcolname'] = '名称';
+$string['clientcoltype'] = '类型';
+$string['connectionactions'] = '操作';
+$string['connectionactivelist'] = '有效的 OAuth 连接';
+$string['connectionclient'] = '客户端';
+$string['connectioncreated'] = '创建时间';
+$string['connectionguideoauthresource'] = '资源';
+$string['connectionguideoauthserverbase'] = '授权服务器基础 URL';
+$string['connectionguideoauthregisterurl'] = '注册 URL';
+$string['connectionguideoauthtokenurl'] = '令牌 URL';
+$string['connectionguideoauthauthorizeurl'] = '授权 URL';
+$string['connectionguideacknowledgementhelp'] = '在 ChatGPT 中阅读安全提示，勾选此确认项，然后点击 Create as plugin 完成操作。本页面仅用于演示这些字段。';
+$string['connectionguiderisknotice'] = '自定义 MCP 服务器可以在您授予的权限范围内访问数据。请仅连接您信任的服务器。';
+$string['connectionguideacknowledgement'] = '我已了解并希望继续';
+$string['connectionguideadvanced'] = '高级 OAuth 设置';
+$string['connectionguideadvancedhelp'] = 'ChatGPT 通常会自动发现这些端点。如需手动输入，请复制下方的值，尤其是以 /local/mcp/server.php 结尾的授权服务器基础 URL。';
+$string['connectionguideadvancedpreview'] = '查看已发现的 OAuth 端点，或在 ChatGPT 中手动输入。';
+$string['connectionguideauthentication'] = '身份验证';
+$string['connectionguideconnected'] = '已检测到有效的 ChatGPT OAuth 连接。您可以使用本指南配置其他连接。';
+$string['connectionguideconnection'] = '连接';
+$string['connectionguidecreate'] = '创建为插件';
+$string['connectionguidecreatehelp'] = '在 ChatGPT 中点击 Create as plugin，完成安装，然后登录 Moodle 并批准请求的读取/写入权限。';
+$string['connectionguidedescription'] = '描述（可选）';
+$string['connectionguidedescriptionexample'] = '通过 ChatGPT 访问 Moodle 课程、活动和工具。';
+$string['connectionguidedescriptionhelp'] = '描述服务器的功能。例如：访问 Moodle 中的课程、用户和活动。';
+$string['connectionguidedocumentation'] = '阅读完整连接指南';
+$string['connectionguideeyebrow'] = 'Moodle MCP · ChatGPT 配置';
+$string['connectionguidefinalbody'] = '打开使用新插件的对话，通过 OAuth 连接并在 Moodle 中授权访问。您可以在 Moodle MCP 管理区域查看已授权的 OAuth 客户端和连接。';
+$string['connectionguidefinaltitle'] = '创建插件后';
+$string['connectionguideformtitle'] = '添加自定义 MCP 服务器';
+$string['connectionguideicon'] = '图标（可选）';
+$string['connectionguideiconhelp'] = '点击 ChatGPT 中的加号并上传自己的 PNG 图标。请使用至少 256 × 256 像素的方形图标，并将文件压缩到 10 KB 或更小。图标不是必需的，但有助于识别您的 Moodle 站点。';
+$string['connectionguideiconhint'] = '仅支持 PNG。建议：256 × 256 像素或更大，最大 10 KB。';
+$string['connectionguideinstructionsintro'] = '将每个编号字段与左侧示例对应。';
+$string['connectionguideintro'] = '通过 MCP 协议将 Moodle 连接到 ChatGPT。按照 Add custom MCP server 对话框中显示的字段操作。本页面仅提供图示说明，实际连接需要在 ChatGPT 中创建。';
+$string['connectionguidename'] = '名称';
+$string['connectionguidenamehelp'] = '输入 Moodle MCP，或者使用 Moodle MCP – 我的学校等便于识别的名称。';
+$string['connectionguideoauthhelp'] = '选择 OAuth。此 Moodle MCP 使用 OAuth 授权流程，无需手动令牌，也不需要选择 No authentication。';
+$string['connectionguidepreviewnotice'] = '这是 ChatGPT 字段的预览。要创建连接，请打开 ChatGPT 并在其中填写表单。';
+$string['connectionguidesafety'] = '安全确认';
+$string['connectionguidesafetyhelp'] = '请阅读安全警告，仅在信任此 Moodle 服务器时选择 I understand and want to continue。';
+$string['connectionguidesteps'] = '各字段的填写说明';
+$string['connectionguidetitle'] = '将 Moodle 连接到 ChatGPT';
+$string['connectionguidetunnelmode'] = '隧道';
+$string['connectionguideurlhelp'] = '选择 Server URL（而不是 Tunnel）。复制示例中的地址并粘贴到 ChatGPT。使用以 /local/mcp/server.php 结尾的 HTTPS URL，不要添加其他参数。';
+$string['connectionguideurlmode'] = '服务器 URL';
+$string['connectionlastused'] = '最近使用';
+$string['connectionnoneactive'] = '当前没有有效的 OAuth 连接。';
+$string['connectionrevoke'] = '撤销访问权限';
+$string['connectionrevoked'] = '连接已被撤销，其令牌也已失效。';
+$string['connections'] = '连接';
+$string['connectionscopes'] = '权限范围';
+$string['connectionuser'] = '用户';
+$string['dashboard'] = '控制面板';
+$string['dashboardactivitychart'] = '每日查询和更改';
+$string['dashboardactivityheading'] = '工具活动';
+$string['dashboardactivityhelp'] = '按您的时区统计最近 7 天。活动包括查询、预览、待批准操作和错误；只有已批准并完成的更改才会修改 Moodle 数据。';
+$string['dashboardcalls'] = '调用次数';
+$string['dashboardclients'] = '有效的 OAuth 客户端';
+$string['dashboardconnections'] = '有效连接';
+$string['dashboarddestructivetoday'] = '今天已完成的破坏性更改';
+$string['dashboardexamples'] = '可用操作示例';
+$string['dashboardmoretools'] = '另有 {$a} 项';
+$string['dashboardnoactivity'] = '最近 7 天内未记录到 ChatGPT、Claude 或其他 MCP 连接应用的操作。';
+$string['dashboardoverview'] = 'AI 集成概览（MCP）';
+$string['dashboardplugin'] = '插件';
+$string['dashboardpluginschart'] = '按插件查看可用更改操作';
+$string['dashboardquicklinks'] = '控制面板快捷链接';
+$string['dashboardreadtoday'] = '今日查询';
+$string['dashboardstatuschart'] = '调用状态（最近 7 天）';
+$string['dashboardstatuserror'] = '错误';
+$string['dashboardstatusok'] = '已成功完成';
+$string['dashboardstatuspending'] = '等待确认';
+$string['dashboardstatuspreview'] = '模拟运行';
+$string['dashboardtodaydescription'] = '今天记录的 AI 应用连接和操作状态。';
+$string['dashboardtools'] = '工具';
+$string['dashboardtotaltools'] = '可用更改操作';
+$string['dashboardviewall'] = '查看所有可用更改操作';
+$string['dashboardwritecompletedtoday'] = '今天已完成的更改';
+$string['dashboardwritesummary'] = '按插件查看可用更改操作';
+$string['dashboardwritesummaryhelp'] = '从已启用的 Moodle 插件中自动发现的更改操作。';
+$string['dashboardwritetoday'] = '今日更改请求';
+$string['error'] = 'MCP API 错误';
+$string['importgiftquestionbank'] = '导入 GIFT 题库';
+$string['importgiftquestionbank_desc'] = '在一次经过确认的操作中，将最多 500 道 UTF-8 编码的 GIFT 题目导入现有分类（categoryid），或新建分类（name）。';
+$string['mcp:manage'] = '管理 Moodle MCP';
+$string['newconnection'] = '新建连接';
+$string['oauthclientdisable'] = '禁用客户端';
+$string['oauthclientdisabled'] = 'OAuth 客户端已禁用，其所有连接和令牌均已撤销。';
+$string['oauthclients'] = 'OAuth 客户端';
+$string['oauthconsentapplication'] = '外部应用';
+$string['oauthconsentconnection'] = '外部应用与此 Moodle 站点之间的连接';
+$string['oauthconsentdestination'] = '您的 Moodle 站点';
+$string['oauthconsenteyebrow'] = 'OAuth 授权请求';
+$string['oauthconsentfooter'] = '请只授权您认识并信任的应用。';
+$string['oauthconsentpermissions'] = '请求的权限';
+$string['oauthconsentpermissionsintro'] = '请检查此应用将被允许代表您执行哪些操作。';
+$string['oauthconsentreadsummary'] = '允许 ChatGPT、Claude 或其他通过 MCP 连接的应用查看 Moodle 只读工具可访问的信息。';
+$string['oauthconsentsecuritybody'] = '此连接不能超出您 Moodle 账户的权限。某些敏感操作需要额外确认。您可以随时撤销访问权限。';
+$string['oauthconsentsecuritytitle'] = '您的 Moodle 权限仍然有效';
+$string['oauthconsenttitle'] = '授权新连接';
+$string['oauthconsentwritesummary'] = '允许 ChatGPT、Claude 或其他通过 MCP 连接的应用使用您账户有权访问的写入工具创建、修改或删除数据，但每次操作均需确认。';
+$string['pluginname'] = 'Moodle MCP';
+$string['privacy:metadata:local_mcp_access_token'] = '存储 OAuth 访问令牌标识符、用户关联信息、权限范围、使用时间和 IP 地址。';
+$string['privacy:metadata:local_mcp_audit'] = '存储 MCP 活动的安全和操作元数据。';
+$string['privacy:metadata:local_mcp_auth_code'] = '存储与用户关联的一次性 OAuth 授权码元数据。';
+$string['privacy:metadata:local_mcp_confirm'] = '存储与用户绑定的 MCP 写入操作确认记录。';
+$string['privacy:metadata:local_mcp_connections'] = '存储已授权的 MCP 连接。';
+$string['privacy:metadata:local_mcp_refresh_token'] = '存储 OAuth 刷新令牌元数据、用户关联信息及生命周期时间戳。';
+$string['privacy:metadata:mcp_client'] = '通过 MCP 协议连接的 ChatGPT、Claude 等已授权 AI 应用，可以根据用户权限和请求的操作接收已启用工具返回的信息。';
+$string['privacy:metadata:mcp_client:activities'] = '已授权的 MCP 工具可能返回活动、提交内容和完成情况。';
+$string['privacy:metadata:mcp_client:courses'] = '已授权的 MCP 工具可能返回课程和选课数据。';
+$string['privacy:metadata:mcp_client:grades'] = '已授权的 MCP 工具可能返回成绩和评估信息。';
+$string['privacy:metadata:mcp_client:otherdata'] = '经授权用户请求时，可能返回已安装 MCP 工具可以访问的其他数据。';
+$string['privacy:metadata:mcp_client:userid'] = '可能发送 Moodle 用户标识符，以标识已授权用户或查询结果。';
+$string['privacy:metadata:mcp_client:userprofile'] = '已授权的 MCP 工具可能返回用户个人资料信息。';
+$string['readapis'] = '读取 API';
+$string['readapiscount'] = '读取工具：{$a}';
+$string['readapisempty'] = '没有可用的读取工具。';
+$string['readapisviewall'] = '查看此插件中的所有读取工具';
+$string['readpermissions'] = '读取权限';
+$string['settings'] = '设置';
+$string['settingsaccessttl'] = '访问令牌有效期';
+$string['settingsaccessttl_desc'] = 'OAuth 访问令牌的默认有效期。';
+$string['settingsauditretention'] = '审计记录保留天数';
+$string['settingscodettl'] = '授权码有效期';
+$string['settingscodettl_desc'] = '授权码有效期短且只能使用一次。';
+$string['settingsconfirmationttl'] = '确认令牌有效期';
+$string['settingsconfirmationttl_desc'] = '一次性写入确认令牌的有效期。';
+$string['settingslogmessages'] = '将 MCP JSON 消息记录到 PHP error_log';
+$string['settingsdebuglogging'] = '将 MCP 诊断事件记录到 PHP error_log';
+$string['settingsdebuglogging_desc'] = '记录结构化的 MCP 调用阶段、结果和经过清理的异常元数据。默认禁用，无需更改 config.php。仅在排查问题时临时启用，并限制对 PHP 日志的访问。';
+$string['settingslogmessages_desc'] = '可选地在 server/read/write 端点跟踪 JSON-RPC 请求体；默认关闭，且仅在 MCP 诊断日志启用时生效。已知密钥和二进制数据会被遮蔽，但仍可能包含 Moodle 个人数据。请仅临时启用，限制 PHP 日志访问并在排查后关闭。';
+$string['settingsrateoauth'] = 'OAuth 请求数/分钟';
+$string['settingsrateread'] = '读取请求数/分钟';
+$string['settingsratewrite'] = '写入请求数/分钟';
+$string['settingsrefreshttl'] = '刷新令牌有效期';
+$string['settingsrefreshttl_desc'] = 'OAuth 刷新令牌的默认有效期。';
+$string['subplugintype_mcptool'] = 'MCP 活动工具';
+$string['subplugintype_mcptool_plural'] = 'MCP 活动工具';
+$string['writeapis'] = '写入 API';
+$string['writeapiscolcapability'] = '权限';
+$string['writeapiscolconfirmation'] = '确认';
+$string['writeapiscoldescription'] = '描述';
+$string['writeapiscoldestructive'] = '破坏性';
+$string['writeapiscoldryrun'] = '模拟运行';
+$string['writeapiscolname'] = '名称';
+$string['writeapiscount'] = '写入工具：{$a}';
+$string['writeapisempty'] = '没有可用的写入工具。';
+$string['writeapisonlyread'] = '仅提供读取 API 的已安装插件';
+$string['writeapisonlyreadhelp'] = '这些集成可通过 MCP 读取访问，但不支持写入。打开相应的读取 API 列表可以查看所有工具。安装顺序不会改变 API 类型。';
+$string['writepermissions'] = '写入权限';
+
+$string['connectionguidetablabel'] = '选择 AI 应用';
+$string['connectionguidetabother'] = '其他 AI';
+$string['connectionguideclaudetitle'] = '将 Moodle 连接到 Claude';
+$string['connectionguideclaudeintro'] = '在 Claude 中添加指向此 MCP 服务器的自定义 Web 连接器。Moodle 通过 OAuth 处理登录。';
+$string['connectionguideclaudestep1'] = '在 Claude 中打开 Customize > Connectors > Add custom connector。组织所有者可以使用 Organization settings > Connectors > Add > Custom > Web。';
+$string['connectionguideclaudestep2'] = '为连接器命名，粘贴上方显示的 MCP 服务器 URL，然后继续配置身份验证。';
+$string['connectionguideclaudestep3'] = '选择 Sign in now 或 Sign in when needed，并在 OAuth client 下选择 Register automatically (DCR)。不要选择 No sign in，也无需创建客户端密钥。';
+$string['connectionguideclaudestep4'] = '完成添加连接器，点击 Connect，登录 Moodle 并授予请求的权限范围。使用工具前，请在 Claude 对话中启用该连接器。';
+$string['connectionguideclaudenote'] = 'Claude 必须能够通过 HTTPS 访问 MCP 服务器。写入工具需要 mcp:write 权限范围、Moodle 权限以及在更改前进行明确确认。';
+$string['connectionguideopenclaude'] = '打开 Claude';
+$string['connectionguideclaudedocs'] = 'Claude 官方文档';
+$string['connectionguideothertitle'] = '连接其他 AI 应用';
+$string['connectionguideotherintro'] = '适用于支持通过 Streamable HTTP 连接远程 MCP 服务器以及 Moodle 所需 OAuth 流程的客户端。不同应用中的设置名称可能有所不同。';
+$string['connectionguideotherstep1'] = '使用 Streamable HTTP 传输方式添加远程 MCP 服务器，并输入上方的 HTTPS URL。不要在 URL 中使用 Moodle Web Service 令牌。';
+$string['connectionguideotherstep2'] = '配置使用 PKCE S256 的 OAuth 授权码流程。如果支持，可使用动态客户端注册（RFC 7591）自动注册客户端。';
+$string['connectionguideotherstep3'] = 'OAuth 自动发现请使用以 /local/mcp/server.php 结尾的授权服务器基础 URL。如需手动配置，请使用下方端点，并使 OAuth 资源与 MCP 端点 URL 保持一致。';
+$string['connectionguideotherstep4'] = '登录 Moodle，批准 mcp:read，并在需要时批准 mcp:write。检查可用工具并分别确认每次写入操作。';
+$string['connectionguideotheradvanced'] = '不支持自动发现的客户端 URL。';
+$string['connectionguideothernote'] = '兼容性取决于客户端是否支持远程 MCP、OAuth、PKCE 和客户端注册。local_mcp 不使用 URL 中的令牌进行身份验证，手动填写这些设置也无需访问 Nginx。';
+$string['connectionguidechatgptstarttitle'] = '开始配置 ChatGPT';
+$string['connectionguidechatgptstartintro'] = '打开 Plugins 区域，按以下步骤添加此 Moodle MCP 服务器。';
+$string['connectionguidechatgptstartstep1'] = '使用下方按钮打开 ChatGPT Plugins。';
+$string['connectionguidechatgptstartstep2'] = '点击右上角的 Add。';
+$string['connectionguidechatgptstartstep3'] = '选择 Add custom MCP server，并使用下方表单显示的 URL。';
+$string['connectionguidechatgptstartaction'] = '打开 ChatGPT Plugins';
+$string['connectionguideclaudestarttitle'] = '开始配置 Claude';
+$string['connectionguideclaudestartintro'] = '在 Claude 连接器设置中将此 Moodle 添加为自定义连接器。';
+$string['connectionguideclaudestartstep1'] = '在 Claude 中打开 Customize > Connectors。';
+$string['connectionguideclaudestartstep2'] = '选择 Add custom connector，再选择 Web。';
+$string['connectionguideclaudestartstep3'] = '输入下方显示的 MCP 服务器 URL，然后通过 OAuth 连接您的 Moodle 账户。';
