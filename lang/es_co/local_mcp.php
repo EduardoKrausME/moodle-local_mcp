@@ -25,6 +25,6 @@
 defined('MOODLE_INTERNAL') || die;
 
 // Only strings that differ from the parent language (es) are defined here.
-$string['privacy:metadata:mcp_client:courses'] = 'Las herramientas MCP autorizadas pueden devolver datos de cursos e inscripciones.';
-$string['connectionguidenamehelp'] = 'Ingresa Moodle MCP o un nombre distintivo, como Moodle MCP – Mi institución.';
 $string['connectionguideiconhelp'] = 'Haz clic en el signo más de ChatGPT y carga tu propio ícono PNG. Usa un ícono cuadrado de al menos 256 × 256 píxeles y comprímelo a 10 KB o menos. Es opcional, pero ayuda a identificar tu Moodle.';
+$string['connectionguidenamehelp'] = 'Ingresa Moodle MCP o un nombre distintivo, como Moodle MCP – Mi institución.';
+$string['privacy:metadata:mcp_client:courses'] = 'Las herramientas MCP autorizadas pueden devolver datos de cursos e inscripciones.';

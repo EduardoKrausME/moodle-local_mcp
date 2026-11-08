@@ -25,6 +25,6 @@
 defined('MOODLE_INTERNAL') || die;
 
 // Only strings that differ from the parent language (fr) are defined here.
+$string['connectionguidedescription'] = 'Description (optionnelle)';
 $string['connectionguidefinalbody'] = 'Ouvrez un clavardage avec le nouveau plugin, connectez-vous par OAuth et autorisez l’accès dans Moodle. Vous pouvez consulter les clients OAuth et les connexions autorisés dans l’administration de Moodle MCP.';
 $string['connectionguideicon'] = 'Icône (optionnelle)';
-$string['connectionguidedescription'] = 'Description (optionnelle)';
