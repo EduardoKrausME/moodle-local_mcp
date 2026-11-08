@@ -43,7 +43,7 @@ final class capability_guard {
     public static function check(string $capability, context $context, int $userid): void {
         $allowed = has_capability($capability, $context, $userid);
 
-        // moodle/course:view permits privileged observers, but active enrolment is
+        // The moodle/course:view capability permits privileged observers, but active enrolment is
         // the ordinary way students and teachers access their own courses.
         if (!$allowed && $capability === "moodle/course:view" && $context instanceof \context_course) {
             $allowed = can_access_course(get_course((int)$context->instanceid), $userid, "", true);

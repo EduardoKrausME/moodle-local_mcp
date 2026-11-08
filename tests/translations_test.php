@@ -28,6 +28,8 @@ use advanced_testcase;
 
 /**
  * Verify that administration strings are available in both supported languages.
+ *
+ * @coversNothing
  */
 final class translations_test extends advanced_testcase {
     /**
