@@ -25,4 +25,3 @@
 defined('MOODLE_INTERNAL') || die;
 
 // Only strings that differ from the parent language (en) are defined here.
-
