@@ -1,0 +1,266 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * local_mcp.php
+ *
+ * @package   local_mcp
+ * @copyright 2026 Eduardo Kraus {@link https://eduardokraus.com}
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die;
+
+$string['audit'] = 'Audit';
+$string['auditclient'] = 'Client OAuth';
+$string['auditconfirmed'] = 'Confirmé';
+$string['auditconnection'] = 'ID de connexion';
+$string['auditduration'] = 'Durée (ms)';
+$string['auditevent'] = 'Événement';
+$string['auditexport'] = 'Exporter le CSV filtré (5 000 lignes maximum)';
+$string['auditnone'] = 'Aucun enregistrement d’audit correspondant.';
+$string['auditobjects'] = 'Noms des champs / ID des entités / nombres';
+$string['auditonlychatgpt'] = 'Connexions ChatGPT uniquement';
+$string['auditprivacy'] = 'Enregistre les appels d’outils effectués par ChatGPT, Claude ou d’autres applications d’IA via MCP, notamment les confirmations, les échecs et les identifiants d’entité non sensibles. Le texte des conversations, les identifiants de connexion et les valeurs des contenus ne sont pas conservés. Seules les opérations envoyées à ce site Moodle peuvent être auditées.';
+$string['auditrequestid'] = 'ID de requête';
+$string['auditresults'] = 'Enregistrements d’audit correspondants : {$a}';
+$string['auditside'] = 'Côté';
+$string['auditstatus'] = 'Statut';
+$string['audittool'] = 'Outil';
+$string['audituser'] = 'Utilisateur';
+$string['audituserid'] = 'ID utilisateur Moodle';
+$string['auditwhen'] = 'Date et heure';
+$string['authorizationdeniedbody'] = 'Connectez-vous avec un compte Moodle actif pour autoriser ChatGPT, Claude ou une autre application d’IA compatible avec le protocole MCP. Les comptes invités ne peuvent pas se connecter.';
+$string['authorizationdeniedtitle'] = 'Connexion non autorisée';
+$string['authorize'] = 'Autoriser la connexion';
+$string['authorizeheading'] = 'Connecter {$a} à Moodle';
+$string['authorizeintro'] = '{$a} demande à accéder à ce Moodle.';
+$string['backtodashboard'] = 'Retour au tableau de bord';
+$string['cachedef_ratelimit'] = 'Cache de limitation du débit';
+$string['cachedef_tooldefinitions'] = 'Cache des définitions des outils';
+$string['cancel'] = 'Annuler';
+$string['chatgptsetupcopied'] = 'URL du serveur copiée.';
+$string['chatgptsetupcopy'] = 'Copier l’URL';
+$string['chatgptsetupcopyfallback'] = 'Sélectionnez et copiez l’URL surlignée.';
+$string['chatgptsetupdcrdisabled'] = 'L’enregistrement dynamique des clients OAuth est désactivé. Activez-le avant de connecter ChatGPT.';
+$string['chatgptsetupdiscoveryhelp'] = 'Si la découverte OAuth échoue, consultez les métadonnées publiées directement par Moodle MCP à cette URL :';
+$string['chatgptsetupfinish'] = 'Une fois l’autorisation terminée, rechargez cette page. Ce guide disparaîtra automatiquement dès qu’une connexion ChatGPT active sera détectée.';
+$string['chatgptsetuphttpsdisabled'] = 'Ce site Moodle ne dispose pas d’une URL HTTPS configurée. Pour connecter ChatGPT via MCP, le serveur doit être accessible sur Internet en HTTPS.';
+$string['chatgptsetupintro'] = 'Connectez ce site Moodle à ChatGPT à l’aide du protocole MCP. Aucune connexion ChatGPT n’est encore active ; suivez ces étapes pour configurer un accès sécurisé.';
+$string['chatgptsetupnewtab'] = 's’ouvre dans un nouvel onglet';
+$string['chatgptsetupopenchatgpt'] = 'Ouvrir ChatGPT';
+$string['chatgptsetupopensettings'] = 'Ouvrir les paramètres de Moodle MCP';
+$string['chatgptsetupserverlabel'] = 'URL du serveur MCP';
+$string['chatgptsetupstep1body'] = 'Cliquez sur le bouton ci-dessous pour ouvrir ChatGPT dans un nouvel onglet et vous connecter.';
+$string['chatgptsetupstep1title'] = 'Ouvrir ChatGPT';
+$string['chatgptsetupstep2body'] = 'Dans ChatGPT sur le Web, ouvrez Plugins, cliquez sur +, puis sélectionnez Add custom MCP server. Nommez-le Moodle MCP et choisissez l’authentification OAuth avec enregistrement dynamique du client (DCR).';
+$string['chatgptsetupstep2title'] = 'Ajouter un serveur MCP personnalisé';
+$string['chatgptsetupstep3body'] = 'Collez l’adresse suivante dans le champ Server URL de ChatGPT :';
+$string['chatgptsetupstep3title'] = 'Saisir l’URL de ce serveur Moodle';
+$string['chatgptsetupstep4body'] = 'Lisez l’avertissement de sécurité, sélectionnez I understand and want to continue, puis cliquez sur Create as a plugin. Installez le plugin créé si nécessaire.';
+$string['chatgptsetupstep4title'] = 'Créer et installer le plugin';
+$string['chatgptsetupstep5body'] = 'Ouvrez une conversation dans ChatGPT et utilisez l’intégration Moodle MCP. Lorsque cela vous est demandé, connectez-vous avec un compte Moodle actif (pas un compte invité) et approuvez les autorisations de lecture et d’écriture demandées. Les outils restent soumis à vos permissions Moodle.';
+$string['chatgptsetupstep5title'] = 'Autoriser l’accès à Moodle';
+$string['chatgptsetuptitle'] = 'Connecter votre site Moodle à ChatGPT';
+$string['chatgptsetuptroubleshooting'] = 'Résoudre les problèmes de découverte OAuth';
+$string['clientcolclientid'] = 'ID du client';
+$string['clientcolcreated'] = 'Créé';
+$string['clientcoldynamic'] = 'Dynamique';
+$string['clientcolenabled'] = 'Activé';
+$string['clientcollastused'] = 'Dernière utilisation';
+$string['clientcolname'] = 'Nom';
+$string['clientcoltype'] = 'Type';
+$string['connectionactions'] = 'Actions';
+$string['connectionactivelist'] = 'Connexions OAuth actives';
+$string['connectionclient'] = 'Client';
+$string['connectioncreated'] = 'Créé';
+$string['connectionguideoauthresource'] = 'Ressource';
+$string['connectionguideoauthserverbase'] = 'URL de base du serveur d’autorisation';
+$string['connectionguideoauthregisterurl'] = 'URL d’enregistrement';
+$string['connectionguideoauthtokenurl'] = 'URL du jeton';
+$string['connectionguideoauthauthorizeurl'] = 'URL d’autorisation';
+$string['connectionguideacknowledgementhelp'] = 'Dans ChatGPT, lisez l’avertissement de sécurité, cochez cette confirmation, puis terminez avec Create as plugin. Cette page présente uniquement les champs à remplir.';
+$string['connectionguiderisknotice'] = 'Les serveurs MCP personnalisés peuvent accéder aux données autorisées par les permissions que vous accordez. Connectez-vous uniquement à des serveurs de confiance.';
+$string['connectionguideacknowledgement'] = 'Je comprends et souhaite continuer';
+$string['connectionguideadvanced'] = 'Paramètres OAuth avancés';
+$string['connectionguideadvancedhelp'] = 'ChatGPT découvre normalement ces points de terminaison automatiquement. Si vous devez les saisir manuellement, copiez les valeurs ci-dessous, en particulier l’URL de base du serveur d’autorisation se terminant par /local/mcp/server.php.';
+$string['connectionguideadvancedpreview'] = 'Consultez les points de terminaison OAuth découverts ou saisissez-les manuellement dans ChatGPT.';
+$string['connectionguideauthentication'] = 'Authentification';
+$string['connectionguideconnected'] = 'Une connexion OAuth ChatGPT active a été détectée. Vous pouvez suivre ces instructions pour configurer une autre connexion.';
+$string['connectionguideconnection'] = 'Connexion';
+$string['connectionguidecreate'] = 'Créer comme plugin';
+$string['connectionguidecreatehelp'] = 'Dans ChatGPT, cliquez sur Create as plugin, terminez l’installation, puis connectez-vous à Moodle et approuvez les permissions de LECTURE/ÉCRITURE demandées.';
+$string['connectionguidedescription'] = 'Description (facultatif)';
+$string['connectionguidedescriptionexample'] = 'Accéder aux cours, activités et outils Moodle depuis ChatGPT.';
+$string['connectionguidedescriptionhelp'] = 'Décrivez ce que fait le serveur. Par exemple : Accéder aux cours, utilisateurs et activités de Moodle.';
+$string['connectionguidedocumentation'] = 'Lire le guide complet de connexion';
+$string['connectionguideeyebrow'] = 'Moodle MCP · Configuration ChatGPT';
+$string['connectionguidefinalbody'] = 'Ouvrez une conversation avec le nouveau plugin, connectez-vous via OAuth et autorisez l’accès dans Moodle. Vous pouvez consulter les clients OAuth et connexions autorisés dans l’administration de Moodle MCP.';
+$string['connectionguidefinaltitle'] = 'Après la création du plugin';
+$string['connectionguideformtitle'] = 'Ajouter un serveur MCP personnalisé';
+$string['connectionguideicon'] = 'Icône (facultatif)';
+$string['connectionguideiconhelp'] = 'Cliquez sur le signe plus dans ChatGPT et téléversez votre icône PNG. Utilisez une image carrée d’au moins 256 × 256 pixels et compressez-la à 10 Ko maximum. L’icône est facultative, mais permet d’identifier votre Moodle.';
+$string['connectionguideiconhint'] = 'PNG uniquement. Recommandé : 256 × 256 px ou plus, 10 Ko maximum.';
+$string['connectionguideinstructionsintro'] = 'Faites correspondre chaque champ numéroté à l’exemple de gauche.';
+$string['connectionguideintro'] = 'Connectez Moodle à ChatGPT avec le protocole MCP. Suivez les champs affichés dans la fenêtre Add custom MCP server ; cette page est un guide illustré et la connexion est créée dans ChatGPT.';
+$string['connectionguidename'] = 'Nom';
+$string['connectionguidenamehelp'] = 'Saisissez Moodle MCP ou un nom distinctif, par exemple Moodle MCP – Mon école.';
+$string['connectionguideoauthhelp'] = 'Choisissez OAuth. Moodle MCP utilise le flux d’autorisation OAuth ; aucun jeton manuel ni option No authentication n’est nécessaire.';
+$string['connectionguidepreviewnotice'] = 'Aperçu des champs de ChatGPT. Pour créer la connexion, ouvrez ChatGPT et remplissez le formulaire.';
+$string['connectionguidesafety'] = 'Confirmation de sécurité';
+$string['connectionguidesafetyhelp'] = 'Lisez l’avertissement de sécurité et sélectionnez I understand and want to continue uniquement si vous faites confiance à ce serveur Moodle.';
+$string['connectionguidesteps'] = 'Que renseigner dans chaque champ';
+$string['connectionguidetitle'] = 'Connecter votre Moodle à ChatGPT';
+$string['connectionguidetunnelmode'] = 'Tunnel';
+$string['connectionguideurlhelp'] = 'Choisissez Server URL (pas Tunnel). Copiez l’adresse de l’exemple et collez-la dans ChatGPT. Utilisez l’URL HTTPS se terminant par /local/mcp/server.php, sans paramètres supplémentaires.';
+$string['connectionguideurlmode'] = 'URL du serveur';
+$string['connectionlastused'] = 'Dernière utilisation';
+$string['connectionnoneactive'] = 'Aucune connexion OAuth active.';
+$string['connectionrevoke'] = 'Révoquer l’accès';
+$string['connectionrevoked'] = 'La connexion a été révoquée et ses jetons ont été invalidés.';
+$string['connections'] = 'Connexions';
+$string['connectionscopes'] = 'Portées';
+$string['connectionuser'] = 'Utilisateur';
+$string['dashboard'] = 'Tableau de bord';
+$string['dashboardactivitychart'] = 'Consultations et modifications par jour';
+$string['dashboardactivityheading'] = 'Activité des outils';
+$string['dashboardactivityhelp'] = 'Les 7 derniers jours selon votre fuseau horaire. L’activité comprend les consultations, aperçus, approbations en attente et erreurs ; seules les modifications approuvées et terminées changent les données Moodle.';
+$string['dashboardcalls'] = 'Appels';
+$string['dashboardclients'] = 'Clients OAuth actifs';
+$string['dashboardconnections'] = 'Connexions actives';
+$string['dashboarddestructivetoday'] = 'Modifications destructives effectuées aujourd’hui';
+$string['dashboardexamples'] = 'Exemples d’actions disponibles';
+$string['dashboardmoretools'] = '+ {$a} autres';
+$string['dashboardnoactivity'] = 'Aucune opération de ChatGPT, Claude ou d’autres applications connectées via MCP n’a été auditée au cours des 7 derniers jours.';
+$string['dashboardoverview'] = 'Vue d’ensemble de l’intégration de l’IA (MCP)';
+$string['dashboardplugin'] = 'Plugin';
+$string['dashboardpluginschart'] = 'Actions de modification disponibles par plugin';
+$string['dashboardquicklinks'] = 'Raccourcis du tableau de bord';
+$string['dashboardreadtoday'] = 'Consultations aujourd’hui';
+$string['dashboardstatuschart'] = 'Statuts des appels (7 derniers jours)';
+$string['dashboardstatuserror'] = 'Erreur';
+$string['dashboardstatusok'] = 'Terminé avec succès';
+$string['dashboardstatuspending'] = 'En attente de confirmation';
+$string['dashboardstatuspreview'] = 'Simulation';
+$string['dashboardtodaydescription'] = 'État des connexions et opérations des applications d’IA enregistrées aujourd’hui.';
+$string['dashboardtools'] = 'Outils';
+$string['dashboardtotaltools'] = 'Actions de modification disponibles';
+$string['dashboardviewall'] = 'Voir toutes les actions de modification disponibles';
+$string['dashboardwritecompletedtoday'] = 'Modifications effectuées aujourd’hui';
+$string['dashboardwritesummary'] = 'Actions de modification disponibles par plugin';
+$string['dashboardwritesummaryhelp'] = 'Actions de modification détectées automatiquement dans les plugins Moodle activés.';
+$string['dashboardwritetoday'] = 'Demandes de modification aujourd’hui';
+$string['error'] = 'Erreur de l’API MCP';
+$string['importgiftquestionbank'] = 'Importer une banque de questions GIFT';
+$string['importgiftquestionbank_desc'] = 'Importer jusqu’à 500 questions GIFT en UTF-8 dans une catégorie existante (categoryid) ou créer une catégorie (name), en une seule opération confirmée.';
+$string['mcp:manage'] = 'Gérer Moodle MCP';
+$string['newconnection'] = 'Nouvelle connexion';
+$string['oauthclientdisable'] = 'Désactiver le client';
+$string['oauthclientdisabled'] = 'Le client OAuth a été désactivé et toutes ses connexions et tous ses jetons ont été révoqués.';
+$string['oauthclients'] = 'Clients OAuth';
+$string['oauthconsentapplication'] = 'Application externe';
+$string['oauthconsentconnection'] = 'Connexion entre l’application externe et ce site Moodle';
+$string['oauthconsentdestination'] = 'Votre site Moodle';
+$string['oauthconsenteyebrow'] = 'Demande d’autorisation OAuth';
+$string['oauthconsentfooter'] = 'N’autorisez que les applications que vous reconnaissez et auxquelles vous faites confiance.';
+$string['oauthconsentpermissions'] = 'Permissions demandées';
+$string['oauthconsentpermissionsintro'] = 'Vérifiez ce que cette application pourra faire en votre nom.';
+$string['oauthconsentreadsummary'] = 'Autoriser ChatGPT, Claude ou une autre application connectée par MCP à consulter les informations disponibles via les outils Moodle en lecture seule.';
+$string['oauthconsentsecuritybody'] = 'Cette connexion ne peut pas dépasser les permissions de votre compte Moodle. Certaines opérations sensibles nécessitent une confirmation supplémentaire. Vous pourrez révoquer l’accès ultérieurement.';
+$string['oauthconsentsecuritytitle'] = 'Vos permissions Moodle restent applicables';
+$string['oauthconsenttitle'] = 'Autoriser une nouvelle connexion';
+$string['oauthconsentwritesummary'] = 'Autoriser ChatGPT, Claude ou une autre application connectée via MCP à créer, modifier ou supprimer des données avec les outils d’écriture accessibles à votre compte, sous réserve de confirmation.';
+$string['pluginname'] = 'Moodle MCP';
+$string['privacy:metadata:local_mcp_access_token'] = 'Stocke les identifiants des jetons d’accès OAuth, les associations aux utilisateurs, les portées, les dates d’utilisation et les adresses IP.';
+$string['privacy:metadata:local_mcp_audit'] = 'Stocke les métadonnées de sécurité et d’opération de l’activité MCP.';
+$string['privacy:metadata:local_mcp_auth_code'] = 'Stocke les métadonnées des codes d’autorisation OAuth à usage unique associés à un utilisateur.';
+$string['privacy:metadata:local_mcp_confirm'] = 'Stocke les enregistrements de confirmation associés à un utilisateur pour les opérations d’écriture MCP.';
+$string['privacy:metadata:local_mcp_connections'] = 'Stocke les connexions MCP autorisées.';
+$string['privacy:metadata:local_mcp_refresh_token'] = 'Stocke les métadonnées des jetons d’actualisation OAuth, leurs associations aux utilisateurs et les horodatages de leur cycle de vie.';
+$string['privacy:metadata:mcp_client'] = 'Les applications d’IA autorisées, telles que ChatGPT et Claude, connectées via MCP peuvent recevoir les informations renvoyées par les outils activés, selon les permissions de l’utilisateur et les opérations demandées.';
+$string['privacy:metadata:mcp_client:activities'] = 'Les outils MCP autorisés peuvent renvoyer les activités, les travaux remis et les informations d’achèvement.';
+$string['privacy:metadata:mcp_client:courses'] = 'Les outils MCP autorisés peuvent renvoyer les données des cours et des inscriptions.';
+$string['privacy:metadata:mcp_client:grades'] = 'Les outils MCP autorisés peuvent renvoyer les notes et les informations d’évaluation.';
+$string['privacy:metadata:mcp_client:otherdata'] = 'D’autres données accessibles par les outils MCP installés peuvent être renvoyées à la demande d’un utilisateur autorisé.';
+$string['privacy:metadata:mcp_client:userid'] = 'Les identifiants des utilisateurs Moodle peuvent être transmis pour identifier l’utilisateur autorisé ou les résultats.';
+$string['privacy:metadata:mcp_client:userprofile'] = 'Les outils MCP autorisés peuvent renvoyer les informations du profil utilisateur.';
+$string['readapis'] = 'API de LECTURE';
+$string['readapiscount'] = 'Outils de LECTURE : {$a}';
+$string['readapisempty'] = 'Aucun outil de LECTURE disponible.';
+$string['readapisviewall'] = 'Voir tous les outils de LECTURE de ce plugin';
+$string['readpermissions'] = 'Permissions de lecture';
+$string['settings'] = 'Paramètres';
+$string['settingsaccessttl'] = 'Durée de vie du jeton d’accès';
+$string['settingsaccessttl_desc'] = 'Durée de vie par défaut des jetons d’accès OAuth.';
+$string['settingsauditretention'] = 'Durée de conservation des audits (jours)';
+$string['settingscodettl'] = 'Durée de vie du code d’autorisation';
+$string['settingscodettl_desc'] = 'Les codes d’autorisation sont à usage unique et de courte durée.';
+$string['settingsconfirmationttl'] = 'Durée de validité de la confirmation';
+$string['settingsconfirmationttl_desc'] = 'Durée de vie du jeton de confirmation d’ÉCRITURE à usage unique.';
+$string['settingslogmessages'] = 'Consigner les messages JSON MCP dans PHP error_log';
+$string['settingsdebuglogging'] = 'Consigner les événements de diagnostic MCP dans PHP error_log';
+$string['settingsdebuglogging_desc'] = 'Enregistre les étapes, les résultats et les métadonnées d’exception assainies des appels MCP. Désactivé par défaut. Aucune modification de config.php n’est nécessaire. Activez temporairement cette option pour le diagnostic et limitez l’accès aux journaux PHP.';
+$string['settingslogmessages_desc'] = 'Traçage facultatif des corps JSON-RPC sur les points de terminaison server/read/write ; désactivé par défaut et actif uniquement si les événements de diagnostic MCP sont aussi journalisés. Les secrets connus et les données binaires sont masqués, mais des données personnelles Moodle peuvent apparaître. Activez-le temporairement, limitez l’accès aux journaux PHP, puis désactivez-le.';
+$string['settingsrateoauth'] = 'Requêtes OAuth/minute';
+$string['settingsrateread'] = 'Requêtes de LECTURE/minute';
+$string['settingsratewrite'] = 'Requêtes d’ÉCRITURE/minute';
+$string['settingsrefreshttl'] = 'Durée de vie du jeton d’actualisation';
+$string['settingsrefreshttl_desc'] = 'Durée de vie par défaut des jetons d’actualisation OAuth.';
+$string['subplugintype_mcptool'] = 'Outil d’activité MCP';
+$string['subplugintype_mcptool_plural'] = 'Outils d’activité MCP';
+$string['writeapis'] = 'API d’ÉCRITURE';
+$string['writeapiscolcapability'] = 'Capacité';
+$string['writeapiscolconfirmation'] = 'Confirmation';
+$string['writeapiscoldescription'] = 'Description';
+$string['writeapiscoldestructive'] = 'Destructif';
+$string['writeapiscoldryrun'] = 'Simulation';
+$string['writeapiscolname'] = 'Nom';
+$string['writeapiscount'] = 'Outils d’ÉCRITURE : {$a}';
+$string['writeapisempty'] = 'Aucun outil d’ÉCRITURE disponible.';
+$string['writeapisonlyread'] = 'Plugins installés avec des API en LECTURE seule';
+$string['writeapisonlyreadhelp'] = 'Ces intégrations sont disponibles en LECTURE MCP, pas en ÉCRITURE. Ouvrez leurs listes d’API en LECTURE pour voir tous les outils. L’ordre d’installation ne change pas le type d’API.';
+$string['writepermissions'] = 'Permissions d’écriture';
+
+$string['connectionguidetablabel'] = 'Choisir une application d’IA';
+$string['connectionguidetabother'] = 'Autre IA';
+$string['connectionguideclaudetitle'] = 'Connecter Moodle à Claude';
+$string['connectionguideclaudeintro'] = 'Dans Claude, ajoutez un connecteur Web personnalisé pointant vers ce serveur MCP. Moodle gère la connexion via OAuth.';
+$string['connectionguideclaudestep1'] = 'Dans Claude, ouvrez Customize > Connectors > Add custom connector. Dans une organisation, un propriétaire peut choisir Organization settings > Connectors > Add > Custom > Web.';
+$string['connectionguideclaudestep2'] = 'Nommez le connecteur, collez l’URL du serveur MCP affichée ci-dessus et poursuivez les paramètres d’authentification.';
+$string['connectionguideclaudestep3'] = 'Choisissez Sign in now ou Sign in when needed et, dans OAuth client, sélectionnez Register automatically (DCR). Ne sélectionnez pas No sign in ; aucun secret client n’est nécessaire.';
+$string['connectionguideclaudestep4'] = 'Terminez l’ajout du connecteur, cliquez sur Connect, connectez-vous à Moodle et accordez les permissions demandées. Activez le connecteur dans votre conversation Claude avant d’utiliser ses outils.';
+$string['connectionguideclaudenote'] = 'Claude doit pouvoir joindre le serveur MCP en HTTPS. Les outils d’écriture nécessitent la portée mcp:write, les permissions Moodle et une confirmation explicite avant toute modification.';
+$string['connectionguideopenclaude'] = 'Ouvrir Claude';
+$string['connectionguideclaudedocs'] = 'Documentation officielle de Claude';
+$string['connectionguideothertitle'] = 'Connecter d’autres applications d’IA';
+$string['connectionguideotherintro'] = 'Utilisez ces paramètres avec un client prenant en charge les serveurs MCP distants via Streamable HTTP et le flux OAuth requis par Moodle. Les noms des paramètres varient selon les applications.';
+$string['connectionguideotherstep1'] = 'Ajoutez un serveur MCP distant avec le transport Streamable HTTP et saisissez l’URL HTTPS ci-dessus. N’utilisez pas de jeton de service Web Moodle dans l’URL.';
+$string['connectionguideotherstep2'] = 'Configurez le flux OAuth Authorization Code avec PKCE S256. Si disponible, utilisez l’enregistrement dynamique du client (RFC 7591) pour enregistrer automatiquement le client.';
+$string['connectionguideotherstep3'] = 'Pour la découverte OAuth, utilisez l’URL de base du serveur d’autorisation se terminant par /local/mcp/server.php. Pour une configuration manuelle, utilisez les points de terminaison ci-dessous et conservez une ressource OAuth identique à l’URL du point de terminaison MCP.';
+$string['connectionguideotherstep4'] = 'Connectez-vous à Moodle, approuvez mcp:read et, si besoin, mcp:write. Vérifiez les outils disponibles et confirmez séparément chaque opération d’écriture.';
+$string['connectionguideotheradvanced'] = 'URL pour les clients sans découverte automatique.';
+$string['connectionguideothernote'] = 'La compatibilité dépend de la prise en charge par le client de MCP distant, OAuth, PKCE et de l’enregistrement de clients. local_mcp ne s’authentifie pas par jeton dans les URL et ne nécessite pas d’accès à Nginx pour saisir manuellement ces paramètres.';
+$string['connectionguidechatgptstarttitle'] = 'Commencer dans ChatGPT';
+$string['connectionguidechatgptstartintro'] = 'Ouvrez la section Plugins et suivez ces étapes pour ajouter ce serveur Moodle MCP.';
+$string['connectionguidechatgptstartstep1'] = 'Ouvrez ChatGPT Plugins avec le bouton ci-dessous.';
+$string['connectionguidechatgptstartstep2'] = 'Cliquez sur Add en haut à droite.';
+$string['connectionguidechatgptstartstep3'] = 'Sélectionnez Add custom MCP server et utilisez l’URL affichée dans le formulaire ci-dessous.';
+$string['connectionguidechatgptstartaction'] = 'Ouvrir ChatGPT Plugins';
+$string['connectionguideclaudestarttitle'] = 'Commencer dans Claude';
+$string['connectionguideclaudestartintro'] = 'Ajoutez ce Moodle comme connecteur personnalisé depuis les paramètres des connecteurs Claude.';
+$string['connectionguideclaudestartstep1'] = 'Dans Claude, ouvrez Customize > Connectors.';
+$string['connectionguideclaudestartstep2'] = 'Sélectionnez Add custom connector, puis Web.';
+$string['connectionguideclaudestartstep3'] = 'Saisissez l’URL du serveur MCP affichée ci-dessous, puis connectez votre compte Moodle via OAuth.';
