@@ -12,6 +12,25 @@
 
 **Deployment:** updating this repository does not install the plugin on a Moodle site. Deploy the files, run Moodle's plugin upgrade, and refresh MCP tool discovery before using the new APIs.
 
+## 1.4.4 - 2026-11-09
+
+- Advertised the combined `server.php` endpoint as the OAuth issuer while retaining legacy issuer discovery compatibility.
+- Removed the dynamic client registration toggle and its registration-endpoint check.
+- Redesigned the connection guide with ChatGPT, Claude and other AI tabs, direct OAuth metadata links and updated onboarding instructions.
+- Moved diagnostic logging configuration into Moodle administration settings and added a settings shortcut to the dashboard.
+- Added translations for Arabic, German, Spanish, French, Italian, Dutch, Russian and Simplified Chinese, including regional language overrides.
+- Removed the callback URL display and unverified-client notice from the consent template.
+
+**Full comparison:** [1.4.2...1.4.4](https://github.com/EduardoKrausME/moodle-local_mcp/compare/1.4.2...1.4.4)
+
+## 1.4.2 - 2026-11-02
+
+- Revised English and Brazilian Portuguese administration labels and README documentation to introduce ChatGPT and Claude before MCP terminology.
+- Added PHP documentation blocks and normalized source headers across activity, grading, cohort and other tools.
+- Updated bundled tool dependency and release metadata.
+
+**Full comparison:** [1.4.1...1.4.2](https://github.com/EduardoKrausME/moodle-local_mcp/compare/1.4.1...1.4.2)
+
 ## 1.4.1 - 2026-10-31
 
 - Added persistent, sequential Moodle workflows with step validation, cancellation, status tracking, optional MCP UI resources and explicit confirmation for each write step.
