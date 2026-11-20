@@ -108,12 +108,10 @@ final class tool_input_validator {
                     continue;
                 }
                 $limit = $schema[$key];
-                $invalid = match ($operator) {
-                    "<" => $value < $limit,
-                    ">" => $value > $limit,
-                    "<=" => $value <= $limit,
-                    ">=" => $value >= $limit,
-                };
+                $invalid = ($operator === "<" && $value < $limit)
+                    || ($operator === ">" && $value > $limit)
+                    || ($operator === "<=" && $value <= $limit)
+                    || ($operator === ">=" && $value >= $limit);
                 if ($invalid) {
                     self::reject($path, "number violates " . $key);
                 }

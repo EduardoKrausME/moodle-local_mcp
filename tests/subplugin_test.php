@@ -274,6 +274,12 @@ final class subplugin_test extends advanced_testcase {
             read_provider_interface,
             write_provider_interface
         {
+            /** @var read\tool_interface Read tool. */
+            private read\tool_interface $readtool;
+
+            /** @var tool_interface Write tool. */
+            private tool_interface $writetool;
+
             /**
              * Set up the class-based provider.
              *
@@ -281,8 +287,10 @@ final class subplugin_test extends advanced_testcase {
              * @param tool_interface $writetool Write tool.
              */
             public function __construct(
-                    private read\tool_interface $readtool,
-                    private tool_interface      $writetool) {
+                    read\tool_interface $readtool,
+                    tool_interface $writetool) {
+                $this->readtool = $readtool;
+                $this->writetool = $writetool;
             }
 
             /**

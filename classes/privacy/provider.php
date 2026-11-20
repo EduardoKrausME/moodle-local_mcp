@@ -93,15 +93,16 @@ final class provider implements
                 "used", "timecreated",
             ],
         ];
+        $metadatakeys = [
+            "local_mcp_connection" => "privacy:metadata:local_mcp_connections",
+            "local_mcp_audit" => "privacy:metadata:local_mcp_audit",
+            "local_mcp_auth_code" => "privacy:metadata:local_mcp_auth_code",
+            "local_mcp_access_token" => "privacy:metadata:local_mcp_access_token",
+            "local_mcp_refresh_token" => "privacy:metadata:local_mcp_refresh_token",
+            "local_mcp_confirm" => "privacy:metadata:local_mcp_confirm",
+        ];
         foreach ($fields as $table => $columns) {
-            $key = match ($table) {
-                "local_mcp_connection" => "privacy:metadata:local_mcp_connections",
-                "local_mcp_audit" => "privacy:metadata:local_mcp_audit",
-                "local_mcp_auth_code" => "privacy:metadata:local_mcp_auth_code",
-                "local_mcp_access_token" => "privacy:metadata:local_mcp_access_token",
-                "local_mcp_refresh_token" => "privacy:metadata:local_mcp_refresh_token",
-                "local_mcp_confirm" => "privacy:metadata:local_mcp_confirm",
-            };
+            $key = $metadatakeys[$table];
             $collection->add_database_table($table, array_fill_keys($columns, $key), $key);
         }
 
