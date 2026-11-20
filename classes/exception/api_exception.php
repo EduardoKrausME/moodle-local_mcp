@@ -30,6 +30,12 @@ use moodle_exception;
  * Class api_exception.
  */
 class api_exception extends moodle_exception {
+    public readonly string $machinecode;
+
+    public readonly int $httpstatus;
+
+    public readonly array $details;
+
     /**
      * Method __construct.
      *
@@ -39,11 +45,14 @@ class api_exception extends moodle_exception {
      * @param array $details Parameter details.
      */
     public function __construct(
-        public readonly string $machinecode,
-        public readonly int    $httpstatus = 400,
+        string $machinecode,
+        int $httpstatus = 400,
         string                 $message = '',
-        public readonly array  $details = [],
+        array $details = [],
     ) {
+        $this->machinecode = $machinecode;
+        $this->httpstatus = $httpstatus;
+        $this->details = $details;
         parent::__construct('error', 'local_mcp', '', null, $message ?: $machinecode);
     }
 }
