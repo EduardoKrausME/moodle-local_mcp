@@ -28,6 +28,20 @@ namespace local_mcp\security;
  * Class authenticated_identity.
  */
 final class authenticated_identity {
+    public readonly int $userid;
+
+    public readonly string $type;
+
+    public readonly array $scopes;
+
+    public readonly ?int $clientid;
+
+    public readonly ?int $connectionid;
+
+    public readonly ?int $tokenid;
+
+    public readonly ?string $family;
+
     /**
      * Method __construct.
      *
@@ -40,14 +54,21 @@ final class authenticated_identity {
      * @param ?string $family Parameter family.
      */
     public function __construct(
-        public readonly int     $userid,
-        public readonly string  $type,
-        public readonly array   $scopes,
-        public readonly ?int    $clientid = null,
-        public readonly ?int    $connectionid = null,
-        public readonly ?int    $tokenid = null,
-        public readonly ?string $family = null,
+        int $userid,
+        string $type,
+        array $scopes,
+        ?int $clientid = null,
+        ?int $connectionid = null,
+        ?int $tokenid = null,
+        ?string $family = null,
     ) {
+        $this->userid = $userid;
+        $this->type = $type;
+        $this->scopes = $scopes;
+        $this->clientid = $clientid;
+        $this->connectionid = $connectionid;
+        $this->tokenid = $tokenid;
+        $this->family = $family;
     }
 
     /**
