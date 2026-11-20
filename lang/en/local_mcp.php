@@ -267,4 +267,3 @@ $string['writeapisempty'] = 'No WRITE tools available.';
 $string['writeapisonlyread'] = 'Installed plugins with READ-only APIs';
 $string['writeapisonlyreadhelp'] = 'These integrations are available through MCP READ, not WRITE. Open their READ API lists to see every tool. Installation order does not change the API type.';
 $string['writepermissions'] = 'Write permissions';
-

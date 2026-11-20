@@ -267,4 +267,3 @@ $string['writeapisempty'] = 'Nenhuma ferramenta WRITE disponível.';
 $string['writeapisonlyread'] = 'Plugins instalados com APIs somente READ';
 $string['writeapisonlyreadhelp'] = 'Essas integrações estão disponíveis pelo MCP READ, não pelo WRITE. Acesse a lista READ para consultar todas as ferramentas. A ordem de instalação não altera o tipo das APIs.';
 $string['writepermissions'] = 'Permissões de gravação';
-
