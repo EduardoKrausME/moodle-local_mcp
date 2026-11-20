@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version = 2026112000;
+$plugin->version = 2026112001;
 $plugin->release = '1.4.5';
 $plugin->component = 'local_mcp';
 $plugin->requires = 2020110900;
