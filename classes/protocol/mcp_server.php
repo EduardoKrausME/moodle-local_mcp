@@ -52,12 +52,15 @@ use Throwable;
  * Class mcp_server.
  */
 final class mcp_server {
+    private readonly string $side;
+
     /**
      * Method __construct.
      *
      * @param string $side Parameter side.
      */
-    public function __construct(private readonly string $side) {
+    public function __construct(string $side) {
+        $this->side = $side;
         if (!in_array($side, ['read', 'write', 'server'], true)) {
             throw new coding_exception('Invalid MCP side.');
         }
