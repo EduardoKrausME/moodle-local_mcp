@@ -36,6 +36,7 @@ use local_mcp\oauth\metadata;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\security\capability_guard;
+use local_mcp\extension\manager as extension_manager;
 use local_mcp\security\confirmation_service;
 use local_mcp\security\rate_limiter;
 use local_mcp\security\scope;
@@ -373,6 +374,16 @@ final class mcp_server {
             if (!$identity->has_scope($requiredscope)) {
                 continue;
             }
+            $visible = true;
+            foreach (extension_manager::access_policies() as $policy) {
+                if (!$policy->tool_visible($identity->userid, $tool->get_name(), $iswrite)) {
+                    $visible = false;
+                    break;
+                }
+            }
+            if (!$visible) {
+                continue;
+            }
             $invalid = false;
             $schema = $this->normalized_tool_schema($tool, $iswrite, $invalid);
             if ($invalid) {
@@ -564,6 +575,10 @@ final class mcp_server {
         }
         $context = $tool->resolve_context($arguments);
         capability_guard::check($tool->get_required_capability(), $context, $identity->userid);
+        // Recheck at execution, including previews and confirmation retries.
+        foreach (extension_manager::access_policies() as $policy) {
+            $policy->authorize_tool($identity->userid, $name, $iswrite, $context, $arguments);
+        }
         if ($workflowid !== "") {
             sequence::assert_current($workflowid, $identity, $workflowstep, $name, $context);
         }
