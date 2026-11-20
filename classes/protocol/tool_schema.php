@@ -24,6 +24,7 @@
 
 namespace local_mcp\protocol;
 
+use local_mcp\compat;
 use stdClass;
 
 /**
@@ -69,7 +70,7 @@ final class tool_schema {
             $field = $path . '.' . $keyword;
             if (in_array($keyword, self::MAPS, true)) {
                 if (is_array($value)) {
-                    if ($value !== [] && \local_mcp\compat::is_list($value)) {
+                    if ($value !== [] && compat::is_list($value)) {
                         self::issue($issues, $field, 'object', 'array', false);
                         continue;
                     }
@@ -91,7 +92,7 @@ final class tool_schema {
                     $schema[$keyword] = self::child($value, $field, $issues);
                 } else {
                     if (in_array($keyword, self::ARRAYS, true)) {
-                        if (!is_array($value) || !\local_mcp\compat::is_list($value)) {
+                        if (!is_array($value) || !compat::is_list($value)) {
                             self::issue($issues, $field, 'array', self::kind($value), false);
                             continue;
                         }
@@ -101,7 +102,7 @@ final class tool_schema {
                         $schema[$keyword] = $value;
                     } else {
                         if ($keyword === 'required') {
-                            if (!is_array($value) || !\local_mcp\compat::is_list($value)) {
+                            if (!is_array($value) || !compat::is_list($value)) {
                                 self::issue($issues, $field, 'array', self::kind($value), false);
                             } else {
                                 foreach ($value as $entry) {
@@ -138,7 +139,7 @@ final class tool_schema {
             return $value;
         }
         if (is_array($value)) {
-            if ($value !== [] && \local_mcp\compat::is_list($value)) {
+            if ($value !== [] && compat::is_list($value)) {
                 self::issue($issues, $path, 'object or boolean', 'array', false);
                 return $value;
             }

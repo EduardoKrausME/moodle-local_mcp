@@ -27,6 +27,7 @@ namespace local_mcp;
 use advanced_testcase;
 use context_course;
 use context_module;
+use context_system;
 use local_mcp\exception\api_exception;
 use local_mcp\question\bank_service;
 use local_mcp\question\gift_import_service;
@@ -213,7 +214,7 @@ final class gift_question_bank_test extends advanced_testcase {
             "name" => "Context-restricted QA",
         ], $identity);
         $args = [
-            "contextid" => \context_system::instance()->id,
+            "contextid" => context_system::instance()->id,
             "categoryid" => (int)$category["id"],
             "gift" => $this->gift(),
         ];

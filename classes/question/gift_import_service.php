@@ -26,9 +26,11 @@ namespace local_mcp\question;
 
 use context;
 use context_course;
+use local_mcp\compat;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\security\capability_guard;
+use question_bank;
 use Throwable;
 
 /**
@@ -102,7 +104,7 @@ final class gift_import_service {
 
         $gift = $arguments["gift"];
         if (trim($gift) === "" || strlen($gift) > self::MAX_BYTES ||
-            \local_mcp\compat::contains($gift, "\0") || !mb_check_encoding($gift, "UTF-8")) {
+            compat::contains($gift, "\0") || !mb_check_encoding($gift, "UTF-8")) {
             throw new api_exception("invalid_gift_content", 400);
         }
 
@@ -133,12 +135,12 @@ final class gift_import_service {
                 $question->qtype === "category" || trim((string)($question->name ?? "")) === "") {
                 throw new api_exception("invalid_gift_questions", 400);
             }
-            if (!\question_bank::get_qtype($question->qtype, false)) {
+            if (!question_bank::get_qtype($question->qtype, false)) {
                 throw new api_exception("unsupported_gift_question_type", 400);
             }
             if (!empty($question->fraction) && is_array($question->fraction)) {
                 foreach ($question->fraction as $fraction) {
-                    if (match_grade_options(\question_bank::fraction_options_full(),
+                    if (match_grade_options(question_bank::fraction_options_full(),
                         $fraction, "error") === false) {
                         throw new api_exception("invalid_gift_grade", 400);
                     }

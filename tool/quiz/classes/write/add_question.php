@@ -29,9 +29,11 @@ use context;
 use context_module;
 use dml_exception;
 use local_mcp\exception\api_exception;
+use local_mcp\question\bank_service;
 use local_mcp\security\input_guard;
 use local_mcp\security\authenticated_identity;
 use local_mcp\write\tool\base_tool;
+use mcptool_quiz\quiz_compat;
 
 /**
  * Attach a bank question by ID and recalculate quiz totals.
@@ -114,7 +116,7 @@ final class add_question extends base_tool {
         }
         $questionid = (int)$a["questionid"];
         input_guard::record("question", $questionid, "question_not_found");
-        if (\local_mcp\question\bank_service::row($questionid)->status !== "ready") {
+        if (bank_service::row($questionid)->status !== "ready") {
             throw new api_exception("question_not_ready", 400);
         }
         quiz_require_question_use($questionid);
@@ -148,7 +150,7 @@ final class add_question extends base_tool {
         if ($added === false) {
             throw new api_exception("question_already_in_quiz", 409);
         }
-        \mcptool_quiz\quiz_compat::recompute_sumgrades((int)$quiz->id);
+        quiz_compat::recompute_sumgrades((int)$quiz->id);
         return ["cmid" => (int)$cm->id, "quizid" => (int)$quiz->id,
             "questionid" => $questionid, "added" => true];
     }

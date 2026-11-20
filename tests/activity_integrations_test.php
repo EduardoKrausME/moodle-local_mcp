@@ -30,7 +30,10 @@ use core_component;
 use local_mcp\course\activity_upload;
 use local_mcp\exception\api_exception;
 use local_mcp\extension\write_provider_interface;
+use local_mcp\security\authenticated_identity;
 use local_mcp\write\registry;
+use mcptool_h5p\write\create_activity;
+use ZipArchive;
 
 /**
  * The six activity integrations must be installable and discoverable.
@@ -84,8 +87,8 @@ final class activity_integrations_test extends advanced_testcase {
         $this->assertSame('handout.pdf', $filename);
         $this->assertSame('%PDF-1.7', $bytes);
         $temporary = tempnam(sys_get_temp_dir(), "h5p-test-");
-        $zip = new \ZipArchive();
-        $this->assertTrue($zip->open($temporary, \ZipArchive::CREATE | \ZipArchive::OVERWRITE));
+        $zip = new ZipArchive();
+        $this->assertTrue($zip->open($temporary, ZipArchive::CREATE | ZipArchive::OVERWRITE));
         $zip->addFromString("h5p.json", '{"title":"Test","mainLibrary":"H5P.Text"}');
         $zip->addFromString("content/content.json", '{"text":"Sample content"}');
         $zip->close();
@@ -115,8 +118,8 @@ final class activity_integrations_test extends advanced_testcase {
         }
 
         $course = $this->getDataGenerator()->create_course();
-        $tool = new \mcptool_h5p\write\create_activity();
-        $identity = new \local_mcp\security\authenticated_identity((int)$USER->id, "test", ["mcp:write"]);
+        $tool = new create_activity();
+        $identity = new authenticated_identity((int)$USER->id, "test", ["mcp:write"]);
         try {
             $tool->preview([
                 "courseid" => (int)$course->id, "sectionnum" => 0, "name" => "Invalid H5P",

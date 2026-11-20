@@ -25,8 +25,12 @@
 namespace local_mcp;
 
 use advanced_testcase;
+use context_system;
+use local_mcp\exception\api_exception;
 use local_mcp\protocol\mcp_server;
 use local_mcp\security\authenticated_identity;
+use local_mcp\security\confirmation_service;
+use local_mcp\security\secret;
 use ReflectionMethod;
 
 /**
@@ -123,7 +127,7 @@ final class confirmation_flow_test extends advanced_testcase {
                 $args + ["confirmation_token" => "mcp_confirm_nonexistent"],
                 [], $identity, $access);
             $this->fail("An unknown confirmation token must be rejected.");
-        } catch (\local_mcp\exception\api_exception $e) {
+        } catch (api_exception $e) {
             $this->assertSame("confirmation_expired", $e->machinecode);
             $this->assertSame(409, $e->httpstatus);
         }
@@ -151,14 +155,14 @@ final class confirmation_flow_test extends advanced_testcase {
         unset_config("confirmationttl", "local_mcp");
 
         $identity = new authenticated_identity((int)get_admin()->id, "test", ["mcp:write"]);
-        $context = \context_system::instance();
+        $context = context_system::instance();
         $arguments = ["name" => "MCP Confirmation TTL", "parentid" => 0];
         $before = time();
-        $token = \local_mcp\security\confirmation_service::issue(
+        $token = confirmation_service::issue(
             $identity, "test-access-token", "create_category", $arguments, $context
         );
         $record = $DB->get_record("local_mcp_confirm", [
-            "tokenhash" => \local_mcp\security\secret::hash($token),
+            "tokenhash" => secret::hash($token),
         ], "*", MUST_EXIST);
 
         $this->assertGreaterThanOrEqual($before + 1800, (int)$record->expires);
@@ -166,11 +170,11 @@ final class confirmation_flow_test extends advanced_testcase {
 
         set_config("confirmationttl", 600, "local_mcp");
         $before = time();
-        $token = \local_mcp\security\confirmation_service::issue(
+        $token = confirmation_service::issue(
             $identity, "test-access-token", "create_category", $arguments, $context
         );
         $record = $DB->get_record("local_mcp_confirm", [
-            "tokenhash" => \local_mcp\security\secret::hash($token),
+            "tokenhash" => secret::hash($token),
         ], "*", MUST_EXIST);
 
         $this->assertGreaterThanOrEqual($before + 600, (int)$record->expires);
@@ -190,35 +194,35 @@ final class confirmation_flow_test extends advanced_testcase {
         set_config("confirmationttl", 1800, "local_mcp");
 
         $identity = new authenticated_identity((int)get_admin()->id, "test", ["mcp:write"]);
-        $context = \context_system::instance();
+        $context = context_system::instance();
         $arguments = ["name" => "MCP Delayed Confirmation", "parentid" => 0];
         $access = "test-access-token";
 
-        $token = \local_mcp\security\confirmation_service::issue(
+        $token = confirmation_service::issue(
             $identity, $access, "create_category", $arguments, $context
         );
-        $tokenhash = \local_mcp\security\secret::hash($token);
+        $tokenhash = secret::hash($token);
         // Simulate approval five minutes after the preview was generated.
         $DB->set_field("local_mcp_confirm", "timecreated", time() - 300, ["tokenhash" => $tokenhash]);
         $DB->set_field("local_mcp_confirm", "expires", time() + 1500, ["tokenhash" => $tokenhash]);
 
-        \local_mcp\security\confirmation_service::consume(
+        confirmation_service::consume(
             $token, $identity, $access, "create_category", $arguments, $context
         );
         $this->assertEquals(1, $DB->get_field("local_mcp_confirm", "used", ["tokenhash" => $tokenhash]));
 
-        $expiredtoken = \local_mcp\security\confirmation_service::issue(
+        $expiredtoken = confirmation_service::issue(
             $identity, $access, "create_category", $arguments, $context
         );
-        $expiredhash = \local_mcp\security\secret::hash($expiredtoken);
+        $expiredhash = secret::hash($expiredtoken);
         $DB->set_field("local_mcp_confirm", "expires", time() - 1, ["tokenhash" => $expiredhash]);
 
         try {
-            \local_mcp\security\confirmation_service::consume(
+            confirmation_service::consume(
                 $expiredtoken, $identity, $access, "create_category", $arguments, $context
             );
             $this->fail("An expired confirmation must be rejected.");
-        } catch (\local_mcp\exception\api_exception $e) {
+        } catch (api_exception $e) {
             $this->assertSame("confirmation_expired", $e->machinecode);
             $this->assertSame(409, $e->httpstatus);
         }

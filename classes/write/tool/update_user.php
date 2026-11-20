@@ -26,6 +26,7 @@ namespace local_mcp\write\tool;
 
 use context;
 use context_user;
+use core\user;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\security\password_policy;
@@ -162,8 +163,8 @@ final class update_user extends base_tool {
 
         $transaction = $DB->start_delegated_transaction();
         if ($fields) {
-            if (method_exists(\core\user::class, 'update_user')) {
-                \core\user::update_user($user, false, false);
+            if (method_exists(user::class, 'update_user')) {
+                user::update_user($user, false, false);
             } else {
                 user_update_user($user, false, false);
             }

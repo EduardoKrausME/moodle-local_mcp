@@ -25,6 +25,7 @@
 namespace local_mcp\audit;
 
 use context;
+use local_mcp\diagnostics;
 use local_mcp\security\authenticated_identity;
 
 /**
@@ -54,7 +55,7 @@ final class logger {
         global $DB;
         // Store only approved field names, numeric IDs and status codes.
         // Correlate this row with the safe PHP diagnostic log.
-        $metadata['request_id'] = \local_mcp\diagnostics::request_id();
+        $metadata['request_id'] = diagnostics::request_id();
         $safe = summary::sanitise($metadata);
         $DB->insert_record('local_mcp_audit', (object)[
             'connectionid' => ($identity === null ? null : $identity->connectionid),

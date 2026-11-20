@@ -27,6 +27,7 @@ namespace local_mcp\write\tool;
 use context;
 use context_coursecat;
 use dml_transaction_exception;
+use local_mcp\compat;
 use local_mcp\course\image_service;
 use local_mcp\course\file_url_normalizer;
 use local_mcp\exception\api_exception;
@@ -158,7 +159,7 @@ final class bulk_create_courses extends base_tool {
         global $DB;
 
         $input = $arguments['courses'] ?? null;
-        if (!is_array($input) || !\local_mcp\compat::is_list($input) || count($input) < 1
+        if (!is_array($input) || !compat::is_list($input) || count($input) < 1
             || count($input) > self::MAX_COURSES) {
             throw new api_exception('invalid_courses', 400,
                 'Provide between 1 and 30 courses in a list.');

@@ -24,6 +24,7 @@
 
 namespace local_mcp\config;
 
+use local_mcp\compat;
 use local_mcp\exception\api_exception;
 
 /**
@@ -92,7 +93,7 @@ final class site_config {
      * @return array<string,string> Canonical name => value map.
      */
     public static function validate_batch(array $settings): array {
-        if (count($settings) < 1 || count($settings) > 20 || !\local_mcp\compat::is_list($settings)) {
+        if (count($settings) < 1 || count($settings) > 20 || !compat::is_list($settings)) {
             throw new api_exception('invalid_config_batch', 400, 'Provide between 1 and 20 settings.');
         }
         $normalized = [];

@@ -22,6 +22,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_mcp\oauth\client_service;
+
 require_once(__DIR__ . '/../../../config.php');
 require_login();
 $context = context_system::instance();
@@ -34,7 +36,7 @@ if (($_SERVER["REQUEST_METHOD"] ?? "") === "POST") {
     if ($action !== "disable" || $clientid <= 0) {
         throw new moodle_exception("invalidrequest", "error");
     }
-    \local_mcp\oauth\client_service::disable($clientid);
+    client_service::disable($clientid);
     redirect(new moodle_url("/local/mcp/admin/clients.php"), get_string("oauthclientdisabled", "local_mcp"));
 }
 // Limit the administrative list to one page of OAuth clients at a time.

@@ -22,6 +22,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core\session\manager;
+use local_mcp\audit\chatgpt_client_lookup;
+
 require_once(__DIR__ . '/../../../config.php');
 
 require_login();
@@ -79,7 +82,7 @@ if ($userid > 0) {
 }
 
 // Resolve client IDs through a streaming lookup to avoid loading every OAuth client into memory.
-$chatgptids = \local_mcp\audit\chatgpt_client_lookup::get_client_ids();
+$chatgptids = chatgpt_client_lookup::get_client_ids();
 if ($onlychatgpt) {
     if (!$chatgptids) {
         $where[] = '1 = 0';
@@ -135,7 +138,7 @@ foreach ($records as $record) {
 
 // Export selected audit metadata, never raw MCP inputs or responses.
 if ($export === 'csv') {
-    \core\session\manager::write_close();
+    manager::write_close();
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="mcp-audit.csv"');
     $output = fopen('php://output', 'w');

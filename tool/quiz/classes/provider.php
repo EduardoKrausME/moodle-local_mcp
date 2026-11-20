@@ -26,6 +26,19 @@ namespace mcptool_quiz;
 
 use local_mcp\extension\read_provider_interface;
 use local_mcp\extension\write_provider_interface;
+use mcptool_quiz\read\get_attempt_responses;
+use mcptool_quiz\read\get_attempt_statistics;
+use mcptool_quiz\read\get_proctoring_status;
+use mcptool_quiz\read\get_question_slots;
+use mcptool_quiz\read\get_question_statistics;
+use mcptool_quiz\read\get_question_usage;
+use mcptool_quiz\read\get_question_versions;
+use mcptool_quiz\write\add_question;
+use mcptool_quiz\write\create_activity;
+use mcptool_quiz\write\regrade_attempt;
+use mcptool_quiz\write\remove_question;
+use mcptool_quiz\write\reorder_questions;
+use mcptool_quiz\write\update_activity;
 
 /**
  * Read-only analytics and confirmed quiz management mutations.
@@ -38,13 +51,13 @@ final class provider implements read_provider_interface, write_provider_interfac
      */
     public function get_read_tools(): array {
         return [
-            new \mcptool_quiz\read\get_question_slots(),
-            new \mcptool_quiz\read\get_attempt_responses(),
-            new \mcptool_quiz\read\get_attempt_statistics(),
-            new \mcptool_quiz\read\get_question_statistics(),
-            new \mcptool_quiz\read\get_question_versions(),
-            new \mcptool_quiz\read\get_question_usage(),
-            new \mcptool_quiz\read\get_proctoring_status(),
+            new get_question_slots(),
+            new get_attempt_responses(),
+            new get_attempt_statistics(),
+            new get_question_statistics(),
+            new get_question_versions(),
+            new get_question_usage(),
+            new get_proctoring_status(),
         ];
     }
 
@@ -55,12 +68,12 @@ final class provider implements read_provider_interface, write_provider_interfac
      */
     public function get_write_tools(): array {
         return [
-            new \mcptool_quiz\write\create_activity(),
-            new \mcptool_quiz\write\add_question(),
-            new \mcptool_quiz\write\update_activity(),
-            new \mcptool_quiz\write\remove_question(),
-            new \mcptool_quiz\write\reorder_questions(),
-            new \mcptool_quiz\write\regrade_attempt(),
+            new create_activity(),
+            new add_question(),
+            new update_activity(),
+            new remove_question(),
+            new reorder_questions(),
+            new regrade_attempt(),
         ];
     }
 }

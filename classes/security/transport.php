@@ -24,6 +24,7 @@
 
 namespace local_mcp\security;
 
+use local_mcp\compat;
 use local_mcp\exception\api_exception;
 
 /**
@@ -41,8 +42,8 @@ final class transport {
         $scheme = strtolower((string)($parts['scheme'] ?? ''));
         $host = strtolower((string)($parts['host'] ?? ''));
         $local = in_array($host, ['localhost', '127.0.0.1', '::1'], true)
-            || \local_mcp\compat::ends_with($host, '.localhost')
-            || \local_mcp\compat::ends_with($host, '.test');
+            || compat::ends_with($host, '.localhost')
+            || compat::ends_with($host, '.test');
         if ($scheme !== 'https' && !$local) {
             throw new api_exception('https_required', 400);
         }

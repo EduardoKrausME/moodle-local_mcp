@@ -26,6 +26,7 @@ namespace local_mcp\write\tool;
 
 use context;
 use context_system;
+use core\user;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\security\password_policy;
@@ -149,8 +150,8 @@ final class create_user extends base_tool {
             $user->password = $arguments['password'];
         }
         $transaction = $DB->start_delegated_transaction();
-        if (method_exists(\core\user::class, 'create_user')) {
-            $id = \core\user::create_user($user, true, false);
+        if (method_exists(user::class, 'create_user')) {
+            $id = user::create_user($user, true, false);
         } else {
             $id = user_create_user($user, true, false);
         }

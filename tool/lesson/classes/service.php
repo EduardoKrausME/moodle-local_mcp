@@ -25,9 +25,12 @@
 namespace mcptool_lesson;
 
 use context_module;
+use lesson_page;
+use lesson_page_type_manager;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\security\untrusted_content;
+use mod_lesson\event\page_updated;
 
 /**
  * Manage lesson page content, navigation and choices with native lesson page APIs.
@@ -219,7 +222,7 @@ final class service {
         // The native page writer reads $PAGE->course->maxbytes for answer draft areas.
         $PAGE->set_course(get_course($cm->course));
         $PAGE->set_cm($cm);
-        \lesson_page_type_manager::get($lesson);
+        lesson_page_type_manager::get($lesson);
         $properties = (object)["title" => $preview["title"],
             "contents_editor" => ["text" => clean_text((string)$a["content"], FORMAT_HTML),
                 "format" => FORMAT_HTML, "itemid" => 0],
@@ -235,7 +238,7 @@ final class service {
             $properties->score[$i] = $choice["score"];
         }
         $transaction = $DB->start_delegated_transaction();
-        $page = \lesson_page::create($properties, $lesson, $context, (int)get_course($cm->course)->maxbytes);
+        $page = lesson_page::create($properties, $lesson, $context, (int)get_course($cm->course)->maxbytes);
         $transaction->allow_commit();
         return ["created" => true, "cmid" => (int)$cm->id,
             "pageid" => (int)$page->id, "title" => $preview["title"]];
@@ -281,10 +284,10 @@ final class service {
         $editor->contentsformat = FORMAT_HTML;
         $editor->timemodified = time();
         $DB->update_record("lesson_pages", $editor);
-        \lesson_page_type_manager::get($lesson);
+        lesson_page_type_manager::get($lesson);
         $updated = $DB->get_record("lesson_pages", ["id" => $page->id], "*", MUST_EXIST);
-        $lessonpage = \lesson_page::load($updated, $lesson);
-        \mod_lesson\event\page_updated::create_from_lesson_page($lessonpage, $context)->trigger();
+        $lessonpage = lesson_page::load($updated, $lesson);
+        page_updated::create_from_lesson_page($lessonpage, $context)->trigger();
         return ["updated" => true, "pageid" => (int)$page->id, "cmid" => (int)$cm->id];
     }
 
@@ -331,9 +334,9 @@ final class service {
         foreach ($preview["routes"] as $route) {
             $DB->set_field("lesson_answers", "jumpto", $route["new_jump"], ["id" => $route["answerid"]]);
         }
-        \lesson_page_type_manager::get($lesson);
-        $lessonpage = \lesson_page::load((int)$a["pageid"], $lesson);
-        \mod_lesson\event\page_updated::create_from_lesson_page($lessonpage, $context)->trigger();
+        lesson_page_type_manager::get($lesson);
+        $lessonpage = lesson_page::load((int)$a["pageid"], $lesson);
+        page_updated::create_from_lesson_page($lessonpage, $context)->trigger();
         $transaction->allow_commit();
         return ["updated" => true, "pageid" => (int)$a["pageid"],
             "routes_updated" => count($preview["routes"])];

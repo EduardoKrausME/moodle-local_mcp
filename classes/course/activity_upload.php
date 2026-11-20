@@ -26,7 +26,9 @@ namespace local_mcp\course;
 
 use context_user;
 use core_user;
+use local_mcp\compat;
 use local_mcp\exception\api_exception;
+use ZipArchive;
 
 /**
  * Convert a single file payload into a Moodle draft item, for use by add_moduleinfo().
@@ -78,22 +80,22 @@ final class activity_upload {
      * @return void
      */
     private static function validate_h5p_package(string $binary): void {
-        if (!\local_mcp\compat::starts_with($binary, "PK\x03\x04")) {
+        if (!compat::starts_with($binary, "PK\x03\x04")) {
             throw new api_exception("invalid_h5p_package", 400, "H5P packages must be ZIP archives.");
         }
-        if (!class_exists(\ZipArchive::class)) {
+        if (!class_exists(ZipArchive::class)) {
             throw new api_exception("h5p_zip_support_unavailable", 503);
         }
         $tempfile = tempnam(sys_get_temp_dir(), "mcp-h5p-");
         if ($tempfile === false) {
             throw new api_exception("h5p_validation_unavailable", 503);
         }
-        $zip = new \ZipArchive();
+        $zip = new ZipArchive();
         try {
             if (file_put_contents($tempfile, $binary) !== strlen($binary)) {
                 throw new api_exception("h5p_validation_unavailable", 503);
             }
-            if ($zip->open($tempfile, \ZipArchive::CHECKCONS) !== true) {
+            if ($zip->open($tempfile, ZipArchive::CHECKCONS) !== true) {
                 throw new api_exception("invalid_h5p_package", 400, "The H5P ZIP is incomplete or corrupt.");
             }
             try {
@@ -104,8 +106,8 @@ final class activity_upload {
                 for ($i = 0; $i < $zip->numFiles; $i++) {
                     $entry = $zip->statIndex($i);
                     if (!$entry || !isset($entry["name"], $entry["size"]) ||
-                        \local_mcp\compat::starts_with($entry["name"], "/") ||
-                        \local_mcp\compat::contains($entry["name"], "\\") ||
+                        compat::starts_with($entry["name"], "/") ||
+                        compat::contains($entry["name"], "\\") ||
                         preg_match("~(?:^|/)\\.\\.(?:/|$)~", $entry["name"])) {
                         throw new api_exception("invalid_h5p_package", 400);
                     }

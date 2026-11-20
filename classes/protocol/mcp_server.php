@@ -41,6 +41,7 @@ use local_mcp\security\confirmation_service;
 use local_mcp\security\rate_limiter;
 use local_mcp\security\scope;
 use local_mcp\security\token_resolver;
+use local_mcp\security\untrusted_content;
 use local_mcp\security\user_access;
 use local_mcp\write\registry;
 use local_mcp\write\tool_interface;
@@ -599,7 +600,7 @@ final class mcp_server {
             $started = microtime(true);
             $result = $tool->execute($arguments, $identity);
             // Explicit trust boundary for all data retrieved from Moodle.
-            $result["content_warning"] = \local_mcp\security\untrusted_content::NOTICE;
+            $result["content_warning"] = untrusted_content::NOTICE;
             logger::record('tool_called', $identity, $name, 'read', $context,
                 summary::from_call($name, $arguments), false, false, false, 'ok', (int)round((microtime(true) - $started) * 1000));
             diagnostics::event('tool_read_completed', [

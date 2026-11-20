@@ -22,6 +22,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_mcp\dashboard\overview;
 use local_mcp\read\registry;
 
 require_once(__DIR__ . '/../../../config.php');
@@ -34,7 +35,7 @@ $PAGE->set_context($context);
 $PAGE->set_title(get_string('readapis', 'local_mcp'));
 $PAGE->set_heading(get_string('readapis', 'local_mcp'));
 // The READ registry includes providers discovered from installed plugins such as Kopere BI.
-$groups = \local_mcp\dashboard\overview::group_tools(registry::get_tools());
+$groups = overview::group_tools(registry::get_tools());
 $tables = [];
 foreach ($groups as $group) {
     $rows = [];

@@ -24,6 +24,7 @@
 
 namespace local_mcp\oauth;
 
+use local_mcp\compat;
 use local_mcp\exception\api_exception;
 
 /**
@@ -41,7 +42,7 @@ final class metadata {
 
         $path = (string)(parse_url($uri ?? ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH) ?: '');
         $prefix = rtrim((string)(parse_url($CFG->wwwroot, PHP_URL_PATH) ?: ''), '/');
-        if ($prefix !== '' && ($path === $prefix || \local_mcp\compat::starts_with($path, $prefix . '/'))) {
+        if ($prefix !== '' && ($path === $prefix || compat::starts_with($path, $prefix . '/'))) {
             $path = substr($path, strlen($prefix));
         }
         return $path;

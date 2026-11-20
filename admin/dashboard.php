@@ -22,6 +22,10 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core\chart_bar;
+use core\chart_line;
+use core\chart_pie;
+use core\chart_series;
 use local_mcp\dashboard\overview;
 use local_mcp\write\registry;
 
@@ -107,11 +111,11 @@ $data = [
 echo $OUTPUT->header();
 // Use Moodle's own accessible chart renderer; no CDN, inline scripts or JS dependency.
 if ($data['hasactivity']) {
-    $timeline = new \core\chart_line();
+    $timeline = new chart_line();
     $timeline->set_title(get_string('dashboardactivitychart', 'local_mcp'));
     $timeline->set_labels($activity['labels']);
-    $timeline->add_series(new \core\chart_series('READ', $activity['read']));
-    $timeline->add_series(new \core\chart_series('WRITE', $activity['write']));
+    $timeline->add_series(new chart_series('READ', $activity['read']));
+    $timeline->add_series(new chart_series('WRITE', $activity['write']));
     $data['activitychart'] = $OUTPUT->render($timeline);
 
     $statuses = [
@@ -129,21 +133,21 @@ if ($data['hasactivity']) {
         }
     }
     if ($statusvalues) {
-        $statuschart = new \core\chart_pie();
+        $statuschart = new chart_pie();
         $statuschart->set_title(get_string('dashboardstatuschart', 'local_mcp'));
         $statuschart->set_doughnut(true);
         $statuschart->set_labels($statuslabels);
-        $statuschart->add_series(new \core\chart_series(
+        $statuschart->add_series(new chart_series(
             get_string('dashboardcalls', 'local_mcp'), $statusvalues));
         $data['statuschart'] = $OUTPUT->render($statuschart);
     }
 }
 if ($data['hasplugins']) {
-    $pluginchart = new \core\chart_bar();
+    $pluginchart = new chart_bar();
     $pluginchart->set_title(get_string('dashboardpluginschart', 'local_mcp'));
     $pluginchart->set_labels($pluginlabels);
     $pluginchart->set_horizontal(true);
-    $pluginchart->add_series(new \core\chart_series(
+    $pluginchart->add_series(new chart_series(
         get_string('dashboardtools', 'local_mcp'), $plugincounts));
     $data['pluginchart'] = $OUTPUT->render($pluginchart);
 }

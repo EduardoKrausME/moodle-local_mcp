@@ -25,6 +25,8 @@
 namespace local_mcp\security;
 
 use context;
+use context_course;
+use context_user;
 use local_mcp\exception\api_exception;
 use local_mcp\diagnostics;
 
@@ -45,13 +47,13 @@ final class capability_guard {
 
         // The moodle/course:view capability permits privileged observers, but active enrolment is
         // the ordinary way students and teachers access their own courses.
-        if (!$allowed && $capability === "moodle/course:view" && $context instanceof \context_course) {
+        if (!$allowed && $capability === "moodle/course:view" && $context instanceof context_course) {
             $allowed = can_access_course(get_course((int)$context->instanceid), $userid, "", true);
         }
 
         // Reading one's own profile and enrolments is not the same as viewing
         // another user's profile, which continues to require Moodle permission.
-        if (!$allowed && $capability === "moodle/user:viewdetails" && $context instanceof \context_user) {
+        if (!$allowed && $capability === "moodle/user:viewdetails" && $context instanceof context_user) {
             $allowed = (int)$context->instanceid === $userid;
         }
 

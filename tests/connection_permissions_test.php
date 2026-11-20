@@ -28,9 +28,12 @@ use advanced_testcase;
 use context_course;
 use context_coursecat;
 use context_system;
+use context_user;
 use local_mcp\exception\api_exception;
 use local_mcp\security\capability_guard;
 use local_mcp\security\user_access;
+use mcptool_forum\read\get_posts;
+use mcptool_forum\write\create_activity;
 
 /**
  * Ensure regular users can connect without receiving administrator privileges.
@@ -118,11 +121,11 @@ final class connection_permissions_test extends advanced_testcase {
     public function test_forum_read_and_creation_declare_distinct_capabilities(): void {
         $this->assertSame(
             "mod/forum:viewdiscussion",
-            (new \mcptool_forum\read\get_posts())->get_required_capability()
+            (new get_posts())->get_required_capability()
         );
         $this->assertSame(
             "moodle/course:manageactivities",
-            (new \mcptool_forum\write\create_activity())->get_required_capability()
+            (new create_activity())->get_required_capability()
         );
     }
     /**
@@ -177,14 +180,14 @@ final class connection_permissions_test extends advanced_testcase {
 
         capability_guard::check(
             "moodle/user:viewdetails",
-            \context_user::instance($student->id),
+            context_user::instance($student->id),
             (int)$student->id
         );
 
         $this->expectException(api_exception::class);
         capability_guard::check(
             "moodle/user:viewdetails",
-            \context_user::instance($other->id),
+            context_user::instance($other->id),
             (int)$student->id
         );
     }

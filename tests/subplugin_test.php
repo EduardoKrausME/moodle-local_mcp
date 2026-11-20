@@ -26,12 +26,19 @@ namespace local_mcp;
 
 use advanced_testcase;
 use coding_exception;
+use context;
+use context_system;
 use core_component;
 use local_mcp\extension\manager;
 use local_mcp\extension\read_provider_interface;
 use local_mcp\extension\write_provider_interface;
+use local_mcp\protocol\mcp_server;
+use local_mcp\security\authenticated_identity;
 use local_mcp\write\registry;
+use local_mcp\write\tool\base_tool;
 use local_mcp\write\tool_interface;
+use ReflectionMethod;
+use ReflectionProperty;
 
 /**
  * Subplugins are visible to Moodle and exposed without core activity switches.
@@ -159,26 +166,26 @@ final class subplugin_test extends advanced_testcase {
              * Resolve the protected Moodle context.
              *
              * @param array $arguments Tool arguments.
-             * @return \context
+             * @return context
              */
-            public function resolve_context(array $arguments): \context {
-                return \context_system::instance();
+            public function resolve_context(array $arguments): context {
+                return context_system::instance();
             }
 
             /**
              * Return fixture content without changing any database records.
              *
              * @param array $arguments Tool arguments.
-             * @param \local_mcp\security\authenticated_identity $identity Connected user.
+             * @param authenticated_identity $identity Connected user.
              * @return array
              */
             public function execute(array $arguments,
-                    \local_mcp\security\authenticated_identity $identity): array {
+                    authenticated_identity $identity): array {
                 return ["value" => $arguments["value"], "userid" => $identity->userid];
             }
         };
 
-        $writetool = new class extends \local_mcp\write\tool\base_tool {
+        $writetool = new class extends base_tool {
             /** Number of committed writes by this fixture. */
             public int $writes = 0;
 
@@ -231,21 +238,21 @@ final class subplugin_test extends advanced_testcase {
              * Resolve the protected Moodle context.
              *
              * @param array $arguments Tool arguments.
-             * @return \context
+             * @return context
              */
-            public function resolve_context(array $arguments): \context {
-                return \context_system::instance();
+            public function resolve_context(array $arguments): context {
+                return context_system::instance();
             }
 
             /**
              * Describe the requested change without executing it.
              *
              * @param array $arguments Tool arguments.
-             * @param \local_mcp\security\authenticated_identity $identity Connected user.
+             * @param authenticated_identity $identity Connected user.
              * @return array
              */
             public function preview(array $arguments,
-                    \local_mcp\security\authenticated_identity $identity): array {
+                    authenticated_identity $identity): array {
                 return ["value" => $arguments["value"], "will_write" => true];
             }
 
@@ -253,11 +260,11 @@ final class subplugin_test extends advanced_testcase {
              * Count an approved write operation.
              *
              * @param array $arguments Tool arguments.
-             * @param \local_mcp\security\authenticated_identity $identity Connected user.
+             * @param authenticated_identity $identity Connected user.
              * @return array
              */
             public function execute(array $arguments,
-                    \local_mcp\security\authenticated_identity $identity): array {
+                    authenticated_identity $identity): array {
                 $this->writes++;
                 return ["value" => $arguments["value"], "writes" => $this->writes];
             }
@@ -270,12 +277,12 @@ final class subplugin_test extends advanced_testcase {
             /**
              * Set up the class-based provider.
              *
-             * @param \local_mcp\read\tool_interface $readtool Read tool.
-             * @param \local_mcp\write\tool_interface $writetool Write tool.
+             * @param read\tool_interface $readtool Read tool.
+             * @param tool_interface $writetool Write tool.
              */
             public function __construct(
-                    private \local_mcp\read\tool_interface $readtool,
-                    private \local_mcp\write\tool_interface $writetool) {
+                    private read\tool_interface $readtool,
+                    private tool_interface      $writetool) {
             }
 
             /**
@@ -298,7 +305,7 @@ final class subplugin_test extends advanced_testcase {
         };
 
         // Supply a class-discovered fixture without installing a dummy Moodle plugin.
-        $property = new \ReflectionProperty(manager::class, "classproviders");
+        $property = new ReflectionProperty(manager::class, "classproviders");
         $previous = $property->getValue();
         $property->setValue(null, ["test_external_provider" => $provider]);
         try {
@@ -310,16 +317,16 @@ final class subplugin_test extends advanced_testcase {
             $this->assertArrayNotHasKey("test_external_provider_read", $writetools);
             $this->assertTrue($writetool->requires_confirmation());
 
-            $identity = new \local_mcp\security\authenticated_identity(
+            $identity = new authenticated_identity(
                 (int)get_admin()->id, "test", ["mcp:read", "mcp:write"]
             );
-            $method = new \ReflectionMethod(\local_mcp\protocol\mcp_server::class, "call_tool");
+            $method = new ReflectionMethod(mcp_server::class, "call_tool");
 
-            $read = $method->invoke(new \local_mcp\protocol\mcp_server("read"),
+            $read = $method->invoke(new mcp_server("read"),
                 "test_external_provider_read", ["value" => "hello"], [], $identity, "test-access");
             $this->assertSame("hello", $read["value"]);
 
-            $server = new \local_mcp\protocol\mcp_server("write");
+            $server = new mcp_server("write");
             $args = ["value" => "ready"];
             $pending = $method->invoke($server, "test_external_provider_write",
                 $args, [], $identity, "test-access");

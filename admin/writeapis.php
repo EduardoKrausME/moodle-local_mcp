@@ -22,6 +22,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use local_mcp\dashboard\overview;
 use local_mcp\write\registry;
 
 require_once(__DIR__ . '/../../../config.php');
@@ -34,7 +35,7 @@ $PAGE->set_context($context);
 $PAGE->set_title(get_string('writeapis', 'local_mcp'));
 $PAGE->set_heading(get_string('writeapis', 'local_mcp'));
 // Reuse the same component grouping as the dashboard's WRITE API summary.
-$groups = \local_mcp\dashboard\overview::group_write_tools(registry::get_tools());
+$groups = overview::group_write_tools(registry::get_tools());
 $yes = get_string('yes');
 $no = get_string('no');
 $tables = [];
@@ -61,7 +62,7 @@ foreach ($groups as $group) {
 // Show a compact reference to plugins that provide only READ tools. They cannot
 // appear in the WRITE registry, but administrators should still see the integration.
 $readonlyplugins = [];
-$readgroups = \local_mcp\dashboard\overview::group_tools(\local_mcp\read\registry::get_tools());
+$readgroups = overview::group_tools(\local_mcp\read\registry::get_tools());
 foreach ($readgroups as $component => $group) {
     if (isset($groups[$component])) {
         continue;

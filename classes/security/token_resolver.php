@@ -24,6 +24,7 @@
 
 namespace local_mcp\security;
 
+use local_mcp\compat;
 use local_mcp\diagnostics;
 use local_mcp\exception\api_exception;
 
@@ -44,7 +45,7 @@ final class token_resolver {
             self::reject('missing_or_malformed_bearer');
         }
         $token = trim($m[1]);
-        if (!\local_mcp\compat::starts_with($token, 'mcp_at_')) {
+        if (!compat::starts_with($token, 'mcp_at_')) {
             self::reject('unsupported_access_token_format');
         }
         $prefix = secret::prefix($token);

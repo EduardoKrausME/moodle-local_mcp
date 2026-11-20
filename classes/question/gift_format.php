@@ -24,10 +24,13 @@
 
 namespace local_mcp\question;
 
+use core_text;
+use qformat_gift;
+
 /**
  * Expose a read-only parsing pass for previewing the native GIFT importer.
  */
-final class gift_format extends \qformat_gift {
+final class gift_format extends qformat_gift {
     /**
      * Parse the original GIFT payload without creating questions or categories.
      *
@@ -35,7 +38,7 @@ final class gift_format extends \qformat_gift {
      * @return array Parsed Moodle question objects.
      */
     public function inspect_content(string $gift): array {
-        $lines = preg_split("/\r\n|\n|\r/", \core_text::trim_utf8_bom($gift));
+        $lines = preg_split("/\r\n|\n|\r/", core_text::trim_utf8_bom($gift));
         return $this->readquestions($lines);
     }
 }

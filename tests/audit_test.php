@@ -25,6 +25,7 @@
 namespace local_mcp;
 
 use advanced_testcase;
+use context_system;
 use local_mcp\audit\logger;
 use local_mcp\audit\summary;
 use local_mcp\security\authenticated_identity;
@@ -81,7 +82,7 @@ final class audit_test extends advanced_testcase {
         $this->setAdminUser();
         $identity = new authenticated_identity((int)get_admin()->id, 'test', ['mcp:write']);
         logger::record('tool_called', $identity, 'create_course', 'write',
-            \context_system::instance(), ['input_fields' => ['fullname'],
+            context_system::instance(), ['input_fields' => ['fullname'],
                 'payload' => 'secret content', 'result_ids' => ['id' => [99]]],
             false, false, true, 'ok');
         $record = $DB->get_record('local_mcp_audit', ['tool' => 'create_course'], '*', MUST_EXIST);
