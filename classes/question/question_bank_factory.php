@@ -23,10 +23,18 @@
  */
 namespace local_mcp\question;
 
+/**
+ * Class question_bank_factory
+ */
 final class question_bank_factory {
     /** @var string|null */
     private static $driver = null;
 
+    /**
+     * driver
+     *
+     * @return string
+     */
     public static function driver(): string {
         global $CFG;
         if (self::$driver === null) {
@@ -37,6 +45,11 @@ final class question_bank_factory {
         return self::$driver;
     }
 
+    /**
+     * category_driver
+     *
+     * @return string
+     */
     public static function category_driver(): string {
         // core_question\category_manager arrived after the initial 4.0 question bank redesign.
         return class_exists(\core_question\category_manager::class)
