@@ -13,9 +13,12 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 //
 
 /**
+ * plugin_package_builder_test.php
+ *
  * @package   local_mcp
  * @copyright 2026 Eduardo Kraus {@link https://eduardokraus.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
