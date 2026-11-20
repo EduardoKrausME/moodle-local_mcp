@@ -65,7 +65,7 @@ final class logger {
             'tool' => $tool ? clean_param($tool, PARAM_ALPHANUMEXT) : null,
             'side' => $side,
             'destructive' => (int)$destructive,
-            'contextid' => $context?->id,
+            'contextid' => $context !== null ? $context->id : null,
             'ip' => getremoteaddr(),
             'durationms' => $durationms,
             'status' => $status,

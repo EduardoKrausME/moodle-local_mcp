@@ -48,7 +48,7 @@ class api_exception extends moodle_exception {
         string $machinecode,
         int $httpstatus = 400,
         string                 $message = '',
-        array $details = [],
+        array $details = []
     ) {
         $this->machinecode = $machinecode;
         $this->httpstatus = $httpstatus;

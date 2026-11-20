@@ -60,7 +60,7 @@ final class authenticated_identity {
         ?int $clientid = null,
         ?int $connectionid = null,
         ?int $tokenid = null,
-        ?string $family = null,
+        ?string $family = null
     ) {
         $this->userid = $userid;
         $this->type = $type;
