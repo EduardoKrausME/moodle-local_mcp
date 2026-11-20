@@ -27,6 +27,6 @@ defined('MOODLE_INTERNAL') || die;
 $plugin->version = 2026102400;
 $plugin->release = "1.0.0";
 $plugin->component = "mcptool_badges";
-$plugin->requires = 2024042212;
+$plugin->requires = 2020110900;
 $plugin->dependencies = ["local_mcp" => 2026100801];
 $plugin->maturity = MATURITY_STABLE;

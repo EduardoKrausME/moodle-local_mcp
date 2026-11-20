@@ -34,76 +34,22 @@ use local_mcp\security\untrusted_content;
  */
 final class question_usage_service {
     /**
-     * @return array Quiz and question bank entry attached to this exact slot.
+     * Use the legacy quiz_slots.questionid schema before Moodle 4.0.
      */
-    private static function entry(array $a, authenticated_identity $identity): array {
-        global $DB;
-        [$quiz] = quiz_service::target((int)$a["cmid"], $identity, "mod/quiz:manage");
-        $slot = $DB->get_record("quiz_slots", ["id" => (int)$a["slotid"],
-            "quizid" => $quiz->id], "*", MUST_EXIST);
-        $ref = $DB->get_record("question_references",
-            ["component" => "mod_quiz", "questionarea" => "slot", "itemid" => $slot->id]);
-        if (!$ref) {
-            throw new api_exception("slot_is_not_fixed_question", 409);
-        }
-        return [$quiz, $slot, $ref];
+    private static function driver(): string {
+        global $CFG;
+        return (int)$CFG->version < 2022041900
+            ? legacy_question_usage_service::class
+            : versioned_question_usage_service::class;
     }
 
-    /**
-     * @return array Versions and statuses, with no question body or correct answers.
-     */
     public static function versions(array $a, authenticated_identity $identity): array {
-        global $DB;
-        [$quiz, $slot, $ref] = self::entry($a, $identity);
-        $versions = $DB->get_records("question_versions",
-            ["questionbankentryid" => $ref->questionbankentryid], "version DESC", "*", 0, 50);
-        $rows = [];
-        foreach ($versions as $version) {
-            $q = $DB->get_record("question", ["id" => $version->questionid], "id,name,qtype");
-            $rows[] = ["version" => (int)$version->version, "questionid" => (int)$version->questionid,
-                "status" => $version->status, "name" => $q ? untrusted_content::text($q->name) : null,
-                "qtype" => $q ? $q->qtype : null];
-        }
-        return ["cmid" => (int)$a["cmid"], "slotid" => (int)$slot->id,
-            "questionbankentryid" => (int)$ref->questionbankentryid,
-            "versions" => $rows, "version_limit" => 50];
+        $driver = self::driver();
+        return $driver::versions($a, $identity);
     }
 
-    /**
-     * @return array Only authorized reuse inside the same Moodle course.
-     */
     public static function usage(array $a, authenticated_identity $identity): array {
-        global $DB;
-        [$quiz, $slot, $ref] = self::entry($a, $identity);
-        $sql = "SELECT qs.id AS slotid, qs.quizid, qs.slot, qz.name
-                  FROM {question_references} qr
-                  JOIN {quiz_slots} qs ON qs.id = qr.itemid
-                  JOIN {quiz} qz ON qz.id = qs.quizid
-                 WHERE qr.component = :component AND qr.questionarea = :area
-                   AND qr.questionbankentryid = :bankentry AND qz.course = :course
-              ORDER BY qs.quizid ASC, qs.slot ASC";
-        $records = $DB->get_records_sql($sql, [
-            "component" => "mod_quiz", "area" => "slot",
-            "bankentry" => $ref->questionbankentryid, "course" => $quiz->course,
-        ], 0, 100);
-        $rows = [];
-        foreach ($records as $record) {
-            $cm = get_coursemodule_from_instance("quiz", $record->quizid, $quiz->course, false);
-            if (!$cm) {
-                continue;
-            }
-            try {
-                quiz_service::target((int)$cm->id, $identity, "mod/quiz:manage");
-            } catch (api_exception $exception) {
-                continue;
-            }
-            $rows[] = ["cmid" => (int)$cm->id, "quizid" => (int)$record->quizid,
-                "slotid" => (int)$record->slotid, "slot" => (int)$record->slot,
-                "quiz_name" => untrusted_content::text($record->name)];
-        }
-        return ["cmid" => (int)$a["cmid"], "slotid" => (int)$slot->id,
-            "questionbankentryid" => (int)$ref->questionbankentryid,
-            "authorized_course_references" => $rows, "limit" => 100,
-            "cross_course_usage_excluded" => true];
+        $driver = self::driver();
+        return $driver::usage($a, $identity);
     }
 }

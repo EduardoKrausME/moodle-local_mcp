@@ -41,7 +41,7 @@ final class metadata {
 
         $path = (string)(parse_url($uri ?? ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH) ?: '');
         $prefix = rtrim((string)(parse_url($CFG->wwwroot, PHP_URL_PATH) ?: ''), '/');
-        if ($prefix !== '' && ($path === $prefix || str_starts_with($path, $prefix . '/'))) {
+        if ($prefix !== '' && ($path === $prefix || \local_mcp\compat::starts_with($path, $prefix . '/'))) {
             $path = substr($path, strlen($prefix));
         }
         return $path;

@@ -102,7 +102,7 @@ final class gift_import_service {
 
         $gift = $arguments["gift"];
         if (trim($gift) === "" || strlen($gift) > self::MAX_BYTES ||
-            str_contains($gift, "\0") || !mb_check_encoding($gift, "UTF-8")) {
+            \local_mcp\compat::contains($gift, "\0") || !mb_check_encoding($gift, "UTF-8")) {
             throw new api_exception("invalid_gift_content", 400);
         }
 
@@ -149,14 +149,8 @@ final class gift_import_service {
                 throw new api_exception("duplicate_gift_question_name", 409);
             }
             $allnames[$questionname] = true;
-            if ($existingcategory !== null && $DB->record_exists_sql(
-                "SELECT 1
-                   FROM {question} q
-                   JOIN {question_versions} v ON v.questionid = q.id
-                   JOIN {question_bank_entries} e ON e.id = v.questionbankentryid
-                  WHERE e.questioncategoryid = :categoryid AND q.name = :name",
-                ["categoryid" => (int)$existingcategory->id, "name" => $questionname]
-            )) {
+            if ($existingcategory !== null &&
+                bank_service::name_exists((int)$existingcategory->id, $questionname)) {
                 // Check all versions and statuses, including hidden and draft entries.
                 throw new api_exception("duplicate_gift_question_name", 409);
             }

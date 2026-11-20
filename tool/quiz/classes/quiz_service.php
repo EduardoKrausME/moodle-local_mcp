@@ -28,8 +28,6 @@ use context_module;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\security\untrusted_content;
-use mod_quiz\quiz_settings;
-use mod_quiz\structure;
 
 /**
  * Resolve authorized quizzes and delegate structure edits to Moodle APIs.
@@ -88,7 +86,7 @@ final class quiz_service {
         global $CFG;
         [$quiz, $cm, $context] = self::target((int)$a["cmid"], $identity, "mod/quiz:manage");
         require_once($CFG->dirroot . "/mod/quiz/locallib.php");
-        $structure = structure::create_for_quiz(quiz_settings::create($quiz->id));
+        $structure = quiz_compat::structure((int)$quiz->id);
         $items = [];
         foreach ($structure->get_slots() as $slot) {
             $items[] = ["slotid" => (int)$slot->id, "slot" => (int)$slot->slot,
@@ -193,13 +191,13 @@ final class quiz_service {
         global $DB, $CFG;
         [$quiz] = self::target((int)$a["cmid"], $identity, "mod/quiz:manage");
         require_once($CFG->dirroot . "/mod/quiz/locallib.php");
-        $structure = structure::create_for_quiz(quiz_settings::create($quiz->id));
+        $structure = quiz_compat::structure((int)$quiz->id);
         $structure->check_can_be_edited();
         self::verify_layout((int)$quiz->id, (string)$a["expected_layout_sha256"]);
         $slotid = (int)$a["slotid"];
         $slot = $DB->get_record("quiz_slots", ["id" => $slotid, "quizid" => $quiz->id], "*", MUST_EXIST);
         $structure->remove_slot((int)$slot->slot);
-        quiz_settings::create($quiz->id)->get_grade_calculator()->recompute_quiz_sumgrades();
+        quiz_compat::recompute_sumgrades((int)$quiz->id);
         return ["removed" => true, "cmid" => (int)$a["cmid"], "slotid" => $slotid];
     }
 
@@ -210,7 +208,7 @@ final class quiz_service {
         global $DB, $CFG;
         [$quiz] = self::target((int)$a["cmid"], $identity, "mod/quiz:manage");
         require_once($CFG->dirroot . "/mod/quiz/locallib.php");
-        $structure = structure::create_for_quiz(quiz_settings::create($quiz->id));
+        $structure = quiz_compat::structure((int)$quiz->id);
         $structure->check_can_be_edited();
         self::verify_layout((int)$quiz->id, (string)$a["expected_layout_sha256"]);
         $slotid = (int)$a["slotid"];

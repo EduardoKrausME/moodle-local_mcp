@@ -57,9 +57,9 @@ final class logger {
         $metadata['request_id'] = \local_mcp\diagnostics::request_id();
         $safe = summary::sanitise($metadata);
         $DB->insert_record('local_mcp_audit', (object)[
-            'connectionid' => $identity?->connectionid,
-            'clientid' => $identity?->clientid,
-            'userid' => $identity?->userid,
+            'connectionid' => ($identity === null ? null : $identity->connectionid),
+            'clientid' => ($identity === null ? null : $identity->clientid),
+            'userid' => ($identity === null ? null : $identity->userid),
             'event' => clean_param($event, PARAM_ALPHANUMEXT),
             'tool' => $tool ? clean_param($tool, PARAM_ALPHANUMEXT) : null,
             'side' => $side,

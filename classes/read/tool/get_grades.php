@@ -104,7 +104,7 @@ final class get_grades extends base_tool {
         foreach ($grades->items ?? [] as $item) {
             $grade = $item->grades[(int)$arguments['userid']] ?? null;
             $out[] = ['name' => $item->name, 'grademin' => $item->grademin, 'grademax' => $item->grademax,
-                'grade' => $grade?->grade, 'formatted' => $grade?->str_grade];
+                'grade' => ($grade === null ? null : $grade->grade), 'formatted' => ($grade === null ? null : $grade->str_grade)];
         }
         return ['grades' => $out];
     }

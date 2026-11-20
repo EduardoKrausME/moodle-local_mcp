@@ -26,7 +26,6 @@ namespace mcptool_quiz;
 
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
-use mod_quiz\quiz_settings;
 
 /**
  * Regrade a single finished attempt through Moodle's report engine.
@@ -73,8 +72,7 @@ final class regrade_service {
         $DB->update_record("quiz_attempts", (object)[
             "id" => $attempt->id, "sumgrades" => $new, "timemodified" => time(),
         ]);
-        quiz_settings::create((int)$quiz->id)->get_grade_calculator()
-            ->recompute_final_grade((int)$attempt->userid);
+        quiz_compat::recompute_final_grade((int)$quiz->id, (int)$attempt->userid);
         $transaction->allow_commit();
         return ["regraded" => true, "quizid" => (int)$quiz->id,
             "attemptid" => (int)$attempt->id, "old_sumgrades" => (float)$attempt->sumgrades,

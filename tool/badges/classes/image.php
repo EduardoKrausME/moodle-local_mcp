@@ -68,7 +68,7 @@ final class image {
      * @return string
      */
     private static function decode_base64(string $data): string {
-        if (str_starts_with($data, "data:image/png;base64,")) {
+        if (\local_mcp\compat::starts_with($data, "data:image/png;base64,")) {
             $data = substr($data, strlen("data:image/png;base64,"));
         }
         // Reject oversized input before allocating a decoded binary buffer.
@@ -98,8 +98,8 @@ final class image {
         }
         $host = strtolower(rtrim($parts["host"], "."));
         if (filter_var($host, FILTER_VALIDATE_IP) ||
-            $host === "localhost" || str_ends_with($host, ".localhost") ||
-            str_ends_with($host, ".local") || str_ends_with($host, ".internal")) {
+            $host === "localhost" || \local_mcp\compat::ends_with($host, ".localhost") ||
+            \local_mcp\compat::ends_with($host, ".local") || \local_mcp\compat::ends_with($host, ".internal")) {
             throw new api_exception("Private or literal IP hosts are not accepted", 400);
         }
         require_once($CFG->libdir . "/filelib.php");

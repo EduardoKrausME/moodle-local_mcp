@@ -169,8 +169,8 @@ final class image_service {
             }
             // Restrict to DNS hostnames. Moodle's cURL security settings apply additional host/IP rules.
             $hostname = strtolower(rtrim((string)$parts['host'], '.'));
-            if ($hostname === 'localhost' || str_ends_with($hostname, '.localhost')
-                || str_ends_with($hostname, '.local') || filter_var(trim($hostname, '[]'), FILTER_VALIDATE_IP)) {
+            if ($hostname === 'localhost' || \local_mcp\compat::ends_with($hostname, '.localhost')
+                || \local_mcp\compat::ends_with($hostname, '.local') || filter_var(trim($hostname, '[]'), FILTER_VALIDATE_IP)) {
                 throw new api_exception('invalid_image_url', 400, 'Use a public HTTPS hostname.');
             }
             // Redirects are disabled so a public URL cannot redirect into an internal resource.

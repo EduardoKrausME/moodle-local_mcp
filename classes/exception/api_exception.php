@@ -30,11 +30,11 @@ use moodle_exception;
  * Class api_exception.
  */
 class api_exception extends moodle_exception {
-    public readonly string $machinecode;
+    public string $machinecode;
 
-    public readonly int $httpstatus;
+    public int $httpstatus;
 
-    public readonly array $details;
+    public array $details;
 
     /**
      * Method __construct.

@@ -41,8 +41,8 @@ final class transport {
         $scheme = strtolower((string)($parts['scheme'] ?? ''));
         $host = strtolower((string)($parts['host'] ?? ''));
         $local = in_array($host, ['localhost', '127.0.0.1', '::1'], true)
-            || str_ends_with($host, '.localhost')
-            || str_ends_with($host, '.test');
+            || \local_mcp\compat::ends_with($host, '.localhost')
+            || \local_mcp\compat::ends_with($host, '.test');
         if ($scheme !== 'https' && !$local) {
             throw new api_exception('https_required', 400);
         }

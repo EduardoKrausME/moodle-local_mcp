@@ -123,7 +123,7 @@ final class tool_input_validator {
             }
         }
 
-        if (is_array($value) && array_is_list($value)) {
+        if (is_array($value) && \local_mcp\compat::is_list($value)) {
             $count = count($value);
             if (isset($schema["minItems"]) && $count < $schema["minItems"]) {
                 self::reject($path, "array is shorter than minItems");
@@ -146,7 +146,7 @@ final class tool_input_validator {
             }
         }
 
-        if ($value instanceof stdClass || (is_array($value) && !array_is_list($value))) {
+        if ($value instanceof stdClass || (is_array($value) && !\local_mcp\compat::is_list($value))) {
             $properties = (array)$value;
             $defined = (array)($schema["properties"] ?? []);
             foreach ($schema["required"] ?? [] as $key) {
@@ -225,8 +225,8 @@ final class tool_input_validator {
      */
     private static function matches_type(mixed $value, mixed $type): bool {
         return match ($type) {
-            "object" => $value instanceof stdClass || (is_array($value) && !array_is_list($value)),
-            "array" => is_array($value) && array_is_list($value),
+            "object" => $value instanceof stdClass || (is_array($value) && !\local_mcp\compat::is_list($value)),
+            "array" => is_array($value) && \local_mcp\compat::is_list($value),
             "integer" => is_int($value),
             "number" => is_int($value) || is_float($value),
             "string" => is_string($value),

@@ -12,7 +12,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:17
+        image: postgres:${{ matrix.config.postgres }}
         env:
           POSTGRES_USER: 'postgres'
           POSTGRES_HOST_AUTH_METHOD: 'trust'
@@ -21,24 +21,37 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 3
 
       mariadb:
-        image: mariadb:11.4
+        image: mariadb:${{ matrix.config.mariadb }}
         env:
           MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "1"
         ports:
           - 3306:3306
-        options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=5
+        options: --health-cmd="mariadb-admin ping -h 127.0.0.1 --silent" --health-interval=10s --health-timeout=5s --health-retries=5
 
     strategy:
       fail-fast: false
       matrix:
         database: [pgsql, mariadb]
         config:
+          - php: '7.4'
+            moodle: 'MOODLE_310_STABLE'
+            postgres: '13'
+            mariadb: '10.6'
+
+          - php: '7.4'
+            moodle: 'MOODLE_400_STABLE'
+            postgres: '13'
+            mariadb: '10.6'
 
           - php: '8.1'
             moodle: 'MOODLE_405_STABLE'
+            postgres: '17'
+            mariadb: '11.4'
 
           - php: '8.3'
             moodle: 'MOODLE_503_STABLE'
+            postgres: '17'
+            mariadb: '11.4'
 
     steps:
     - name: Check out repository code

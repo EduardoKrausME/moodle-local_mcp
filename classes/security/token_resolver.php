@@ -44,7 +44,7 @@ final class token_resolver {
             self::reject('missing_or_malformed_bearer');
         }
         $token = trim($m[1]);
-        if (!str_starts_with($token, 'mcp_at_')) {
+        if (!\local_mcp\compat::starts_with($token, 'mcp_at_')) {
             self::reject('unsupported_access_token_format');
         }
         $prefix = secret::prefix($token);

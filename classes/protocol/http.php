@@ -40,7 +40,7 @@ final class http {
     private static string $traceside = 'server';
 
     /** @var mixed Original JSON tool arguments, retaining object/array distinctions. */
-    private static mixed $originalarguments = null;
+    private static $originalarguments = null;
 
     /**
      * Enable tracing for this MCP endpoint (never for OAuth endpoints).

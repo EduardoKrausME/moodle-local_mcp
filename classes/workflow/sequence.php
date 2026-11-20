@@ -100,7 +100,7 @@ final class sequence {
      * @param callable $callback Transition callback.
      * @return mixed
      */
-    private static function locked(string $id, callable $callback): mixed {
+    private static function locked(string $id, callable $callback) {
         $factory = \core\lock\lock_config::get_lock_factory("local_mcp");
         $lock = $factory->get_lock("workflow_" . self::key($id), 5);
         if (!$lock) {

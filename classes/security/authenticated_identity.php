@@ -28,19 +28,19 @@ namespace local_mcp\security;
  * Class authenticated_identity.
  */
 final class authenticated_identity {
-    public readonly int $userid;
+    public int $userid;
 
-    public readonly string $type;
+    public string $type;
 
-    public readonly array $scopes;
+    public array $scopes;
 
-    public readonly ?int $clientid;
+    public ?int $clientid;
 
-    public readonly ?int $connectionid;
+    public ?int $connectionid;
 
-    public readonly ?int $tokenid;
+    public ?int $tokenid;
 
-    public readonly ?string $family;
+    public ?string $family;
 
     /**
      * Method __construct.

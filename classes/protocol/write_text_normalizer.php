@@ -34,7 +34,7 @@ final class write_text_normalizer {
      * @param mixed $value A decoded JSON value.
      * @return mixed The normalized value.
      */
-    public static function normalize(mixed $value, string $key = ''): mixed {
+    public static function normalize($value, string $key = '') {
         if (is_string($value)) {
             // Credentials are opaque. Never modify their bytes, even for typography cleanup.
             if (preg_match('/(?:password|passwd|passphrase|secret|token)$/i', $key)) {

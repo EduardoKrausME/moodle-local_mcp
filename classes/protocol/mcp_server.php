@@ -52,7 +52,7 @@ use Throwable;
  * Class mcp_server.
  */
 final class mcp_server {
-    private readonly string $side;
+    private string $side;
 
     /**
      * Method __construct.

@@ -142,7 +142,7 @@ final class update_category extends base_tool {
                 }
                 $parent = core_course_category::get($newparentid, MUST_EXIST, true);
                 if ($newparentid > 0 &&
-                    (str_starts_with($parent->path . '/', $category->path . '/'))) {
+                    (\local_mcp\compat::starts_with($parent->path . '/', $category->path . '/'))) {
                     throw new api_exception('category_cycle', 400);
                 }
                 $oldparentctx = $category->parent > 0

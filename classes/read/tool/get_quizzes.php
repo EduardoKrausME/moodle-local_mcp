@@ -102,7 +102,7 @@ final class get_quizzes extends base_tool {
             if (!$cm->uservisible) {
                 continue;
             }
-            $out[] = ['cmid' => (int)$cm->id, 'instanceid' => (int)$cm->instance, 'name' => $cm->name, 'url' => $cm->url?->out(false)];
+            $out[] = ['cmid' => (int)$cm->id, 'instanceid' => (int)$cm->instance, 'name' => $cm->name, 'url' => ($cm->url === null ? null : $cm->url->out(false))];
         }
         return ['quizzes' => $out];
     }

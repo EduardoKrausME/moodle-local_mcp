@@ -78,7 +78,7 @@ final class activity_upload {
      * @return void
      */
     private static function validate_h5p_package(string $binary): void {
-        if (!str_starts_with($binary, "PK\x03\x04")) {
+        if (!\local_mcp\compat::starts_with($binary, "PK\x03\x04")) {
             throw new api_exception("invalid_h5p_package", 400, "H5P packages must be ZIP archives.");
         }
         if (!class_exists(\ZipArchive::class)) {
@@ -104,8 +104,8 @@ final class activity_upload {
                 for ($i = 0; $i < $zip->numFiles; $i++) {
                     $entry = $zip->statIndex($i);
                     if (!$entry || !isset($entry["name"], $entry["size"]) ||
-                        str_starts_with($entry["name"], "/") ||
-                        str_contains($entry["name"], "\\") ||
+                        \local_mcp\compat::starts_with($entry["name"], "/") ||
+                        \local_mcp\compat::contains($entry["name"], "\\") ||
                         preg_match("~(?:^|/)\\.\\.(?:/|$)~", $entry["name"])) {
                         throw new api_exception("invalid_h5p_package", 400);
                     }

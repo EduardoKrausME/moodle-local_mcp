@@ -103,7 +103,7 @@ final class get_assignments extends base_tool {
             if (!$cm->uservisible || !has_capability('mod/assign:view', context_module::instance($cm->id), $identity->userid)) {
                 continue;
             }
-            $out[] = ['cmid' => (int)$cm->id, 'instanceid' => (int)$cm->instance, 'name' => $cm->name, 'url' => $cm->url?->out(false)];
+            $out[] = ['cmid' => (int)$cm->id, 'instanceid' => (int)$cm->instance, 'name' => $cm->name, 'url' => ($cm->url === null ? null : $cm->url->out(false))];
         }
         return ['assignments' => $out];
     }
