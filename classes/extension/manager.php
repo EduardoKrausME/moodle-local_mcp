@@ -65,6 +65,16 @@ final class manager {
     }
 
     /**
+     * Optional policy providers, discovered through Moodle's plugin callback API.
+     * No policy provider may grant privileges absent from native Moodle checks.
+     *
+     * @return access_policy_interface[]
+     */
+    public static function access_policies(): array {
+        return self::providers('mcp_access_policy', access_policy_interface::class);
+    }
+
+    /**
      * Automatically discover providers in any installed Moodle plugin:
      * /<plugintype>/<name>/classes/mcp/provider.php
      *
