@@ -263,3 +263,8 @@ $string['writeapisempty'] = 'No WRITE tools available.';
 $string['writeapisonlyread'] = 'Installed plugins with READ-only APIs';
 $string['writeapisonlyreadhelp'] = 'These integrations are available through MCP READ, not WRITE. Open their READ API lists to see every tool. Installation order does not change the API type.';
 $string['writepermissions'] = 'Write permissions';
+
+$string['newconnectiontitle'] = 'Connect your Moodle account to ChatGPT or Claude';
+$string['newconnectionintro'] = 'Add this Moodle MCP server in ChatGPT or Claude. Sign in with your own Moodle account during OAuth authorization; you do not need to share your password or copy tokens.';
+$string['newconnectionurlhelp'] = 'Use this address when configuring the MCP server in ChatGPT or the custom connector in Claude.';
+$string['newconnectionfinish'] = 'After authorizing the connection in Moodle, return to the activity and reload the page. You can then copy the prompt to create the draft.';
