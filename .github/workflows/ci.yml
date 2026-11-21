@@ -38,7 +38,7 @@ jobs:
             postgres: '13'
             mariadb: '10.6'
 
-          - php: '7.4'
+          - php: '8.0'
             moodle: 'MOODLE_400_STABLE'
             postgres: '13'
             mariadb: '10.6'
