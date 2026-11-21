@@ -1,0 +1,47 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Permissões, SHA-256 de estado e configuração de conclusão."><title>Grupos, restrições e conclusão · Moodle MCP</title><link rel="icon" href="../../favicon.svg"><script src="../../theme-init.js"></script><link rel="stylesheet" href="../../styles.css"></head><body><a class="skip" href="#conteudo">Ir para o conteúdo</a><header class="site-header"><div class="shell header-inner"><a class="brand" href="../index.html"><span class="brand-mark">M</span><span>Moodle <strong>MCP</strong></span></a><nav aria-label="Navegação"><a href="../index.html#recursos">Recursos</a><a href="../index.html#conectar">Conexão</a><a href="index.html">Guias técnicos</a><a href="../index.html#seguranca">Segurança</a></nav><div class="header-actions"><a class="button small primary" href="https://github.com/EduardoKrausME/moodle-local_mcp" target="_blank" rel="noopener">Ver no GitHub ↗</a><button class="menu-button" aria-label="Abrir menu" aria-expanded="false">☰</button></div></div></header><main id="conteudo"><section class="detail-hero"><div class="shell"><a class="back" href="index.html">← Voltar aos guias</a><span class="eyebrow" style="display:flex;margin-top:32px">Documentação técnica</span><h1>Grupos, restrições e conclusão</h1><p>Permissões, SHA-256 de estado e configuração de conclusão.</p></div></section><div class="shell detail-layout doc-layout"><article class="prose doc-prose"><p>Essas ferramentas ampliam os registries READ e WRITE do próprio <code>local_mcp</code>, sem exigir a instalação de um subplugin. São compatíveis com Moodle 4.5 LTS e Moodle 5.3.</p>
+<h3 id="operacoes-read">Operações READ</h3>
+<ul>
+<li><code>get_course_groups(courseid, limit?, offset?)</code>: lista IDs, nomes e quantidade de membros dos grupos.</li>
+<li><code>get_group_members(courseid, groupid, limit?, offset?)</code>: lista paginada dos IDs e nomes de exibição dos participantes e fornece <code>members_sha256</code>, que representa o conjunto completo de membros do grupo naquele momento.</li>
+<li><code>get_activity_restrictions(cmid)</code>: devolve o JSON atual das condições de disponibilidade, o modo de grupos e <code>availability_sha256</code>, assinatura SHA-256 do JSON armazenado ou da string vazia.</li>
+<li><code>get_activity_completion(cmid)</code>: informa modo de conclusão, regras relacionadas a visualização e nota e quantidade de registros de conclusão já existentes.</li>
+</ul>
+<h3 id="operacoes-write-com-confirmacao">Operações WRITE com confirmação</h3>
+<ul>
+<li><code>create_group(courseid, name)</code></li>
+<li><code>add_group_members(courseid, groupid, userids, expected_members_sha256)</code></li>
+<li><code>remove_group_members(courseid, groupid, userids, expected_members_sha256)</code></li>
+<li><code>set_activity_groupmode(cmid, groupmode, expected_groupmode)</code> — 0 sem grupos, 1 grupos separados, 2 grupos visíveis.</li>
+<li><code>set_activity_restrictions(cmid, mode, expected_availability_sha256, conditions?)</code></li>
+<li><code>set_activity_completion(cmid, completion, expected_completion, requireview?, requiregrade?)</code></li>
+</ul>
+<p>Todas as operações WRITE exigem a confirmação de uso único existente no MCP. O servidor verifica novamente as permissões e os pré-requisitos durante a execução, não apenas na prévia. Alterações de membros exigem <code>moodle/course:managegroups</code>, matrícula ativa do estudante na inclusão e assinatura atualizada de membros. Componentes externos responsáveis por matrículas ou grupos podem impedir exclusões. Modo de grupos, restrições e conclusão exigem <code>moodle/course:manageactivities</code> no contexto do módulo.</p>
+<h3 id="condicoes-de-disponibilidade">Condições de disponibilidade</h3>
+<p>A ferramenta <code>set_activity_restrictions</code> substitui toda a árvore anterior de restrições por uma única condição lógica AND que contém de 1 a 20 condições. <code>mode=clear</code> remove as restrições e ignora <code>conditions</code>; a ferramenta não mescla nem modifica parcialmente as regras existentes. Por isso, é obrigatório conferir a prévia completa do antes e depois.</p>
+<p>Exemplo de solicitação:</p>
+<pre><code class="language-json">{
+  &quot;cmid&quot;: 17,
+  &quot;mode&quot;: &quot;replace&quot;,
+  &quot;expected_availability_sha256&quot;: &quot;&lt;sha256 devolvido por get_activity_restrictions&gt;&quot;,
+  &quot;conditions&quot;: [
+    {&quot;type&quot;: &quot;group&quot;, &quot;groupid&quot;: 11},
+    {&quot;type&quot;: &quot;date&quot;, &quot;direction&quot;: &quot;from&quot;, &quot;timestamp&quot;: 1790000000},
+    {&quot;type&quot;: &quot;completion&quot;, &quot;cmid&quot;: 16, &quot;state&quot;: &quot;complete&quot;},
+    {&quot;type&quot;: &quot;grade&quot;, &quot;gradeitemid&quot;: 54, &quot;min&quot;: 60}
+  ]
+}</code></pre>
+<p>Condições de data aceitam <code>from</code> (inclusivo) ou <code>until</code> (exclusivo). A conclusão aceita <code>complete</code>, <code>incomplete</code>, <code>passed</code> e <code>failed</code>. Os limites mínimo e máximo de nota usam percentuais de 0 a 100, sendo o máximo exclusivo. Cada grupo, atividade ou item de nota referenciado é conferido no mesmo curso. Regras de conclusão recusam autorreferências e cursos com conclusão desativada. Apenas plugins de disponibilidade habilitados no Moodle são permitidos, e a árvore resultante é validada pelo core.</p>
+<h3 id="configuracao-de-conclusao">Configuração de conclusão</h3>
+<p>A ferramenta aceita desativada (0), manual (1) e automática (2). A conclusão automática exige <code>requireview=true</code>, <code>requiregrade=true</code> ou ambos; a condição por nota só é possível quando a atividade possui item de avaliação. Não são oferecidas regras específicas de cada tipo de módulo. Caso já existam registros de conclusão de estudantes, a alteração fica bloqueada para evitar apagar ou recalcular silenciosamente o histórico.</p>
+<p>A conclusão precisa estar habilitada no curso e no site. A ferramenta altera somente os campos centrais do módulo do curso, não as configurações específicas dos formulários de cada atividade. Após instalar o plugin, atualize os caches do Moodle e a descoberta MCP. Nenhum registro preexistente de conclusão ou nota do curso é apagado ou modificado por essas operações.</p><nav class="doc-prevnext" aria-label="Guia anterior e seguinte"><a href="assignment-feedback-tools.html">← Feedback de tarefas</a><a href="course-module-maintenance.html">Criação de tarefas e exclusão segura →</a></nav></article><aside class="detail-aside doc-aside"><h3>Nesta página</h3><nav class="doc-toc"><a href="#operacoes-read">Operações READ</a>
+<a href="#operacoes-write-com-confirmacao">Operações WRITE com confirmação</a>
+<a href="#condicoes-de-disponibilidade">Condições de disponibilidade</a>
+<a href="#configuracao-de-conclusao">Configuração de conclusão</a></nav><h3>Todos os guias</h3><nav class="doc-side-links"><a href="assignment-feedback-tools.html">Feedback de tarefas</a>
+<a href="course-groups-restrictions-completion.html" aria-current="page" class="is-current">Grupos, restrições e conclusão</a>
+<a href="course-module-maintenance.html">Criação de tarefas e exclusão segura</a>
+<a href="gradebook-completion-mcp.html">Notas e progresso</a>
+<a href="mcptool-assign.html">Ferramentas avançadas de tarefas</a>
+<a href="mcptool-feedback-lesson.html">Questionários de feedback e lições</a>
+<a href="mcptool-quiz.html">Questionários e banco de questões</a>
+<a href="oauth-webserver.html">OAuth e configuração do servidor web</a>
+<a href="sequential-workflows.html">Fluxos sequenciais com confirmação</a></nav></aside></div></main><footer><div class="shell footer-main"><a class="brand" href="../index.html"><span class="brand-mark">M</span><span>Moodle <strong>MCP</strong></span></a><p>Um servidor MCP extensível para o Moodle.</p><div><a href="https://github.com/EduardoKrausME/moodle-local_mcp" target="_blank" rel="noopener">Open source ↗</a><a href="../privacy.html">Política de Privacidade</a></div></div><div class="shell footer-bottom"><span>© 2026 Eduardo Kraus · Moodle MCP</span><span>Moodle™ é uma marca registrada. Projeto independente.</span></div></footer><script src="../../script.js"></script></body></html>

@@ -1,0 +1,37 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Layout, estatísticas e recorreção com segurança."><title>Questionários e banco de questões · Moodle MCP</title><link rel="icon" href="../../favicon.svg"><script src="../../theme-init.js"></script><link rel="stylesheet" href="../../styles.css"></head><body><a class="skip" href="#conteudo">Ir para o conteúdo</a><header class="site-header"><div class="shell header-inner"><a class="brand" href="../index.html"><span class="brand-mark">M</span><span>Moodle <strong>MCP</strong></span></a><nav aria-label="Navegação"><a href="../index.html#recursos">Recursos</a><a href="../index.html#conectar">Conexão</a><a href="index.html">Guias técnicos</a><a href="../index.html#seguranca">Segurança</a></nav><div class="header-actions"><a class="button small primary" href="https://github.com/EduardoKrausME/moodle-local_mcp" target="_blank" rel="noopener">Ver no GitHub ↗</a><button class="menu-button" aria-label="Abrir menu" aria-expanded="false">☰</button></div></div></header><main id="conteudo"><section class="detail-hero"><div class="shell"><a class="back" href="index.html">← Voltar aos guias</a><span class="eyebrow" style="display:flex;margin-top:32px">Documentação técnica</span><h1>Questionários e banco de questões</h1><p>Layout, estatísticas e recorreção com segurança.</p></div></section><div class="shell detail-layout doc-layout"><article class="prose doc-prose"><p>O subplugin <code>mcptool_quiz</code> amplia as ferramentas existentes <code>quiz_create_activity</code> e <code>quiz_add_question</code>.</p>
+<h3 id="operacoes-read">Operações READ</h3>
+<ul>
+<li><code>quiz_get_question_slots</code>: posições, números das páginas, referências e pontuações das questões.</li>
+<li><code>quiz_get_attempt_responses</code>: variáveis de respostas submetidas em uma tentativa concluída.</li>
+<li><code>quiz_get_attempt_statistics</code>: estatísticas amostrais de tentativas concluídas.</li>
+<li><code>quiz_get_question_statistics</code>: fração média da pontuação e correlação bruta, calculadas sobre uma amostra.</li>
+<li><code>quiz_get_question_versions</code>: versões disponíveis de questões do banco associadas a uma posição fixa.</li>
+<li><code>quiz_get_question_usage</code>: outras utilizações autorizadas das questões em questionários do mesmo curso.</li>
+</ul>
+<h3 id="operacoes-write">Operações WRITE</h3>
+<p>Cada operação exige prévia e confirmação MCP de uso único:</p>
+<ul>
+<li><code>quiz_update_activity</code>: atualiza somente configurações selecionadas do questionário, preservando campos não relacionados.</li>
+<li><code>quiz_remove_question</code>: remove uma posição da estrutura, somente antes de tentativas reais.</li>
+<li><code>quiz_reorder_questions</code>: move uma posição dentro de uma página válida, somente antes de tentativas reais.</li>
+<li><code>quiz_regrade_attempt</code>: reavalia uma tentativa concluída e atualiza o livro de notas do Moodle.</li>
+</ul>
+<h3 id="estrutura-e-reavaliacao">Estrutura e reavaliação</h3>
+<p>As ferramentas de organização utilizam <code>mod_quiz\structure</code>, API nativa do Moodle, e não permitem alterações estruturais depois de tentativas reais dos estudantes. Remoção e reordenação exigem o valor atualizado de <code>expected_layout_sha256</code> fornecido por <code>quiz_get_question_slots</code>; alterações concorrentes tornam a assinatura inválida.</p>
+<p>A recorreção exige <code>mod/quiz:regrade</code>, uma tentativa real concluída, autorização para acessar o grupo separado do estudante e os valores atuais de <code>expected_timemodified</code> e <code>expected_sumgrades</code>. Antes de solicitá-la, consulte <code>quiz_get_attempt_responses</code> para obter uma versão recente desses campos.</p>
+<p>Cada recorreção é confirmada individualmente; não existe reavaliação em lote ou automática. A compatibilidade das versões de questões é verificada pelo mecanismo de recorreção do relatório de visão geral do Moodle. A nota final é recalculada pelo mecanismo nativo do questionário, sem escrita direta no livro de notas.</p>
+<h3 id="restricoes-de-privacidade-e-estatisticas">Restrições de privacidade e estatísticas</h3>
+<p>Ferramentas READ não retornam os gabaritos. A inspeção de respostas exige adicionalmente <code>mod/quiz:grade</code>, e os relatórios respeitam grupos e matrículas ativas. Valores de respostas são limitados e identificados como dados não confiáveis.</p>
+<p>Relatórios estatísticos usam as primeiras 500 tentativas concluídas, excluem prévias e suprimem resultados quando existem menos de cinco tentativas elegíveis. Seus indicadores são descritivos e explicitamente apresentados como amostrais, portanto <strong>não substituem</strong> o relatório oficial de estatísticas do Moodle, que utiliza dados em cache e métricas próprias como o índice de discriminação corrigido.</p>
+<p>Consultas de versões e utilização de questões exigem permissão de gerenciamento do questionário. Utilizações entre cursos e atividades sem autorização de acesso são excluídas.</p><nav class="doc-prevnext" aria-label="Guia anterior e seguinte"><a href="mcptool-feedback-lesson.html">← Questionários de feedback e lições</a><a href="oauth-webserver.html">OAuth e configuração do servidor web →</a></nav></article><aside class="detail-aside doc-aside"><h3>Nesta página</h3><nav class="doc-toc"><a href="#operacoes-read">Operações READ</a>
+<a href="#operacoes-write">Operações WRITE</a>
+<a href="#estrutura-e-reavaliacao">Estrutura e reavaliação</a>
+<a href="#restricoes-de-privacidade-e-estatisticas">Restrições de privacidade e estatísticas</a></nav><h3>Todos os guias</h3><nav class="doc-side-links"><a href="assignment-feedback-tools.html">Feedback de tarefas</a>
+<a href="course-groups-restrictions-completion.html">Grupos, restrições e conclusão</a>
+<a href="course-module-maintenance.html">Criação de tarefas e exclusão segura</a>
+<a href="gradebook-completion-mcp.html">Notas e progresso</a>
+<a href="mcptool-assign.html">Ferramentas avançadas de tarefas</a>
+<a href="mcptool-feedback-lesson.html">Questionários de feedback e lições</a>
+<a href="mcptool-quiz.html" aria-current="page" class="is-current">Questionários e banco de questões</a>
+<a href="oauth-webserver.html">OAuth e configuração do servidor web</a>
+<a href="sequential-workflows.html">Fluxos sequenciais com confirmação</a></nav></aside></div></main><footer><div class="shell footer-main"><a class="brand" href="../index.html"><span class="brand-mark">M</span><span>Moodle <strong>MCP</strong></span></a><p>Um servidor MCP extensível para o Moodle.</p><div><a href="https://github.com/EduardoKrausME/moodle-local_mcp" target="_blank" rel="noopener">Open source ↗</a><a href="../privacy.html">Política de Privacidade</a></div></div><div class="shell footer-bottom"><span>© 2026 Eduardo Kraus · Moodle MCP</span><span>Moodle™ é uma marca registrada. Projeto independente.</span></div></footer><script src="../../script.js"></script></body></html>
