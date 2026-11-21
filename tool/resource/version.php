@@ -28,5 +28,8 @@ $plugin->release = '1.0.1';
 $plugin->version = 2026101000;
 $plugin->component = 'mcptool_resource';
 $plugin->requires = 2020110900;
-$plugin->dependencies = ['local_mcp' => 2026100801];
 $plugin->maturity = MATURITY_STABLE;
+
+$plugin->dependencies = [
+    "local_mcp" => 2026112001,
+];

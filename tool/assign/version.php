@@ -28,5 +28,8 @@ $plugin->component = "mcptool_assign";
 $plugin->version = 2026102200;
 $plugin->release = "1.0.0";
 $plugin->requires = 2020110900;
-$plugin->dependencies = ["local_mcp" => 2026100801];
 $plugin->maturity = MATURITY_STABLE;
+
+$plugin->dependencies = [
+    "local_mcp" => 2026112001,
+];
