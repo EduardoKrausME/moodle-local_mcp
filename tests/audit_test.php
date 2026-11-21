@@ -89,6 +89,6 @@ final class audit_test extends advanced_testcase {
         $metadata = json_decode($record->metadata, true);
         $this->assertSame([99], $metadata['result_ids']['id']);
         $this->assertArrayNotHasKey('payload', $metadata);
-        $this->assertMatchesRegularExpression('/^[a-f0-9]{12}$/', $metadata['request_id']);
+        $this->assertSame(1, preg_match('/^[a-f0-9]{12}$/', $metadata['request_id']));
     }
 }

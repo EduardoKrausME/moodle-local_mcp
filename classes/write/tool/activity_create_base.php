@@ -157,6 +157,15 @@ abstract class activity_create_base extends base_tool {
     }
 
     /**
+     * Activity creation supports a non-mutating preview before approval.
+     *
+     * @return bool
+     */
+    public function supports_dry_run(): bool {
+        return true;
+    }
+
+    /**
      * Do not include large uploaded payloads in previews or logs.
      *
      * @param array $arguments Input data.
@@ -218,6 +227,10 @@ abstract class activity_create_base extends base_tool {
         $info->name = clean_param($arguments['name'] ?? '', PARAM_TEXT);
         $info->intro = clean_text($arguments['intro'] ?? '', FORMAT_HTML);
         $info->introformat = FORMAT_HTML;
+        // Older Moodle module forms expect an explicit course-module ID number.
+        if (!isset($info->cmidnumber)) {
+            $info->cmidnumber = '';
+        }
         $this->configure($info, $arguments, $identity);
         // The core module API takes intro and introformat from introeditor when present.
         // Synchronize after configure() because some tools replace the introduction.

@@ -52,6 +52,7 @@ final class confirmation_flow_test extends advanced_testcase {
         $identity = new authenticated_identity((int)get_admin()->id, 'test', ['mcp:write']);
         $server = new mcp_server('write');
         $method = new ReflectionMethod(mcp_server::class, 'call_tool');
+        $method->setAccessible(true);
         $args = ['name' => 'MCP Pending Approval Test', 'parentid' => 0];
         $access = 'test-access-token';
 
@@ -82,6 +83,7 @@ final class confirmation_flow_test extends advanced_testcase {
         $identity = new authenticated_identity((int)get_admin()->id, 'test', ['mcp:write']);
         $server = new mcp_server('write');
         $method = new ReflectionMethod(mcp_server::class, 'call_tool');
+        $method->setAccessible(true);
         $args = ['name' => 'MCP — Typography test', 'parentid' => 0];
         $access = 'test-typography-token';
 
@@ -115,6 +117,7 @@ final class confirmation_flow_test extends advanced_testcase {
         $identity = new authenticated_identity((int)get_admin()->id, "test", ["mcp:write"]);
         $server = new mcp_server("write");
         $method = new ReflectionMethod(mcp_server::class, "call_tool");
+        $method->setAccessible(true);
         $args = ["name" => "MCP Unknown Token Regression", "parentid" => 0];
         $access = "test-token-approval";
 

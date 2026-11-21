@@ -77,7 +77,9 @@ final class password_policy {
         if (check_password_policy($password, $message, $user)) {
             return;
         }
-        $errors = get_password_policy_errors($password, $user);
+        // Older Moodle releases report policy violations through the message argument.
+        $errors = function_exists('get_password_policy_errors')
+            ? get_password_policy_errors($password, $user) : [];
         if (!$errors) {
             $errors = [$message ?: 'The password does not comply with the Moodle password policy.'];
         }

@@ -126,6 +126,7 @@ final class create_activity extends base_tool {
         $info->content = clean_text($arguments['content'], FORMAT_HTML);
         $info->contentformat = FORMAT_HTML;
         $info->display = RESOURCELIB_DISPLAY_OPEN;
+        $info->printheading = 1;
         $info->printintro = 0;
         $info->printlastmodified = 0;
         $result = add_moduleinfo($info, $course);

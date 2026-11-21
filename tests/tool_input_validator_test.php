@@ -189,6 +189,7 @@ final class tool_input_validator_test extends advanced_testcase {
         $this->setAdminUser();
         $server = new mcp_server("read");
         $method = new ReflectionMethod(mcp_server::class, "call_tool");
+        $method->setAccessible(true);
         $identity = new authenticated_identity((int)get_admin()->id, "test", ["mcp:read"]);
         try {
             $method->invoke($server, "get_user", ["userid" => "not-an-integer"],
@@ -210,6 +211,7 @@ final class tool_input_validator_test extends advanced_testcase {
         $this->setAdminUser();
         $server = new mcp_server("read");
         $method = new ReflectionMethod(mcp_server::class, "call_tool");
+        $method->setAccessible(true);
         $identity = new authenticated_identity((int)get_admin()->id, "test", ["mcp:read"]);
         foreach ([[], (object)["userid" => "1"]] as $raw) {
             try {
@@ -233,6 +235,7 @@ final class tool_input_validator_test extends advanced_testcase {
         $this->setAdminUser();
         $server = new mcp_server("write");
         $method = new ReflectionMethod(mcp_server::class, "call_tool");
+        $method->setAccessible(true);
         $identity = new authenticated_identity((int)get_admin()->id, "test", ["mcp:write"]);
         $name = "Schema Rejection Test";
         try {

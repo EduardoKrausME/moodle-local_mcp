@@ -59,6 +59,7 @@ final class untrusted_content_test extends advanced_testcase {
         $course = $this->getDataGenerator()->create_course();
         $identity = new authenticated_identity((int)get_admin()->id, "test", ["mcp:read"]);
         $method = new ReflectionMethod(mcp_server::class, "call_tool");
+        $method->setAccessible(true);
         $result = $method->invoke(new mcp_server("read"), "get_course",
             ["courseid" => (int)$course->id], [], $identity, "test-access-token");
         $this->assertSame(untrusted_content::NOTICE, $result["content_warning"]);

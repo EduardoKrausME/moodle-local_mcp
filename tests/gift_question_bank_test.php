@@ -93,11 +93,17 @@ final class gift_question_bank_test extends advanced_testcase {
         $this->assertCount(3, array_unique($result["question_ids"]));
         $this->assertSame("GIFT-TEST-001", $DB->get_field("question_categories",
             "idnumber", ["id" => $result["categoryid"]]));
-        $types = $DB->get_records_sql("SELECT q.id, q.qtype
-            FROM {question} q
-            JOIN {question_versions} v ON v.questionid = q.id
-            JOIN {question_bank_entries} e ON e.id = v.questionbankentryid
-            WHERE e.questioncategoryid = :categoryid", ["categoryid" => $result["categoryid"]]);
+        global $CFG;
+        if ((int)$CFG->version < 2022041900) {
+            $types = $DB->get_records("question",
+                ["category" => $result["categoryid"], "parent" => 0], "id ASC", "id, qtype");
+        } else {
+            $types = $DB->get_records_sql("SELECT q.id, q.qtype
+                FROM {question} q
+                JOIN {question_versions} v ON v.questionid = q.id
+                JOIN {question_bank_entries} e ON e.id = v.questionbankentryid
+                WHERE e.questioncategoryid = :categoryid", ["categoryid" => $result["categoryid"]]);
+        }
         $this->assertCount(3, $types);
         $this->assertEqualsCanonicalizing(["multichoice", "truefalse", "shortanswer"],
             array_values(array_map(static fn($q) => $q->qtype, $types)));
@@ -136,6 +142,7 @@ final class gift_question_bank_test extends advanced_testcase {
             "gift" => $this->gift()];
         $server = new mcp_server("write");
         $method = new ReflectionMethod(mcp_server::class, "call_tool");
+        $method->setAccessible(true);
         $pending = $method->invoke($server, "import_gift_question_bank", $args,
             [], $identity, "test-access-token");
         $this->assertSame("confirmation_pending", $pending["status"]);
@@ -168,7 +175,7 @@ final class gift_question_bank_test extends advanced_testcase {
      * Reuse the selected category without creating any new category.
      */
     public function test_import_into_existing_category_is_atomic_and_preserves_metadata(): void {
-        global $DB;
+        global $CFG, $DB;
 
         [$ctx, $identity] = $this->setup_import();
         $category = bank_service::create_category([
@@ -196,8 +203,13 @@ final class gift_question_bank_test extends advanced_testcase {
             ["contextid" => $ctx->id]));
         $this->assertSame("EXISTING-QA-001", $DB->get_field("question_categories",
             "idnumber", ["id" => $categoryid]));
-        $this->assertCount(3, $DB->get_records("question_bank_entries",
-            ["questioncategoryid" => $categoryid]));
+        if ((int)$CFG->version < 2022041900) {
+            $this->assertCount(3, $DB->get_records("question",
+                ["category" => $categoryid, "parent" => 0]));
+        } else {
+            $this->assertCount(3, $DB->get_records("question_bank_entries",
+                ["questioncategoryid" => $categoryid]));
+        }
 
         // Check every version, including drafts and hidden questions.
         $this->expectException(api_exception::class);
@@ -281,6 +293,7 @@ final class gift_question_bank_test extends advanced_testcase {
 
         $server = new mcp_server("write");
         $method = new ReflectionMethod(mcp_server::class, "call_tool");
+        $method->setAccessible(true);
         $pending = $method->invoke($server, "import_gift_question_bank",
             $args, [], $identity, "test-access-token");
         $this->assertSame("confirmation_pending", $pending["status"]);

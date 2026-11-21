@@ -117,6 +117,7 @@ final class workflow_sequence_test extends advanced_testcase {
         $this->resetAfterTest();
         $identity = new authenticated_identity(2, "test", ["mcp:write"]);
         $method = new ReflectionMethod(mcp_server::class, "tool_definitions");
+        $method->setAccessible(true);
         $tools = $method->invoke(new mcp_server("write"), $identity);
         $indexed = [];
         foreach ($tools as $tool) {

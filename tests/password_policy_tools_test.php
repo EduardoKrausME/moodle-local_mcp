@@ -121,6 +121,7 @@ final class password_policy_tools_test extends advanced_testcase {
         $secret = 'Strong!Abcd12—safe';
         $server = new mcp_server('write');
         $call = new ReflectionMethod(mcp_server::class, 'call_tool');
+        $call->setAccessible(true);
         $args = ['userid' => (int)$user->id, 'password' => $secret];
         $pending = $call->invoke($server, 'update_user', $args, [], $identity, 'test-access-password');
         $this->assertTrue($pending['confirmation_required']);

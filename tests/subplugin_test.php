@@ -314,6 +314,7 @@ final class subplugin_test extends advanced_testcase {
 
         // Supply a class-discovered fixture without installing a dummy Moodle plugin.
         $property = new ReflectionProperty(manager::class, "classproviders");
+        $property->setAccessible(true);
         $previous = $property->getValue();
         $property->setValue(null, ["test_external_provider" => $provider]);
         try {
@@ -329,6 +330,7 @@ final class subplugin_test extends advanced_testcase {
                 (int)get_admin()->id, "test", ["mcp:read", "mcp:write"]
             );
             $method = new ReflectionMethod(mcp_server::class, "call_tool");
+            $method->setAccessible(true);
 
             $read = $method->invoke(new mcp_server("read"),
                 "test_external_provider_read", ["value" => "hello"], [], $identity, "test-access");

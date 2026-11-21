@@ -93,9 +93,18 @@ final class question_bank_test extends advanced_testcase {
             'name' => 'Revised question',
         ]), $identity, $created['questionid']);
         $this->assertSame($created['bankentryid'], $next['bankentryid']);
-        $this->assertSame($created['version'] + 1, $next['version']);
-        $this->assertSame('Example question',
-            bank_service::details($created['questionid'], $identity)['name']);
+        global $CFG;
+        if ((int)$CFG->version < 2022041900) {
+            // Moodle 3.x edits in place and uses a hashed optimistic concurrency token.
+            $this->assertNotSame($created['version'], $next['version']);
+            $this->assertSame('Revised question',
+                bank_service::details($created['questionid'], $identity)['name']);
+        } else {
+            // Moodle 4+ stores immutable question versions.
+            $this->assertSame($created['version'] + 1, $next['version']);
+            $this->assertSame('Example question',
+                bank_service::details($created['questionid'], $identity)['name']);
+        }
     }
 
     /**

@@ -106,6 +106,7 @@ final class discovery_test extends advanced_testcase {
         global $CFG;
         $identity = new authenticated_identity(2, "test", ["mcp:read"]);
         $method = new ReflectionMethod(mcp_server::class, "tool_definitions");
+        $method->setAccessible(true);
         $tools = $method->invoke(new mcp_server("read"), $identity);
         $this->assertNotEmpty($tools);
         foreach ($tools as $tool) {

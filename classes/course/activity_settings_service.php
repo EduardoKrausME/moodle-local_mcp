@@ -209,7 +209,7 @@ final class activity_settings_service {
             "completionview" => (int)$cm->completionview,
             "completiongradeitemnumber" => $cm->completiongradeitemnumber === null
                 ? null : (int)$cm->completiongradeitemnumber,
-            "completionpassgrade" => (int)$cm->completionpassgrade,
+            "completionpassgrade" => (int)($cm->completionpassgrade ?? 0),
             "existing_student_records" => $DB->count_records("course_modules_completion",
                 ["coursemoduleid" => $cm->id]), "modname" => $modname];
     }
@@ -261,12 +261,17 @@ final class activity_settings_service {
         $preview = self::completion_preview($a, $identity);
         $id = $preview["cmid"];
         $flags = $preview["after"];
-        $DB->update_record("course_modules", (object)[
+        $fields = [
             "id" => $id,
             "completion" => $flags["completion"], "completionview" => $flags["completionview"],
             "completiongradeitemnumber" => $flags["completiongradeitemnumber"],
-            "completionpassgrade" => $flags["completionpassgrade"],
-        ]);
+        ];
+        // Moodle 3.10 has no completionpassgrade column.
+        if (property_exists($DB->get_record("course_modules", ["id" => $id], "*", MUST_EXIST),
+                "completionpassgrade")) {
+            $fields["completionpassgrade"] = $flags["completionpassgrade"];
+        }
+        $DB->update_record("course_modules", (object)$fields);
         $courseid = (int)$DB->get_field("course_modules", "course", ["id" => $id], MUST_EXIST);
         rebuild_course_cache($courseid, true);
         \cache::make("core", "completion")->purge();

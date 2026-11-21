@@ -175,7 +175,34 @@ final class create_badge extends base_tool {
             throw new api_exception("Invalid issuer_contact email", 400);
         }
         $transaction = $DB->start_delegated_transaction();
-        $badge = \badge::create_badge($data, $courseid ?: null);
+        if (method_exists(\badge::class, "create_badge")) {
+            $badge = \badge::create_badge($data, $courseid ?: null);
+        } else {
+            // Moodle 3.10 and 4.0 use the native legacy badge insertion API.
+            $legacy = clone $data;
+            unset($legacy->expiry);
+            $legacy->timecreated = time();
+            $legacy->timemodified = $legacy->timecreated;
+            $legacy->usercreated = (int)$identity->userid;
+            $legacy->usermodified = (int)$identity->userid;
+            $legacy->expiredate = null;
+            $legacy->expireperiod = null;
+            $legacy->type = $courseid ? BADGE_TYPE_COURSE : BADGE_TYPE_SITE;
+            $legacy->courseid = $courseid ?: null;
+            $legacy->messagesubject = get_string("messagesubject", "badges");
+            $legacy->message = get_string("messagebody", "badges",
+                \html_writer::link($CFG->wwwroot . "/badges/mybadges.php",
+                    get_string("managebadges", "badges")));
+            $legacy->attachment = 1;
+            $legacy->notification = BADGE_MESSAGE_NEVER;
+            $legacy->status = BADGE_STATUS_INACTIVE;
+            $badgeid = $DB->insert_record("badge", $legacy, true);
+            $badge = new \badge($badgeid);
+            $event = \core\event\badge_created::create([
+                "objectid" => $badgeid, "context" => $badge->get_context(),
+            ]);
+            $event->trigger();
+        }
         image::save($badge, $image["bytes"]);
         $transaction->allow_commit();
         return [
