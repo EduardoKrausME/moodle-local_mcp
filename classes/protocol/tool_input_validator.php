@@ -42,7 +42,7 @@ final class tool_input_validator {
      * @param mixed $arguments Original JSON arguments object.
      * @return void
      */
-    public static function validate(array $schema, mixed $arguments): void {
+    public static function validate(array $schema, $arguments): void {
         self::check($schema, $arguments, "arguments", 0);
     }
 
@@ -55,7 +55,7 @@ final class tool_input_validator {
      * @param int $depth Current nesting depth.
      * @return void
      */
-    private static function check(mixed $schema, mixed $value, string $path, int $depth): void {
+    private static function check($schema, $value, string $path, int $depth): void {
         if ($depth > self::MAX_DEPTH) {
             self::reject($path, "maximum nesting depth exceeded");
         }
@@ -222,17 +222,29 @@ final class tool_input_validator {
      * @param mixed $type JSON Schema type.
      * @return bool
      */
-    private static function matches_type(mixed $value, mixed $type): bool {
-        return match ($type) {
-            "object" => $value instanceof stdClass || (is_array($value) && !compat::is_list($value)),
-            "array" => is_array($value) && compat::is_list($value),
-            "integer" => is_int($value),
-            "number" => is_int($value) || is_float($value),
-            "string" => is_string($value),
-            "boolean" => is_bool($value),
-            "null" => $value === null,
-            default => false,
-        };
+    private static function matches_type($value, $type): bool {
+        if ($type === "object") {
+            return $value instanceof stdClass || (is_array($value) && !compat::is_list($value));
+        }
+        if ($type === "array") {
+            return is_array($value) && compat::is_list($value);
+        }
+        if ($type === "integer") {
+            return is_int($value);
+        }
+        if ($type === "number") {
+            return is_int($value) || is_float($value);
+        }
+        if ($type === "string") {
+            return is_string($value);
+        }
+        if ($type === "boolean") {
+            return is_bool($value);
+        }
+        if ($type === "null") {
+            return $value === null;
+        }
+        return false;
     }
 
     /**
@@ -242,7 +254,7 @@ final class tool_input_validator {
      * @param string $reason Error description.
      * @return never
      */
-    private static function reject(string $path, string $reason): never {
+    private static function reject(string $path, string $reason): void {
         throw new api_exception("invalid_params", 400, "Invalid tool arguments: " . $reason . ".",
             ["path" => $path, "reason" => $reason]);
     }
