@@ -298,8 +298,15 @@ final class gift_question_bank_test extends advanced_testcase {
             $args, [], $identity, "test-access-token");
         $this->assertSame("confirmation_pending", $pending["status"]);
         $this->assertSame("existing", $pending["preview"]["mode"]);
-        $this->assertFalse($DB->record_exists("question_bank_entries",
-            ["questioncategoryid" => (int)$category["id"]]));
+        global $CFG;
+        if ((int)$CFG->version < 2022041900) {
+            $this->assertFalse($DB->record_exists("question", [
+                "category" => (int)$category["id"], "parent" => 0,
+            ]));
+        } else {
+            $this->assertFalse($DB->record_exists("question_bank_entries",
+                ["questioncategoryid" => (int)$category["id"]]));
+        }
 
         $confirmed = $method->invoke($server, "import_gift_question_bank",
             $args + ["confirmation_token" => $pending["confirmation_token"]],

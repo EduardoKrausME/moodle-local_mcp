@@ -82,7 +82,7 @@ final class assignment_tools_test extends \advanced_testcase {
         $this->assertStringContainsString("Prepare a summary", $record->intro);
         [$updatedcourse, $cm] = get_course_and_cm_from_cmid($created["cmid"], "assign");
         $assignment = new \assign(\context_module::instance($cm->id), $cm, $updatedcourse);
-        $this->assertTrue($assignment->get_submission_plugin_by_type("file")->is_enabled());
+        $this->assertTrue((bool)$assignment->get_submission_plugin_by_type("file")->is_enabled());
 
         $update = new \mcptool_assign\write\update_activity();
         $response = $update->execute(["cmid" => $created["cmid"], "name" => "Assignment Two"], $identity);
@@ -90,8 +90,8 @@ final class assignment_tools_test extends \advanced_testcase {
         $this->assertSame("Assignment Two",
             $DB->get_field("assign", "name", ["id" => $created["instanceid"]]));
         $assignment = new \assign(\context_module::instance($cm->id), $cm, $updatedcourse);
-        $this->assertTrue($assignment->get_submission_plugin_by_type("file")->is_enabled());
-        $this->assertTrue($assignment->get_submission_plugin_by_type("onlinetext")->is_enabled());
+        $this->assertTrue((bool)$assignment->get_submission_plugin_by_type("file")->is_enabled());
+        $this->assertTrue((bool)$assignment->get_submission_plugin_by_type("onlinetext")->is_enabled());
     }
 
     /**
