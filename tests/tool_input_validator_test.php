@@ -46,7 +46,7 @@ final class tool_input_validator_test extends advanced_testcase {
      * @param string $path Expected argument path.
      * @return void
      */
-    private function assert_invalid(array $schema, mixed $arguments, string $path): void {
+    private function assert_invalid($schema, $arguments, $path) {
         try {
             tool_input_validator::validate($schema, $arguments);
             $this->fail("Expected invalid_params at " . $path);

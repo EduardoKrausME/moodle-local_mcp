@@ -113,7 +113,7 @@ final class message_logger {
      * @param int $depth Maximum recursion guard.
      * @return mixed
      */
-    private static function redact(mixed $value, string $key = '', int $depth = 0): mixed {
+    private static function redact($value, $key = '', $depth = 0) {
         if ($depth > 30) {
             return '[depth limit]';
         }
