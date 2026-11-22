@@ -88,6 +88,35 @@
         headerActions.insertBefore(switcher, headerActions.firstChild);
     };
 
+    // Add the same plugin navigation to documentation pages outside the homepage.
+    const createPluginMenu = () => {
+        if (!nav || nav.querySelector('.plugin-nav')) return;
+        const language = currentLanguage();
+        const nested = /\\/(?:recursos|guia|casos)\\//.test(window.location.pathname);
+        const prefix = nested ? '../recursos/' : 'recursos/';
+        const details = document.createElement('details');
+        details.className = 'plugin-nav';
+        const label = document.createElement('summary');
+        label.textContent = 'Plugins';
+        const arrow = document.createElement('span');
+        arrow.setAttribute('aria-hidden', 'true');
+        arrow.textContent = '⌄';
+        label.appendChild(arrow);
+        const list = document.createElement('div');
+        list.className = 'plugin-nav-menu';
+        [
+            ['block-mcp.html', language === 'pt_br' ? 'Bloco MCP' : 'MCP Block'],
+            ['mod-mcp.html', language === 'pt_br' ? 'Experiência Interativa' : 'Interactive Experience']
+        ].forEach(([filename, text]) => {
+            const link = document.createElement('a');
+            link.href = prefix + filename;
+            link.textContent = text;
+            list.appendChild(link);
+        });
+        details.append(label, list);
+        nav.appendChild(details);
+    };
+
     const createLanguageNotice = () => {
         if (!header) return;
         const current = currentLanguage();
@@ -128,6 +157,7 @@
 
     createLanguageNotice();
     createLanguageMenu();
+    createPluginMenu();
 
     let themeButton = null;
     if (headerActions) {
