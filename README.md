@@ -6,6 +6,8 @@ Connect your Moodle to **ChatGPT or Claude** through the **Model Context Protoco
 
 Under the hood, Moodle MCP exposes an extensible server with separate READ and WRITE tool registries.
 
+When the current [mod_mcp](https://github.com/EduardoKrausME/moodle-mod_mcp) is installed, its auto-discovered `mcp_configure_questions` WRITE tool configures server-side native question subset selection and presentation shuffling. First attach the bank questions; then retrieve `settingshash` with `mcp_get_activity` and confirm the change. This never publishes the activity or puts question selection logic inside the iframe.
+
 This is a **local plugin**: `local_mcp`. It does not use Moodle's traditional `wstoken` mechanism as its primary
 authentication layer.
 

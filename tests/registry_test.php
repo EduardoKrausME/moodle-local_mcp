@@ -71,6 +71,19 @@ final class registry_test extends advanced_testcase {
     }
 
     /**
+     * The new mod_mcp write tool is auto-discovered when the updated activity is installed.
+     */
+    public function test_mod_mcp_question_selection_tool_is_discovered_if_installed(): void {
+        if (!class_exists('\\mod_mcp\\mcp\\write\\configure_questions')) {
+            $this->markTestSkipped('Updated mod_mcp is not installed on this Moodle instance.');
+        }
+        $write = registry::get_tools();
+        $this->assertArrayHasKey('mcp_configure_questions', $write);
+        $this->assertSame('mod/mcp:manage',
+            $write['mcp_configure_questions']->get_required_capability());
+    }
+
+    /**
      * Method test_expected_scopes_are_independent.
      *
      * @return void Return value.
