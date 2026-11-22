@@ -92,7 +92,7 @@
     const createPluginMenu = () => {
         if (!nav || nav.querySelector('.plugin-nav')) return;
         const language = currentLanguage();
-        const nested = /\\/(?:recursos|guia|casos)\\//.test(window.location.pathname);
+        const nested = ['/recursos/', '/guia/', '/casos/'].some(part => window.location.pathname.includes(part));
         const prefix = nested ? '../recursos/' : 'recursos/';
         const details = document.createElement('details');
         details.className = 'plugin-nav';
