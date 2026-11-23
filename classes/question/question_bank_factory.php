@@ -51,7 +51,7 @@ final class question_bank_factory {
      * @return string
      */
     public static function category_driver(): string {
-        // core_question\category_manager arrived after the initial 4.0 question bank redesign.
+        // The core_question\category_manager arrived after the initial 4.0 question bank redesign.
         return class_exists(\core_question\category_manager::class)
             ? versioned_question_bank::class : legacy_question_bank::class;
     }
