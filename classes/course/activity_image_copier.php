@@ -257,36 +257,36 @@ final class activity_image_copier {
         try {
             foreach ($plan['images'] as &$item) {
                 $source = $storage->get_file_by_id($item['source_fileid']);
-            if (!$source || !hash_equals($source->get_contenthash(), $item['contenthash'])) {
-                throw new api_exception('source_image_changed', 409);
-            }
-            $existing = $storage->get_file($destinationcontext->id, 'mod_mcp', 'assets',
-                0, $item['destination_filepath'], $item['destination_filename']);
-            if ($existing) {
-                if (!hash_equals($existing->get_contenthash(), $source->get_contenthash())) {
-                    throw new api_exception('destination_image_changed', 409);
+                if (!$source || !hash_equals($source->get_contenthash(), $item['contenthash'])) {
+                    throw new api_exception('source_image_changed', 409);
                 }
-                $item['action'] = 'reuse';
-                $reused++;
-                continue;
-            }
-            $storage->create_file_from_storedfile([
-                'contextid' => $destinationcontext->id,
-                'component' => 'mod_mcp',
-                'filearea' => 'assets',
-                'itemid' => 0,
-                'filepath' => $item['destination_filepath'],
-                'filename' => $item['destination_filename'],
-                'userid' => $userid,
-                'mimetype' => $source->get_mimetype(),
-                'license' => $source->get_license(),
-                'author' => $source->get_author(),
-            ], $source);
+                $existing = $storage->get_file($destinationcontext->id, 'mod_mcp', 'assets',
+                    0, $item['destination_filepath'], $item['destination_filename']);
+                if ($existing) {
+                    if (!hash_equals($existing->get_contenthash(), $source->get_contenthash())) {
+                        throw new api_exception('destination_image_changed', 409);
+                    }
+                    $item['action'] = 'reuse';
+                    $reused++;
+                    continue;
+                }
+                $storage->create_file_from_storedfile([
+                    'contextid' => $destinationcontext->id,
+                    'component' => 'mod_mcp',
+                    'filearea' => 'assets',
+                    'itemid' => 0,
+                    'filepath' => $item['destination_filepath'],
+                    'filename' => $item['destination_filename'],
+                    'userid' => $userid,
+                    'mimetype' => $source->get_mimetype(),
+                    'license' => $source->get_license(),
+                    'author' => $source->get_author(),
+                ], $source);
                 $copied++;
             }
             unset($item);
             $transaction->allow_commit();
-        } catch (\\Throwable $exception) {
+        } catch (\Throwable $exception) {
             $transaction->rollback($exception);
         }
 
