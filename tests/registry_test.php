@@ -57,6 +57,8 @@ final class registry_test extends advanced_testcase {
         $this->assertArrayHasKey('get_calendar_events', $read);
         $this->assertArrayHasKey('grade_submission', $write);
         $this->assertArrayHasKey('purge_css_cache', $write);
+        $this->assertArrayHasKey('copy_activity_images', $write);
+        $this->assertSame('mod/mcp:manage', $write['copy_activity_images']->get_required_capability());
         $this->assertArrayHasKey('purge_all_caches', $write);
         $this->assertEmpty(array_intersect(array_keys($read), array_keys($write)));
 
