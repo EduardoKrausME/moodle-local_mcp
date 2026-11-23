@@ -37,7 +37,7 @@ use local_mcp\write\registry;
  */
 final class copy_activity_images_test extends advanced_testcase {
     /** A valid 1x1 PNG (the binary never travels through the MCP tool). */
-    private const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg==';
+    private const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==';
 
     /**
      * @return array Course, source page, destination MCP activity, admin identity.
