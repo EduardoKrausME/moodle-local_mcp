@@ -167,7 +167,8 @@ final class copy_activity_images_test extends advanced_testcase {
             ], $identity->userid);
             $this->fail('The tool must reject a changed source manifest.');
         } catch (api_exception $exception) {
-            $this->assertSame(409, $exception->getCode());
+            $this->assertSame(409, $exception->httpstatus);
+            $this->assertSame('image_manifest_changed', $exception->machinecode);
         }
 
         $copy = activity_image_copier::copy($arguments + ['source_filename' => 'figura-1.png'],
