@@ -170,65 +170,65 @@ final class activity_image_copier {
         foreach ($candidates as $candidate) {
             $file = $candidate['file'];
             $filearea = $file->get_filearea();
-                if ($filenamefilter !== null && $filenamefilter !== $file->get_filename()) {
-                    continue;
-                }
-                $foundmatchingname = true;
-                $extension = strtolower(pathinfo($file->get_filename(), PATHINFO_EXTENSION));
-                $mime = $file->get_mimetype();
-                $reason = null;
-                if (!isset(self::MIME_EXTENSIONS[$mime]) ||
-                        !in_array($extension, self::MIME_EXTENSIONS[$mime], true)) {
-                    $reason = 'unsupported_image_format';
-                } else if ($file->get_filesize() < 1 || $file->get_filesize() > self::MAX_FILE_BYTES) {
-                    $reason = 'image_size_out_of_range';
-                } else if (!$file->is_valid_image()) {
-                    $reason = 'invalid_image_data';
-                }
-                if ($reason !== null) {
-                    $skipped[] = [
-                        'source_filearea' => $filearea,
-                        'filepath' => $file->get_filepath(),
-                        'filename' => $file->get_filename(),
-                        'reason' => $reason,
-                    ];
-                    continue;
-                }
-                if (count($entries) >= self::MAX_IMAGES) {
-                    throw new api_exception('too_many_images', 413);
-                }
-
-                [$destfilename, $action] = self::destination_name($file, $destinationcontext, $reserved);
-                $sourceurl = moodle_url::make_pluginfile_url($file->get_contextid(),
-                    $file->get_component(), $filearea, $file->get_itemid(),
-                    $file->get_filepath(), $file->get_filename())->out(false);
-                $destinationurl = moodle_url::make_pluginfile_url($destinationcontext->id, 'mod_mcp',
-                    'assets', 0, $file->get_filepath(), $destfilename)->out(false);
-                $encodedpath = implode('/', array_map('rawurlencode',
-                    array_filter(explode('/', $file->get_filepath()), 'strlen')));
-                $encodedname = rawurlencode($file->get_filename());
-                $placeholder = '@@PLUGINFILE@@/' . ($encodedpath === '' ? '' : $encodedpath . '/') . $encodedname;
-                $entries[] = [
-                    'source_fileid' => (int)$file->get_id(),
-                    'source_contextid' => (int)$file->get_contextid(),
-                    'source_component' => $file->get_component(),
-                    'source_itemid' => (int)$file->get_itemid(),
+            if ($filenamefilter !== null && $filenamefilter !== $file->get_filename()) {
+                continue;
+            }
+            $foundmatchingname = true;
+            $extension = strtolower(pathinfo($file->get_filename(), PATHINFO_EXTENSION));
+            $mime = $file->get_mimetype();
+            $reason = null;
+            if (!isset(self::MIME_EXTENSIONS[$mime]) ||
+                    !in_array($extension, self::MIME_EXTENSIONS[$mime], true)) {
+                $reason = 'unsupported_image_format';
+            } else if ($file->get_filesize() < 1 || $file->get_filesize() > self::MAX_FILE_BYTES) {
+                $reason = 'image_size_out_of_range';
+            } else if (!$file->is_valid_image()) {
+                $reason = 'invalid_image_data';
+            }
+            if ($reason !== null) {
+                $skipped[] = [
                     'source_filearea' => $filearea,
-                    'reference_srcs' => $candidate['references'],
-                    'source_filepath' => $file->get_filepath(),
-                    'source_filename' => $file->get_filename(),
-                    'source_url' => $sourceurl,
-                    'source_placeholder' => $file->get_component() === 'mod_page' &&
-                        (int)$file->get_contextid() === (int)$sourcecontext->id ?
-                        $placeholder : null,
-                    'destination_filepath' => $file->get_filepath(),
-                    'destination_filename' => $destfilename,
-                    'destination_url' => $destinationurl,
-                    'mimetype' => $mime,
-                    'size' => (int)$file->get_filesize(),
-                    'contenthash' => $file->get_contenthash(),
-                    'action' => $action,
+                    'filepath' => $file->get_filepath(),
+                    'filename' => $file->get_filename(),
+                    'reason' => $reason,
                 ];
+                continue;
+            }
+            if (count($entries) >= self::MAX_IMAGES) {
+                throw new api_exception('too_many_images', 413);
+            }
+
+            [$destfilename, $action] = self::destination_name($file, $destinationcontext, $reserved);
+            $sourceurl = moodle_url::make_pluginfile_url($file->get_contextid(),
+                $file->get_component(), $filearea, $file->get_itemid(),
+                $file->get_filepath(), $file->get_filename())->out(false);
+            $destinationurl = moodle_url::make_pluginfile_url($destinationcontext->id, 'mod_mcp',
+                'assets', 0, $file->get_filepath(), $destfilename)->out(false);
+            $encodedpath = implode('/', array_map('rawurlencode',
+                array_filter(explode('/', $file->get_filepath()), 'strlen')));
+            $encodedname = rawurlencode($file->get_filename());
+            $placeholder = '@@PLUGINFILE@@/' . ($encodedpath === '' ? '' : $encodedpath . '/') . $encodedname;
+            $entries[] = [
+                'source_fileid' => (int)$file->get_id(),
+                'source_contextid' => (int)$file->get_contextid(),
+                'source_component' => $file->get_component(),
+                'source_itemid' => (int)$file->get_itemid(),
+                'source_filearea' => $filearea,
+                'reference_srcs' => $candidate['references'],
+                'source_filepath' => $file->get_filepath(),
+                'source_filename' => $file->get_filename(),
+                'source_url' => $sourceurl,
+                'source_placeholder' => $file->get_component() === 'mod_page' &&
+                    (int)$file->get_contextid() === (int)$sourcecontext->id ?
+                    $placeholder : null,
+                'destination_filepath' => $file->get_filepath(),
+                'destination_filename' => $destfilename,
+                'destination_url' => $destinationurl,
+                'mimetype' => $mime,
+                'size' => (int)$file->get_filesize(),
+                'contenthash' => $file->get_contenthash(),
+                'action' => $action,
+            ];
         }
         if ($filenamefilter !== null && !$foundmatchingname) {
             throw new api_exception('source_image_not_found', 404);
