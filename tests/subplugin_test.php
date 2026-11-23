@@ -354,5 +354,4 @@ final class subplugin_test extends advanced_testcase {
         }
     }
 
-
 }

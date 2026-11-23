@@ -31,7 +31,6 @@ Use \`courseid: 0\` or omit it for a site-level badge. \`badges_list\` and \`bad
 
 **Security:** Creation requires \`moodle/badges:createbadge\`; replacement requires \`moodle/badges:configuredetails\`; listing and details require \`moodle/badges:viewbadges\` in the matching system/course context. URL downloads go through Moodle's SSRF-protected curl, reject non-HTTPS/redirects/private hosts and enforce a size cap. All WRITEs use the parent MCP preview/confirmation flow; Base64 values are never echoed in previews or result data. No badge is enabled or awarded automatically.
 
-
 ## Automatic awarding from activity completion
 
 1. Enable completion tracking at site level, then call `get_course_completion_config` and, when needed, `set_course_completion_config` with the current expected state (WRITE preview/confirmation).

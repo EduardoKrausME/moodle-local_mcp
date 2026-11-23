@@ -55,7 +55,6 @@ Supported media are PNG, JPEG, GIF and WebP, with a limit of 8 MiB per file and
 100 images per operation. Images that live only inside a SCORM ZIP but are not
 directly referenced by the Page HTML are not searched or copied.
 
-
 When the current [mod_mcp](https://github.com/EduardoKrausME/moodle-mod_mcp) is installed, its auto-discovered `mcp_configure_questions` WRITE tool configures server-side native question subset selection and presentation shuffling. First attach the bank questions; then retrieve `settingshash` with `mcp_get_activity` and confirm the change. This never publishes the activity or puts question selection logic inside the iframe.
 
 This is a **local plugin**: `local_mcp`. It does not use Moodle's traditional `wstoken` mechanism as its primary

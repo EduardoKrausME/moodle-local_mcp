@@ -144,7 +144,6 @@ final class confirmation_flow_test extends advanced_testcase {
     }
 
 
-
     /**
      * Default WRITE confirmation tokens last thirty minutes, unless explicitly configured.
      *

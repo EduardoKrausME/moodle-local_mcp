@@ -123,7 +123,6 @@ final class create_activity extends activity_create_base {
         $info->assignfeedback_comments_enabled = 1;
     }
 
-
     /**
      * @param array $arguments Assignment options.
      * @return bool Whether file submissions are enabled.

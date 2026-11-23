@@ -49,7 +49,6 @@ final class manager {
         );
     }
 
-
     /**
      * write_providers
      *
