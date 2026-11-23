@@ -24,7 +24,11 @@
 
 namespace local_mcp\course;
 
+use availability_grade\condition;
+use cache;
 use context_module;
+use core_availability\tree;
+use core_plugin_manager;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 
@@ -82,17 +86,17 @@ final class activity_settings_service {
         }
         $children = [];
         $summary = [];
-        $enabled = \core_plugin_manager::instance()->get_enabled_plugins("availability");
+        $enabled = core_plugin_manager::instance()->get_enabled_plugins("availability");
         foreach ($input as $condition) {
             $type = (string)($condition["type"] ?? "");
             if (!in_array($type, ["date", "group", "completion", "grade"], true) ||
-                    empty($enabled[$type])) {
+                empty($enabled[$type])) {
                 throw new api_exception("availability_condition_unavailable", 409);
             }
             if ($type === "date") {
                 $direction = (string)($condition["direction"] ?? "");
                 if (!in_array($direction, ["from", "until"], true) ||
-                        empty($condition["timestamp"])) {
+                    empty($condition["timestamp"])) {
                     throw new api_exception("invalid_date_condition", 400);
                 }
                 $d = $direction === "from" ? ">=" : "<";
@@ -118,7 +122,7 @@ final class activity_settings_service {
                 $other = $DB->get_record("course_modules", ["id" => $requirescm, "course" => $course->id],
                     "id,completion,deletioninprogress");
                 if (!$other || empty($other->completion) || !empty($other->deletioninprogress) ||
-                        empty($course->enablecompletion) || empty($CFG->enablecompletion)) {
+                    empty($course->enablecompletion) || empty($CFG->enablecompletion)) {
                     throw new api_exception("completion_condition_unavailable", 409);
                 }
                 $children[] = \availability_completion\condition::get_json($requirescm, $states[$state]);
@@ -135,18 +139,18 @@ final class activity_settings_service {
                 $min = array_key_exists("min", $condition) ? (float)$condition["min"] : null;
                 $max = array_key_exists("max", $condition) ? (float)$condition["max"] : null;
                 if (($min === null && $max === null) ||
-                        ($min !== null && ($min < 0 || $min > 100)) ||
-                        ($max !== null && ($max < 0 || $max > 100)) ||
-                        ($min !== null && $max !== null && $min >= $max)) {
+                    ($min !== null && ($min < 0 || $min > 100)) ||
+                    ($max !== null && ($max < 0 || $max > 100)) ||
+                    ($min !== null && $max !== null && $min >= $max)) {
                     throw new api_exception("invalid_grade_condition", 400);
                 }
-                $children[] = \availability_grade\condition::get_json($gradeid, $min, $max);
+                $children[] = condition::get_json($gradeid, $min, $max);
                 $summary[] = ["type" => $type, "gradeitemid" => $gradeid,
                     "min" => $min, "max" => $max];
             }
         }
-        $jsonobj = \core_availability\tree::get_root_json($children, "&", true);
-        $tree = new \core_availability\tree($jsonobj);
+        $jsonobj = tree::get_root_json($children, "&", true);
+        $tree = new tree($jsonobj);
         if ($tree->is_empty()) {
             throw new api_exception("empty_availability_tree", 400);
         }
@@ -268,13 +272,13 @@ final class activity_settings_service {
         ];
         // Moodle 3.10 has no completionpassgrade column.
         if (property_exists($DB->get_record("course_modules", ["id" => $id], "*", MUST_EXIST),
-                "completionpassgrade")) {
+            "completionpassgrade")) {
             $fields["completionpassgrade"] = $flags["completionpassgrade"];
         }
         $DB->update_record("course_modules", (object)$fields);
         $courseid = (int)$DB->get_field("course_modules", "course", ["id" => $id], MUST_EXIST);
         rebuild_course_cache($courseid, true);
-        \cache::make("core", "completion")->purge();
+        cache::make("core", "completion")->purge();
         return ["updated" => true, "cmid" => $id, "completion" => $flags["completion"],
             "completionview" => $flags["completionview"],
             "completiongradeitemnumber" => $flags["completiongradeitemnumber"]];

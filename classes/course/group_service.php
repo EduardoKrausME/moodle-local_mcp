@@ -28,13 +28,14 @@ use context_course;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\security\untrusted_content;
+use stdClass;
 
 /**
  * Access-controlled core Moodle group operations.
  */
 final class group_service {
     /**
-     * @return \context_course Group-management context.
+     * @return context_course Group-management context.
      */
     public static function course(int $courseid, authenticated_identity $identity): context_course {
         global $DB, $CFG;
@@ -49,9 +50,9 @@ final class group_service {
     }
 
     /**
-     * @return \stdClass A group in the specified course.
+     * @return stdClass A group in the specified course.
      */
-    public static function group(int $courseid, int $groupid, authenticated_identity $identity): \stdClass {
+    public static function group(int $courseid, int $groupid, authenticated_identity $identity): stdClass {
         global $DB;
         self::course($courseid, $identity);
         return $DB->get_record("groups", ["id" => $groupid, "courseid" => $courseid], "*", MUST_EXIST);

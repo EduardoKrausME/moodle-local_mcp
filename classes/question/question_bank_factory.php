@@ -23,6 +23,8 @@
  */
 namespace local_mcp\question;
 
+use core_question\category_manager;
+
 /**
  * Class question_bank_factory
  */
@@ -52,7 +54,7 @@ final class question_bank_factory {
      */
     public static function category_driver(): string {
         // The core_question\category_manager arrived after the initial 4.0 question bank redesign.
-        return class_exists(\core_question\category_manager::class)
+        return class_exists(category_manager::class)
             ? versioned_question_bank::class : legacy_question_bank::class;
     }
 }

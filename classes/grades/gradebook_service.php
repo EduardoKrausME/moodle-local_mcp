@@ -25,9 +25,11 @@
 namespace local_mcp\grades;
 
 use context_course;
+use grade_item;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\security\untrusted_content;
+use stdClass;
 
 /**
  * Safely read gradebook configuration and recorded grade changes.
@@ -47,7 +49,7 @@ final class gradebook_service {
     /**
      * Grade item fingerprint to prevent overwriting concurrent edits.
      */
-    private static function item_hash(\stdClass $item): string {
+    private static function item_hash(stdClass $item): string {
         return hash("sha256", json_encode([(int)$item->id, (int)$item->courseid,
             (int)$item->hidden, (int)$item->locked, (int)$item->timemodified,
             (int)$item->categoryid, (float)$item->grademax,
@@ -195,7 +197,7 @@ final class gradebook_service {
         $preview = self::visibility_preview($args, $identity);
         require_once($CFG->libdir . "/gradelib.php");
         require_once($CFG->libdir . "/grade/grade_item.php");
-        $item = \grade_item::fetch(["id" => $preview["itemid"],
+        $item = grade_item::fetch(["id" => $preview["itemid"],
             "courseid" => $preview["courseid"]]);
         if (!$item) {
             throw new api_exception("grade_item_not_found", 404);

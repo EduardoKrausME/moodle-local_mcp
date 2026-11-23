@@ -24,6 +24,7 @@
 
 namespace local_mcp\write\tool;
 
+use cm_info;
 use context;
 use context_course;
 use context_module;
@@ -110,9 +111,9 @@ final class delete_course_module extends base_tool {
      *
      * @param array $a Parameter a.
      * @param authenticated_identity $identity Parameter identity.
-     * @return \cm_info Return value.
+     * @return cm_info Return value.
      */
-    private function verified_module(array $a, authenticated_identity $identity): \cm_info {
+    private function verified_module(array $a, authenticated_identity $identity): cm_info {
         global $DB;
         $courseid = (int)$a["courseid"];
         $cmid = (int)$a["cmid"];

@@ -24,6 +24,8 @@
 
 namespace local_mcp\protocol;
 
+use stdClass;
+
 /**
  * Replace em dashes in WRITE argument strings without altering JSON value types.
  */
@@ -46,7 +48,7 @@ final class write_text_normalizer {
             foreach ($value as $key => $item) {
                 $value[$key] = self::normalize($item, (string)$key);
             }
-        } else if ($value instanceof \stdClass) {
+        } else if ($value instanceof stdClass) {
             $value = clone $value;
             foreach ($value as $key => $item) {
                 $value->{$key} = self::normalize($item, (string)$key);

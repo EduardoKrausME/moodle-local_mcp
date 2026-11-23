@@ -136,7 +136,7 @@ final class token_service {
      * @param int $generation Parameter generation.
      * @return array Return value.
      */
-    private static function issue_pair(int     $userid, int $clientid, int $connectionid, string $scopes, string $resource,
+    private static function issue_pair(int $userid, int $clientid, int $connectionid, string $scopes, string $resource,
                                        ?string $family = null, int $generation = 0): array {
         global $DB;
         $resource = resource::validate($resource);

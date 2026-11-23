@@ -47,7 +47,7 @@ class api_exception extends moodle_exception {
     public function __construct(
         string $machinecode,
         int $httpstatus = 400,
-        string                 $message = '',
+        string $message = '',
         array $details = []
     ) {
         $this->machinecode = $machinecode;

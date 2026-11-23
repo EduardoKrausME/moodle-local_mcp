@@ -24,6 +24,8 @@
 
 namespace local_mcp\plugin;
 
+use InvalidArgumentException;
+
 /**
  * Builds an installable plugin package using this Moodle's own MCP URL.
  */
@@ -40,7 +42,7 @@ final class package_builder {
         if ($parts === false || ($parts['scheme'] ?? '') !== 'https' || empty($parts['host']) ||
                 isset($parts['user']) || isset($parts['pass']) || isset($parts['query']) ||
                 isset($parts['fragment']) || substr($serverurl, -11) !== '/server.php') {
-            throw new \InvalidArgumentException('A valid HTTPS Moodle MCP server URL is required.');
+            throw new InvalidArgumentException('A valid HTTPS Moodle MCP server URL is required.');
         }
 
         $host = strtolower($parts['host']);

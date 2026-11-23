@@ -27,6 +27,7 @@ namespace local_mcp\read\tool;
 use context;
 use context_module;
 use local_mcp\assignment\feedback_service;
+use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 
 /**
@@ -124,7 +125,7 @@ final class get_assignment_feedback_queue extends base_tool {
                 [$assign, $checkedcm, $current] = feedback_service::target(
                     (int)$cm->id, (int)$submission->userid, $identity
                 );
-            } catch (\local_mcp\exception\api_exception $exception) {
+            } catch (api_exception $exception) {
                 continue;
             }
             $feedback = feedback_service::current_feedback($assign, (int)$submission->userid);

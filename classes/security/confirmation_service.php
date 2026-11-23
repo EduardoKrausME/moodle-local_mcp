@@ -53,7 +53,7 @@ final class confirmation_service {
      * @return string Return value.
      */
     public static function issue(authenticated_identity $identity, string $rawaccess, string $tool,
-                                 array                  $arguments, context $context): string {
+                                 array $arguments, context $context): string {
         global $DB;
         $token = secret::generate('mcp_confirm_', 32);
         $ttl = (int)get_config("local_mcp", "confirmationttl") ?: 1800;

@@ -28,7 +28,9 @@ use completion_info;
 use context_course;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
+use local_mcp\security\capability_guard;
 use local_mcp\security\untrusted_content;
+use stdClass;
 
 /**
  * Completion criteria, individual completion and paginated enrolled-user progress.
@@ -42,7 +44,7 @@ final class completion_report_service {
         $context = context_course::instance($courseid, MUST_EXIST);
         $crossuser = $userid !== 0 && $userid !== $identity->userid;
         $capability = $crossuser ? "moodle/grade:viewall" : "moodle/course:view";
-        \local_mcp\security\capability_guard::check($capability, $context, $identity->userid);
+        capability_guard::check($capability, $context, $identity->userid);
         if ($userid) {
             global $DB;
             if (!$DB->record_exists("user", ["id" => $userid, "deleted" => 0]) ||
@@ -148,7 +150,7 @@ final class completion_report_service {
      *
      * @return array Per-activity snapshots; no other student's data.
      */
-    private static function activity_states(\stdClass $course, int $userid): array {
+    private static function activity_states(stdClass $course, int $userid): array {
         $completion = new completion_info($course);
         $modinfo = get_fast_modinfo($course, $userid);
         $rows = [];

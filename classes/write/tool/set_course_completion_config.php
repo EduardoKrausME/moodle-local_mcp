@@ -28,6 +28,7 @@ use context;
 use context_course;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
+use stdClass;
 
 /**
  * Enable completion tracking without disabling or rewriting any student progress.
@@ -95,9 +96,9 @@ final class set_course_completion_config extends base_tool {
      * Method checked.
      *
      * @param array $arguments Parameter arguments.
-     * @return \stdClass Return value.
+     * @return stdClass Return value.
      */
-    private function checked(array $arguments): \stdClass {
+    private function checked(array $arguments): stdClass {
         global $CFG;
         $course = get_course((int)$arguments["courseid"]);
         if (empty($CFG->enablecompletion)) {

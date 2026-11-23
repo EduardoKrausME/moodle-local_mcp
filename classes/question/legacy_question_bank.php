@@ -24,6 +24,7 @@
 namespace local_mcp\question;
 
 use context;
+use core\event\question_category_created;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\security\capability_guard;
@@ -250,7 +251,7 @@ final class legacy_question_bank {
             'parent' => $parentid, 'sortorder' => 999, 'idnumber' => $idnumber ?: null,
         ];
         $id = $DB->insert_record('question_categories', $category);
-        $event = \core\event\question_category_created::create_from_question_category_instance(
+        $event = question_category_created::create_from_question_category_instance(
             (object)['id' => $id, 'contextid' => $contextid]);
         $event->trigger();
         return ['id' => $id, 'contextid' => $contextid, 'parentid' => $parentid, 'name' => $name];

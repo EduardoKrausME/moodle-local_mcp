@@ -30,6 +30,7 @@ use context_module;
 use DOMDocument;
 use local_mcp\security\capability_guard;
 use moodle_url;
+use stdClass;
 use stored_file;
 
 /**
@@ -69,14 +70,14 @@ final class page_image_manifest {
      * Return both a safe, serialisable manifest and internal stored_file handles.
      * Callers must not serialise the 'files' member to an MCP response.
      *
-     * @param \stdClass $sourcecm Page course module.
+     * @param stdClass $sourcecm Page course module.
      * @param context_module $sourcecontext Page context.
      * @param string $html Original Page HTML.
      * @param int $userid Authenticated Moodle user.
      * @return array Images and resolved files.
      */
-    public static function collect(\stdClass $sourcecm, context_module $sourcecontext,
-            string $html, int $userid): array {
+    public static function collect(stdClass $sourcecm, context_module $sourcecontext,
+                                   string $html, int $userid): array {
         $images = [];
         $files = [];
         if ($html === '' || strlen($html) > self::MAX_HTML_BYTES) {
@@ -136,8 +137,8 @@ final class page_image_manifest {
      * Resolve only local pluginfile references in the Page's own course.
      * External URLs, data URIs, user files and unapproved file areas are never fetched.
      */
-    private static function resolve(string $src, \stdClass $sourcecm,
-            context_module $sourcecontext, int $userid): ?stored_file {
+    private static function resolve(string $src, stdClass $sourcecm,
+                                    context_module $sourcecontext, int $userid): ?stored_file {
         global $CFG, $DB;
 
         $storage = get_file_storage();
@@ -160,11 +161,11 @@ final class page_image_manifest {
         $url = parse_url($src);
         $site = parse_url($CFG->wwwroot);
         if ($url === false || $site === false || !isset($url['path']) ||
-                isset($url['user']) || isset($url['pass'])) {
+            isset($url['user']) || isset($url['pass'])) {
             return null;
         }
         if (isset($url['host']) &&
-                (strcasecmp($url['host'], $site['host'] ?? '') !== 0 ||
+            (strcasecmp($url['host'], $site['host'] ?? '') !== 0 ||
                 strtolower($url['scheme'] ?? '') !== strtolower($site['scheme'] ?? '') ||
                 ($url['port'] ?? null) !== ($site['port'] ?? null))) {
             return null;
@@ -185,7 +186,7 @@ final class page_image_manifest {
         $component = array_shift($parts);
         $area = array_shift($parts);
         if (!isset(self::ALLOWED_AREAS[$component]) ||
-                !in_array($area, self::ALLOWED_AREAS[$component], true)) {
+            !in_array($area, self::ALLOWED_AREAS[$component], true)) {
             return null;
         }
 
@@ -225,12 +226,12 @@ final class page_image_manifest {
             $modname = substr($component, 4);
             $cm = get_coursemodule_from_id($modname, (int)$context->instanceid, 0, false, IGNORE_MISSING);
             if (!$cm || (int)$cm->course !== (int)$sourcecm->course ||
-                    !has_capability("mod/{$modname}:view", $context, $userid)) {
+                !has_capability("mod/{$modname}:view", $context, $userid)) {
                 return null;
             }
             // Other modules' file areas require management permission in that context.
             if ((int)$cm->id !== (int)$sourcecm->id &&
-                    !has_capability('moodle/course:manageactivities', $context, $userid)) {
+                !has_capability('moodle/course:manageactivities', $context, $userid)) {
                 return null;
             }
             $item = array_shift($parts);
@@ -260,9 +261,9 @@ final class page_image_manifest {
         foreach ($parts as &$part) {
             $part = rawurldecode($part);
             if ($part === '' || $part === '.' || $part === '..' ||
-                    str_contains($part, '/') || str_contains($part, '\\') ||
-                    preg_match('/[\x00-\x1f\x7f]/', $part) ||
-                    clean_param($part, PARAM_FILE) !== $part) {
+                str_contains($part, '/') || str_contains($part, '\\') ||
+                preg_match('/[\x00-\x1f\x7f]/', $part) ||
+                clean_param($part, PARAM_FILE) !== $part) {
                 return null;
             }
         }

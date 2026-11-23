@@ -48,9 +48,9 @@ final class logger {
      * @param ?int $durationms Parameter durationms.
      * @return void Return value.
      */
-    public static function record(string  $event, ?authenticated_identity $identity = null,
+    public static function record(string $event, ?authenticated_identity $identity = null,
                                   ?string $tool = null, ?string $side = null, ?context $context = null, array $metadata = [],
-                                  bool    $destructive = false, bool $dryrun = false, bool $confirmation = false,
+                                  bool $destructive = false, bool $dryrun = false, bool $confirmation = false,
                                   ?string $status = null, ?int $durationms = null): void {
         global $DB;
         // Store only approved field names, numeric IDs and status codes.

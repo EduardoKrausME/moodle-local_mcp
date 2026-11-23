@@ -26,6 +26,8 @@ namespace local_mcp\workflow;
 
 use context;
 use context_course;
+use core\lock\lock_config;
+use core_text;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\write\registry;
@@ -101,7 +103,7 @@ final class sequence {
      * @return mixed
      */
     private static function locked(string $id, callable $callback) {
-        $factory = \core\lock\lock_config::get_lock_factory("local_mcp");
+        $factory = lock_config::get_lock_factory("local_mcp");
         $lock = $factory->get_lock("workflow_" . self::key($id), 5);
         if (!$lock) {
             throw new api_exception("workflow_busy", 409);
@@ -166,7 +168,7 @@ final class sequence {
             $tool = (string)($item["tool"] ?? "");
             $title = trim((string)($item["title"] ?? ""));
             if ($tool === "workflow_sequence" || !isset($available[$tool]) ||
-                    $title === "" || \core_text::strlen($title) > 160) {
+                    $title === "" || core_text::strlen($title) > 160) {
                 throw new api_exception("invalid_workflow_items", 400);
             }
             $clean[] = ["title" => clean_param($title, PARAM_TEXT), "tool" => $tool];
