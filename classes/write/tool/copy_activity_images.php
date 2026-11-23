@@ -30,7 +30,7 @@ use local_mcp\course\activity_image_copier;
 use local_mcp\security\authenticated_identity;
 
 /**
- * Copy stored images from mod_page to mod_mcp via Moodle's native File API.
+ * Copy Page attachments and authorised referenced course images via Moodle File API.
  */
 final class copy_activity_images extends base_tool {
     /**
@@ -51,7 +51,7 @@ final class copy_activity_images extends base_tool {
      * @return string Description.
      */
     public function get_description(): string {
-        return 'Copy images stored in mod_page content/intro to the assets area of a mod_mcp activity, '
+        return 'Copy stored Page images and authorised same-course images referenced in Page HTML to mod_mcp/assets, '
             . 'entirely inside Moodle. Returns original and new pluginfile URLs for updating HTML. '
             . 'Never changes the original page, the destination HTML or publication state.';
     }

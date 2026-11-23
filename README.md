@@ -6,35 +6,54 @@ Connect your Moodle to **ChatGPT or Claude** through the **Model Context Protoco
 
 Under the hood, Moodle MCP exposes an extensible server with separate READ and WRITE tool registries.
 
-### Copy images inside Moodle (Page to MCP activity)
+### Read Page HTML and copy authorised images inside Moodle
 
-The built-in WRITE tool `copy_activity_images` copies stored images directly via Moodle's
-File API, without downloading files to ChatGPT/Claude or sending Base64 back to Moodle.
-Its current, deliberately restricted route is `mod_page/content` or `mod_page/intro`
-to `mod_mcp/assets`, using the course-module IDs rather than untrusted URLs.
-A source Page and a destination MCP activity may be in different courses provided the
-connected Moodle user can manage both and has the required module capabilities.
+The READ tool `page_get_content` keeps its existing plain-text `content` field for
+compatibility and now also returns the **original** Page `html`, `htmlformat` and
+an `images` manifest. Each image entry preserves the original `<img src>` value.
+When an image resolves to an authorised local Moodle file, the manifest includes
+its file ID, context, component, file area, filename and canonical pluginfile URL.
+Unresolved or external references remain visible in the manifest but cannot be
+copied. All HTML is untrusted, and READ continues to enforce `mod/page:view` and
+the activity's visibility.
 
-For a migration from Page CMID 2097 to MCP CMID 8318, request the tool preview with:
+The built-in WRITE tool `copy_activity_images` copies files inside Moodle with
+`create_file_from_storedfile()`, without downloading bytes to ChatGPT or Claude.
+It retains compatibility with standalone images in `mod_page/content` and
+`mod_page/intro`, and additionally resolves images explicitly referenced by the
+Page's own HTML when they are in supported **same-course** file areas:
+
+- `course/summary`, `course/overviewfiles`, `course/section` (valid section ID);
+- `mod_page/content` or `mod_page/intro`, including references to another page;
+- `mod_scorm/content`, `mod_resource/content`, or `mod_folder/content`.
+
+References must be same-origin Moodle `pluginfile.php` links or Page
+`@@PLUGINFILE@@` placeholders. The server parses and validates each path,
+context, course, file area and filename, rejects traversal and external hosts,
+and checks Moodle view/management capabilities for the referenced module.
+It never accepts an arbitrary source file URL as a WRITE argument. User files,
+private submission areas, other courses, remote URLs, `data:` images and SVG
+are intentionally excluded. The old `source_filearea` filter still narrows
+the selected source file areas, while its default `all` enables the extended scan.
+
+For example, preview the migration from Page CMID 2097 to MCP CMID 8318:
 
 ```json
-{"sourcecmid":2097,"destinationcmid":8318}
+{"sourcecmid":2097,"destinationcmid":8318,"dry_run":true}
 ```
 
-The preview lists the images, supported types, file sizes, conflicts, old
-`source_url` and `source_placeholder` references, and new `destination_url` references.
-After explicit WRITE approval, the tool copies files in Moodle storage using
-`create_file_from_storedfile()`. Send `expected_manifest_sha256` from the preview
-when possible to reject changes between inspection and copying. Optionally select
-`source_filearea` (`all`, `content`, `intro`) or `source_filename` to migrate one image.
-Files with the same name and bytes are reused; different bytes get a safe new filename.
+The WRITE preview lists `reference_srcs`, `source_url`, source metadata and
+`destination_url` for each copyable image, along with skipped image formats.
+After explicit user confirmation, repeat the identical arguments and optionally
+add the preview's `expected_manifest_sha256` to reject stale source/destination
+plans. Identical files are reused; filename conflicts create hash-suffixed
+names instead of overwriting originals. The page, destination HTML, visibility,
+draft revision and publication state are **never** changed by this tool.
+Updating HTML references and publishing remain separate approval-gated actions.
 
-The original activity, the destination's HTML and its draft/publish state are
-not modified. Replace image links in the new HTML with the returned destination URLs
-in a separately reviewed content-saving step. Supported formats are PNG, JPEG, GIF
-and WebP, up to 8 MiB each (100 images per call). External URLs, SVG, files missing
-from Moodle File API and embedded `data:` images are not copied. Permissions are
-checked on both modules and every WRITE requires confirmation.
+Supported media are PNG, JPEG, GIF and WebP, with a limit of 8 MiB per file and
+100 images per operation. Images that live only inside a SCORM ZIP but are not
+directly referenced by the Page HTML are not searched or copied.
 
 
 When the current [mod_mcp](https://github.com/EduardoKrausME/moodle-mod_mcp) is installed, its auto-discovered `mcp_configure_questions` WRITE tool configures server-side native question subset selection and presentation shuffling. First attach the bank questions; then retrieve `settingshash` with `mcp_get_activity` and confirm the change. This never publishes the activity or puts question selection logic inside the iframe.

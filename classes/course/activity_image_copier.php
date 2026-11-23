@@ -33,8 +33,8 @@ use stored_file;
 /**
  * Copy images from a Page into mod_mcp/assets without transferring bytes through an MCP client.
  *
- * Only source mod_page/content or mod_page/intro and destination mod_mcp/assets are allowed.
- * Extending this to another module requires explicit permission and file-area handling.
+ * Stored Page attachments and explicitly referenced images in supported areas of the
+ * same course can be copied into mod_mcp/assets. Arbitrary URLs are never fetched.
  */
 final class activity_image_copier {
     /** Keep the same per-file media size limit as mod_mcp's upload tool. */
@@ -133,15 +133,43 @@ final class activity_image_copier {
             throw new api_exception('invalid_source_filename', 400);
         }
 
+        global $DB;
         $areas = $area === 'all' ? ['content', 'intro'] : [$area];
         $entries = [];
         $skipped = [];
         $reserved = [];
         $foundmatchingname = false;
+        $candidates = [];
+
+        // Preserve the original behaviour for stored Page attachments.
         foreach ($areas as $filearea) {
-            $files = get_file_storage()->get_area_files($sourcecontext->id, 'mod_page',
+            $stored = get_file_storage()->get_area_files($sourcecontext->id, 'mod_page',
                 $filearea, 0, 'filepath ASC, filename ASC', false);
-            foreach ($files as $file) {
+            foreach ($stored as $file) {
+                $candidates[(int)$file->get_id()] = ['file' => $file, 'references' => []];
+            }
+        }
+
+        // A Page may refer to another authorised Moodle file area without owning the bytes.
+        // Resolve only image src attributes actually present in the stored Page HTML.
+        $page = $DB->get_record('page', ['id' => $sourcecm->instance], 'id,content', MUST_EXIST);
+        $manifest = page_image_manifest::collect($sourcecm, $sourcecontext, (string)$page->content, $userid);
+        foreach ($manifest['files'] as $reference) {
+            $file = $reference['file'];
+            if ($area !== 'all' && !in_array($file->get_filearea(), $areas, true)) {
+                continue;
+            }
+            $id = (int)$file->get_id();
+            if (isset($candidates[$id])) {
+                $candidates[$id]['references'] = $reference['references'];
+            } else {
+                $candidates[$id] = $reference;
+            }
+        }
+
+        foreach ($candidates as $candidate) {
+            $file = $candidate['file'];
+            $filearea = $file->get_filearea();
                 if ($filenamefilter !== null && $filenamefilter !== $file->get_filename()) {
                     continue;
                 }
@@ -171,8 +199,9 @@ final class activity_image_copier {
                 }
 
                 [$destfilename, $action] = self::destination_name($file, $destinationcontext, $reserved);
-                $sourceurl = moodle_url::make_pluginfile_url($sourcecontext->id, 'mod_page', $filearea,
-                    0, $file->get_filepath(), $file->get_filename())->out(false);
+                $sourceurl = moodle_url::make_pluginfile_url($file->get_contextid(),
+                    $file->get_component(), $filearea, $file->get_itemid(),
+                    $file->get_filepath(), $file->get_filename())->out(false);
                 $destinationurl = moodle_url::make_pluginfile_url($destinationcontext->id, 'mod_mcp',
                     'assets', 0, $file->get_filepath(), $destfilename)->out(false);
                 $encodedpath = implode('/', array_map('rawurlencode',
@@ -181,11 +210,17 @@ final class activity_image_copier {
                 $placeholder = '@@PLUGINFILE@@/' . ($encodedpath === '' ? '' : $encodedpath . '/') . $encodedname;
                 $entries[] = [
                     'source_fileid' => (int)$file->get_id(),
+                    'source_contextid' => (int)$file->get_contextid(),
+                    'source_component' => $file->get_component(),
+                    'source_itemid' => (int)$file->get_itemid(),
                     'source_filearea' => $filearea,
+                    'reference_srcs' => $candidate['references'],
                     'source_filepath' => $file->get_filepath(),
                     'source_filename' => $file->get_filename(),
                     'source_url' => $sourceurl,
-                    'source_placeholder' => $placeholder,
+                    'source_placeholder' => $file->get_component() === 'mod_page' &&
+                        (int)$file->get_contextid() === (int)$sourcecontext->id ?
+                        $placeholder : null,
                     'destination_filepath' => $file->get_filepath(),
                     'destination_filename' => $destfilename,
                     'destination_url' => $destinationurl,
@@ -194,7 +229,6 @@ final class activity_image_copier {
                     'contenthash' => $file->get_contenthash(),
                     'action' => $action,
                 ];
-            }
         }
         if ($filenamefilter !== null && !$foundmatchingname) {
             throw new api_exception('source_image_not_found', 404);
@@ -203,8 +237,10 @@ final class activity_image_copier {
         // A caller can provide this hash on a follow-up WRITE to detect changes since preview.
         $fingerprintitems = array_map(static function(array $entry): array {
             return [
-                $entry['source_fileid'], $entry['source_filearea'], $entry['source_filepath'],
-                $entry['source_filename'], $entry['contenthash'], $entry['destination_filepath'],
+                $entry['source_fileid'], $entry['source_contextid'], $entry['source_component'],
+                $entry['source_itemid'], $entry['source_filearea'], $entry['source_filepath'],
+                $entry['source_filename'], $entry['reference_srcs'],
+                $entry['contenthash'], $entry['destination_filepath'],
                 $entry['destination_filename'], $entry['action'],
             ];
         }, $entries);

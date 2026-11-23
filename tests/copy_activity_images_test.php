@@ -191,4 +191,113 @@ final class copy_activity_images_test extends advanced_testcase {
             'sourcecmid' => (int)$page->cmid, 'destinationcmid' => (int)$mcp->cmid,
         ], (int)$student->id);
     }
+
+    /**
+     * Page READ preserves the src attribute; WRITE can copy attached and
+     * explicitly referenced course images without publishing either activity.
+     */
+    public function test_page_html_manifest_and_course_summary_reference_copy(): void {
+        global $DB;
+        [$course, $page, $mcp, $identity] = $this->setup_modules();
+        $this->add_image((int)$page->cmid);
+        $coursecontext = \context_course::instance((int)$course->id);
+        $summary = get_file_storage()->create_file_from_string([
+            'contextid' => $coursecontext->id, 'component' => 'course',
+            'filearea' => 'summary', 'itemid' => 0, 'filepath' => '/',
+            'filename' => 'course-figure.png', 'mimetype' => 'image/png', 'userid' => 2,
+        ], base64_decode(self::PNG));
+        $summaryurl = \moodle_url::make_pluginfile_url($coursecontext->id, 'course',
+            'summary', 0, '/', 'course-figure.png')->out(false);
+        $html = '<h2>Objectives</h2><img src="@@PLUGINFILE@@/figura-1.png">'
+            . '<img src="' . s($summaryurl) . '">';
+        $DB->set_field('page', 'content', $html, ['id' => $page->id]);
+
+        $read = new \mcptool_page\read\get_content();
+        $result = $read->execute(['cmid' => (int)$page->cmid], $identity);
+        $this->assertSame($html, $result['html']);
+        $this->assertStringNotContainsString('<img', $result['content']);
+        $this->assertSame(1, $result['htmlformat']);
+        $this->assertCount(2, $result['images']);
+        $this->assertSame('resolved', $result['images'][0]['status']);
+        $this->assertSame('@@PLUGINFILE@@/figura-1.png', $result['images'][0]['src']);
+        $this->assertSame($summaryurl, $result['images'][1]['src']);
+        $this->assertSame('course', $result['images'][1]['component']);
+        $this->assertSame((int)$summary->get_id(), $result['images'][1]['fileid']);
+
+        $args = ['sourcecmid' => (int)$page->cmid, 'destinationcmid' => (int)$mcp->cmid];
+        $preview = activity_image_copier::preview($args, $identity->userid);
+        $this->assertSame(2, $preview['would_copy']);
+        $copied = activity_image_copier::copy($args + [
+            'expected_manifest_sha256' => $preview['manifest_sha256'],
+        ], $identity->userid);
+        $this->assertSame(2, $copied['copied']);
+        $this->assertCount(2, $copied['images']);
+
+        $destinationcontext = context_module::instance((int)$mcp->cmid);
+        $destination = get_file_storage()->get_file($destinationcontext->id, 'mod_mcp',
+            'assets', 0, '/', 'course-figure.png');
+        $this->assertNotFalse($destination);
+        $this->assertSame($summary->get_contenthash(), $destination->get_contenthash());
+        $this->assertSame($html, $DB->get_field('page', 'content', ['id' => $page->id]));
+        $this->assertSame(0, (int)$DB->get_field('mcp', 'draftrevision', ['id' => $mcp->id]));
+    }
+
+    /**
+     * A forged pluginfile URL does not grant access to files from another course.
+     * External URLs and path traversal must not be fetched or copied.
+     */
+    public function test_external_cross_course_and_traversal_references_are_not_copied(): void {
+        global $DB;
+        [, $page, $mcp, $identity] = $this->setup_modules();
+        $othercourse = $this->getDataGenerator()->create_course();
+        $context = \context_course::instance((int)$othercourse->id);
+        get_file_storage()->create_file_from_string([
+            'contextid' => $context->id, 'component' => 'course', 'filearea' => 'summary',
+            'itemid' => 0, 'filepath' => '/', 'filename' => 'secret.png',
+            'mimetype' => 'image/png', 'userid' => 2,
+        ], base64_decode(self::PNG));
+        $url = \moodle_url::make_pluginfile_url($context->id, 'course',
+            'summary', 0, '/', 'secret.png')->out(false);
+        $html = '<img src="' . s($url) . '">'
+            . '<img src="https://untrusted.example/image.png">'
+            . '<img src="/pluginfile.php/' . $context->id . '/course/summary/%2e%2e/secret.png">';
+        $DB->set_field('page', 'content', $html, ['id' => $page->id]);
+
+        $manifest = \local_mcp\course\page_image_manifest::inspect((int)$page->cmid, $identity->userid);
+        $this->assertCount(3, $manifest);
+        foreach ($manifest as $entry) {
+            $this->assertNotEquals('resolved', $entry['status']);
+            $this->assertArrayNotHasKey('fileid', $entry);
+        }
+        $args = ['sourcecmid' => (int)$page->cmid, 'destinationcmid' => (int)$mcp->cmid];
+        $preview = activity_image_copier::preview($args, $identity->userid);
+        $this->assertSame(0, $preview['would_copy']);
+        $this->assertSame([], $preview['images']);
+    }
+
+    /**
+     * Course section images need a real section ID in the original course.
+     */
+    public function test_explicit_course_section_reference_can_be_copied(): void {
+        global $DB;
+        [$course, $page, $mcp, $identity] = $this->setup_modules();
+        $section = $DB->get_record('course_sections',
+            ['course' => $course->id, 'section' => 0], 'id', MUST_EXIST);
+        $context = \context_course::instance((int)$course->id);
+        $file = get_file_storage()->create_file_from_string([
+            'contextid' => $context->id, 'component' => 'course', 'filearea' => 'section',
+            'itemid' => $section->id, 'filepath' => '/', 'filename' => 'section.png',
+            'mimetype' => 'image/png', 'userid' => 2,
+        ], base64_decode(self::PNG));
+        $url = \moodle_url::make_pluginfile_url($context->id, 'course',
+            'section', $section->id, '/', 'section.png')->out(false);
+        $DB->set_field('page', 'content', '<img src="' . s($url) . '">', ['id' => $page->id]);
+
+        $preview = activity_image_copier::preview([
+            'sourcecmid' => (int)$page->cmid, 'destinationcmid' => (int)$mcp->cmid,
+        ], $identity->userid);
+        $this->assertSame(1, $preview['would_copy']);
+        $this->assertSame('course', $preview['images'][0]['source_component']);
+        $this->assertSame('section', $preview['images'][0]['source_filearea']);
+    }
 }

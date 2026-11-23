@@ -32,6 +32,7 @@ use local_mcp\exception\api_exception;
 use local_mcp\read\tool\base_tool;
 use local_mcp\security\authenticated_identity;
 use local_mcp\security\untrusted_content;
+use local_mcp\course\page_image_manifest;
 use moodle_exception;
 use moodle_url;
 
@@ -120,6 +121,9 @@ final class get_content extends base_tool {
             'name' => $page->name,
             'content' => untrusted_content::text(format_text($page->content, $page->contentformat,
                 ['context' => $context, 'filter' => true])),
+            'html' => (string)$page->content,
+            'htmlformat' => (int)$page->contentformat,
+            'images' => page_image_manifest::inspect((int)$cm->id, (int)$identity->userid),
             'revision' => (int)$page->revision,
             'url' => (new moodle_url('/mod/page/view.php', ['id' => $cm->id]))->out(false),
         ];
