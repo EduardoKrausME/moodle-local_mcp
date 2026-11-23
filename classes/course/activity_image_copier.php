@@ -254,8 +254,9 @@ final class activity_image_copier {
         $transaction = $DB->start_delegated_transaction();
         $copied = 0;
         $reused = 0;
-        foreach ($plan['images'] as &$item) {
-            $source = $storage->get_file_by_id($item['source_fileid']);
+        try {
+            foreach ($plan['images'] as &$item) {
+                $source = $storage->get_file_by_id($item['source_fileid']);
             if (!$source || !hash_equals($source->get_contenthash(), $item['contenthash'])) {
                 throw new api_exception('source_image_changed', 409);
             }
@@ -281,10 +282,13 @@ final class activity_image_copier {
                 'license' => $source->get_license(),
                 'author' => $source->get_author(),
             ], $source);
-            $copied++;
+                $copied++;
+            }
+            unset($item);
+            $transaction->allow_commit();
+        } catch (\\Throwable $exception) {
+            $transaction->rollback($exception);
         }
-        unset($item);
-        $transaction->allow_commit();
 
         foreach ($plan['images'] as &$item) {
             unset($item['source_fileid']);
