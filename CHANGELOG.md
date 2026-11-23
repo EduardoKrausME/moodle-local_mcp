@@ -12,6 +12,23 @@
 
 **Deployment:** updating this repository does not install the plugin on a Moodle site. Deploy the files, run Moodle's plugin upgrade, and refresh MCP tool discovery before using the new APIs.
 
+## 1.4.7 - 2026-11-23
+
+- Extended the Page content READ tool to expose original HTML, formatting and a manifest of embedded images.
+- Added a permission-checked `copy_activity_images` WRITE tool to copy authorized Moodle files into target activities, with preview, conflict detection, idempotency checks and transaction rollback.
+- Added documentation and integration tests for Page-to-MCP content and image migration.
+
+**Comparison:** [1.4.6...1.4.7](https://github.com/EduardoKrausME/moodle-local_mcp/compare/1.4.6...1.4.7)
+
+## 1.4.6 - 2026-11-21
+
+- Added Moodle 3.10+ compatibility adapters for question-bank operations and extended legacy compatibility CI coverage.
+- Added a self-service MCP connection guide for Moodle users, with related administration and language-string updates.
+- Reworked PHP 8-only syntax in shared security and protocol classes for PHP 7.4 compatibility and normalized coding style.
+- Added a repository security reporting policy.
+
+**Comparison:** [1.4.4...1.4.6](https://github.com/EduardoKrausME/moodle-local_mcp/compare/1.4.4...1.4.6)
+
 ## 1.4.4 - 2026-11-09
 
 - Advertised the combined `server.php` endpoint as the OAuth issuer while retaining legacy issuer discovery compatibility.
