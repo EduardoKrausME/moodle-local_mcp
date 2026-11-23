@@ -25,12 +25,10 @@
 namespace local_mcp\course;
 
 use context_module;
-use core_text;
 use local_mcp\exception\api_exception;
 use local_mcp\security\capability_guard;
 use moodle_url;
 use stored_file;
-use Throwable;
 
 /**
  * Copy images from a Page into mod_mcp/assets without transferring bytes through an MCP client.
@@ -78,12 +76,12 @@ final class activity_image_copier {
      * Generate a stable destination name, avoiding accidental replacement of different images.
      *
      * @param stored_file $source Original image.
-     * @param context_module $destinationcontext Destination context.
+     * @param \context_module $destinationcontext Destination context.
      * @param array $reserved Already planned destinations.
      * @return array Filename and action (copy or reuse).
      */
     private static function destination_name(stored_file $source, context_module $destinationcontext,
-                                             array &$reserved): array {
+            array &$reserved): array {
         $storage = get_file_storage();
         $path = $source->get_filepath();
         $original = $source->get_filename();
@@ -94,7 +92,7 @@ final class activity_image_copier {
         // A filename conflict is resolved by suffixing the content hash, not by overwriting.
         for ($attempt = 0; $attempt < 20; $attempt++) {
             $filename = $attempt === 0 ? $original :
-                core_text::substr($basename, 0, 150) . '-' . substr($hash, 0, min(8 + $attempt, 40)) . '.' . $extension;
+                \core_text::substr($basename, 0, 150) . '-' . substr($hash, 0, min(8 + $attempt, 40)) . '.' . $extension;
             $key = $path . $filename;
             if (isset($reserved[$key])) {
                 if (hash_equals($reserved[$key], $hash)) {
@@ -180,7 +178,7 @@ final class activity_image_copier {
             $mime = $file->get_mimetype();
             $reason = null;
             if (!isset(self::MIME_EXTENSIONS[$mime]) ||
-                !in_array($extension, self::MIME_EXTENSIONS[$mime], true)) {
+                    !in_array($extension, self::MIME_EXTENSIONS[$mime], true)) {
                 $reason = 'unsupported_image_format';
             } else if ($file->get_filesize() < 1 || $file->get_filesize() > self::MAX_FILE_BYTES) {
                 $reason = 'image_size_out_of_range';
@@ -221,7 +219,7 @@ final class activity_image_copier {
                 'source_filename' => $file->get_filename(),
                 'source_url' => $sourceurl,
                 'source_placeholder' => $file->get_component() === 'mod_page' &&
-                (int)$file->get_contextid() === (int)$sourcecontext->id ?
+                    (int)$file->get_contextid() === (int)$sourcecontext->id ?
                     $placeholder : null,
                 'destination_filepath' => $file->get_filepath(),
                 'destination_filename' => $destfilename,
@@ -237,7 +235,7 @@ final class activity_image_copier {
         }
 
         // A caller can provide this hash on a follow-up WRITE to detect changes since preview.
-        $fingerprintitems = array_map(static function (array $entry): array {
+        $fingerprintitems = array_map(static function(array $entry): array {
             return [
                 $entry['source_fileid'], $entry['source_contextid'], $entry['source_component'],
                 $entry['source_itemid'], $entry['source_filearea'], $entry['source_filepath'],
@@ -266,14 +264,14 @@ final class activity_image_copier {
         }
         unset($item);
         return $plan + [
-                'copied' => 0,
-                'would_copy' => count(array_filter($plan['images'], static function (array $item): bool {
-                    return $item['action'] === 'copy';
-                })),
-                'source_unchanged' => true,
-                'destination_html_unchanged' => true,
-                'requires_confirmation' => true,
-            ];
+            'copied' => 0,
+            'would_copy' => count(array_filter($plan['images'], static function(array $item): bool {
+                return $item['action'] === 'copy';
+            })),
+            'source_unchanged' => true,
+            'destination_html_unchanged' => true,
+            'requires_confirmation' => true,
+        ];
     }
 
     /**
@@ -284,7 +282,7 @@ final class activity_image_copier {
 
         $plan = self::plan($arguments, $userid);
         if (isset($arguments['expected_manifest_sha256']) &&
-            !hash_equals($plan['manifest_sha256'], $arguments['expected_manifest_sha256'])) {
+                !hash_equals($plan['manifest_sha256'], $arguments['expected_manifest_sha256'])) {
             throw new api_exception('image_manifest_changed', 409);
         }
         $destinationcontext = context_module::instance((int)$arguments['destinationcmid'], MUST_EXIST);
@@ -324,7 +322,7 @@ final class activity_image_copier {
             }
             unset($item);
             $transaction->allow_commit();
-        } catch (Throwable $exception) {
+        } catch (\Throwable $exception) {
             $transaction->rollback($exception);
         }
 
@@ -333,10 +331,10 @@ final class activity_image_copier {
         }
         unset($item);
         return $plan + [
-                'copied' => $copied,
-                'reused' => $reused,
-                'source_unchanged' => true,
-                'destination_html_unchanged' => true,
-            ];
+            'copied' => $copied,
+            'reused' => $reused,
+            'source_unchanged' => true,
+            'destination_html_unchanged' => true,
+        ];
     }
 }
