@@ -29,6 +29,7 @@ use local_mcp\write\tool\set_course_completion_config;
 use local_mcp\extension\manager;
 use local_mcp\write\tool\workflow_sequence;
 use local_mcp\write\tool\set_grade_item_visibility;
+use local_mcp\write\tool\copy_activity_images;
 use local_mcp\write\tool\create_group;
 use local_mcp\write\tool\add_group_members;
 use local_mcp\write\tool\remove_group_members;
@@ -74,6 +75,7 @@ final class registry {
     public static function get_tools(): array {
         $tools = [
             new workflow_sequence(),
+            new copy_activity_images(),
             new delete_course_module(),
             new create_question_category(),
             new import_gift_question_bank(),
