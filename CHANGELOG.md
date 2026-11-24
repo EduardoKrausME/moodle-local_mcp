@@ -2,6 +2,9 @@
 
 ## Unreleased - 2026-10-24
 
+- Added allowlisted native Moodle error mapping and opt-in public API messages without exposing debug details, preserving confirmation and unexpected-error handling.
+- Clarified tool rediscovery after plugin upgrades or missing tools, without bypassing permissions.
+
 - Added `assign_create_activity` for Moodle Assignment activities with configurable submissions, grades, and deadlines, including option validation and duplicate-name protection.
 - Added `delete_course_module` for permanently removing an explicitly identified course module through Moodle's core API, with permission checks, a reviewed preview, and mandatory destructive-operation confirmation.
 - Added regression tests and documentation for both tools and their safety checks.

@@ -83,6 +83,7 @@ final class discovery_test extends advanced_testcase {
         $this->assertSame($wwwroot, $modern["_meta"]["moodle_wwwroot"]);
         $this->assertSame($wwwroot, $modern["_meta"]["io.modelcontextprotocol/serverInfo"]["websiteUrl"]);
         $this->assertStringContainsString($wwwroot, $modern["instructions"]);
+        $this->assertStringContainsString('Refresh tools/list after plugin upgrades', $modern['instructions']);
 
         $legacy = discovery::initialize_result("read", "1.3.1");
         $this->assertSame($wwwroot, $legacy["serverInfo"]["websiteUrl"]);

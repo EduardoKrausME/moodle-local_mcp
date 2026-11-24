@@ -36,6 +36,9 @@ class api_exception extends moodle_exception {
 
     public array $details;
 
+    /** @var string|null Explicitly approved client-facing message, never inferred from debug info. */
+    private ?string $publicmessage;
+
     /**
      * Method __construct.
      *
@@ -43,16 +46,58 @@ class api_exception extends moodle_exception {
      * @param int $httpstatus Parameter httpstatus.
      * @param string $message Parameter message.
      * @param array $details Parameter details.
+     * @param string|null $publicmessage Safe, static public message, not exception or user input.
      */
     public function __construct(
         string $machinecode,
         int $httpstatus = 400,
         string $message = '',
-        array $details = []
+        array $details = [],
+        ?string $publicmessage = null
     ) {
         $this->machinecode = $machinecode;
         $this->httpstatus = $httpstatus;
         $this->details = $details;
+        $this->publicmessage = $publicmessage;
         parent::__construct('error', 'local_mcp', '', null, $message ?: $machinecode);
+    }
+
+    /**
+     * Return the explicitly approved message or the existing localized generic message.
+     * @return string
+     */
+    public function get_public_message(): string {
+        return $this->publicmessage ?? $this->getMessage();
+    }
+
+    /**
+     * Normalize only known native Moodle failures. Never copy native exception text or data.
+     * @param \Throwable $exception Original failure.
+     * @return self|null Structured failure, or null for unexpected errors.
+     */
+    public static function from_throwable(\Throwable $exception): ?self {
+        if ($exception instanceof self) {
+            return $exception;
+        }
+        if ($exception instanceof \required_capability_exception) {
+            return new self('permission_denied', 403, '', [], 'Permission denied.');
+        }
+        if ($exception instanceof \invalid_parameter_exception) {
+            return new self('invalid_params', 400, '', [], 'Invalid parameters.');
+        }
+        if (!$exception instanceof moodle_exception ||
+                !in_array($exception->module, ['error', 'moodle'], true)) {
+            return null;
+        }
+        switch ($exception->errorcode) {
+            case 'invalidcourseid':
+                return new self('course_not_found', 404, '', [], 'Course not found or unavailable.');
+            case 'invalidcoursemodule':
+                return new self('activity_not_found', 404, '', [], 'Activity not found or unavailable.');
+            case 'invalidparameter':
+                return new self('invalid_params', 400, '', [], 'Invalid parameters.');
+            default:
+                return null;
+        }
     }
 }

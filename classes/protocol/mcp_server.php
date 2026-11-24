@@ -218,14 +218,19 @@ final class mcp_server {
                     'args_keys' => $argumentkeys,
                 ]);
                 try {
-                    $result = $this->call_tool(
-                        (string)($params['name'] ?? ''),
-                        (array)($params['arguments'] ?? []),
-                        $params,
-                        $identity,
-                        $rawtoken,
-                        http::original_tool_arguments()
-                    );
+                    try {
+                        $result = $this->call_tool(
+                            (string)($params['name'] ?? ''),
+                            (array)($params['arguments'] ?? []),
+                            $params,
+                            $identity,
+                            $rawtoken,
+                            http::original_tool_arguments()
+                        );
+                    } catch (Throwable $failure) {
+                        // Only an explicitly classified exception may reach the structured error handler.
+                        throw api_exception::from_throwable($failure) ?? $failure;
+                    }
                     // Images are sent as visual MCP content, not embedded into textual JSON.
                     $additionalcontent = $result['_mcp_content'] ?? [];
                     unset($result['_mcp_content']);
@@ -292,7 +297,7 @@ final class mcp_server {
                     }
                     $error = [
                         'error' => $e->machinecode,
-                        'message' => $e->getMessage(),
+                        'message' => $e->get_public_message(),
                         'details' => $e->details,
                     ];
                     $error = discovery::with_site_identity($error);
