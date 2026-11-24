@@ -1,5 +1,7 @@
 # Changelog
 
+- Preserve exact HTML, CSS and JavaScript source-code arguments during WRITE typography normalization, including nested values; ordinary text and credential handling remain unchanged. Added byte-integrity regression coverage.
+
 - Isolated missing or broken built-in READ and WRITE tool classes during discovery, preserving healthy tools and reserving unavailable built-in names against extension takeover.
 
 - Fixed the public error fallback to use the localized generic message directly, including HTTP dispatch errors, so Moodle debug-mode exception messages cannot expose private diagnostics.

@@ -52,7 +52,7 @@ final class write_text_normalizer_test extends advanced_testcase {
         $normalized = write_text_normalizer::normalize($original);
 
         $this->assertSame('Uma aula - prática', $normalized['title']);
-        $this->assertSame('<p>Primeiro - segundo</p>', $normalized['html']);
+        $this->assertSame($original['html'], $normalized['html']);
         $this->assertSame('Um-dois-três', $normalized['nested'][0]['text']);
         $this->assertSame(['Sim - não', 'Fim'], $normalized['nested'][0]['answers']);
         $this->assertSame('en dash – e hífen -', $normalized['unchanged']);
@@ -99,6 +99,32 @@ final class write_text_normalizer_test extends advanced_testcase {
         $this->assertSame($password, $normalized['nested']->newpassword);
         $this->assertSame('token—exact', $normalized['nested']->api_token);
         $this->assertSame('Other - text', $normalized['nested']->text);
+    }
+
+    /**
+     * Source code must survive recursive WRITE normalization byte for byte.
+     */
+    public function test_preserves_source_code_bytes(): void {
+        $html = "\n<!doctype html><p>“Olá” — ‘mundo’ –</p>"
+            . '<style>.x::before{content:"—"}</style><script>const s = "—";</script>' . "\r\n";
+        $value = (object)[
+            'html' => $html,
+            'nested' => [
+                (object)['CSS' => '.x::after{content:"—"}', 'javascript' => 'const s = "—";'],
+                ['js' => 'const s = "—";', 'source_code' => " —\n", 'title' => 'A — B'],
+            ],
+            'title' => 'Normal — title',
+        ];
+        $normalized = write_text_normalizer::normalize($value);
+        $this->assertSame($html, $normalized->html);
+        $this->assertSame(hash('sha256', $html), hash('sha256', $normalized->html));
+        $this->assertSame($value->nested[0]->CSS, $normalized->nested[0]->CSS);
+        $this->assertSame($value->nested[0]->javascript, $normalized->nested[0]->javascript);
+        $this->assertSame($value->nested[1]['js'], $normalized->nested[1]['js']);
+        $this->assertSame($value->nested[1]['source_code'], $normalized->nested[1]['source_code']);
+        $this->assertSame('A - B', $normalized->nested[1]['title']);
+        $this->assertSame('Normal - title', $normalized->title);
+        $this->assertSame('Normal — title', $value->title);
     }
 
 }

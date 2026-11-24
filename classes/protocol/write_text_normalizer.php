@@ -38,8 +38,10 @@ final class write_text_normalizer {
      */
     public static function normalize($value, string $key = '') {
         if (is_string($value)) {
-            // Credentials are opaque. Never modify their bytes, even for typography cleanup.
-            if (preg_match('/(?:password|passwd|passphrase|secret|token)$/i', $key)) {
+            // Credentials and explicitly named source-code fields are opaque.
+            // Never change HTML, CSS or JavaScript literals during typography cleanup.
+            if (preg_match('/(?:password|passwd|passphrase|secret|token)$/i', $key) ||
+                    in_array(strtolower($key), ['html', 'css', 'javascript', 'js', 'sourcecode', 'source_code'], true)) {
                 return $value;
             }
             return str_replace("\u{2014}", '-', $value);
