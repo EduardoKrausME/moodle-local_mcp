@@ -552,11 +552,11 @@ final class mcp_server {
         $tool = $tools[$name];
         $iswrite = $tool instanceof tool_interface;
         $this->selectedwrite = $iswrite;
-        $this->selecteddestructive = $iswrite && $tool->is_destructive();
         $requiredscope = $iswrite ? scope::WRITE : scope::READ;
         if (!$identity->has_scope($requiredscope)) {
             throw new api_exception('insufficient_scope', 403);
         }
+        $this->selecteddestructive = $iswrite && $tool->is_destructive();
         // The unified server still enforces the independent WRITE rate limit.
         if ($this->side === 'server') {
             $configkey = $iswrite ? 'ratewrite' : 'rateread';

@@ -6,6 +6,7 @@
 
 - Isolated failing tool providers and malformed definitions, excluded ambiguous names, preserved fail-closed access policies and cached the registry per request.
 - Prevented registry reloads during failure auditing, added references to unexpected HTTP errors and exposed the running build in discovery and diagnostic logs.
+- Isolated optional message tracing during initialization, request parsing and notification responses; reject missing WRITE scopes before invoking tool metadata and cover both paths with regression tests.
 
 - Added confirmed native move_activity, hide_activity and show_activity tools, with a reusable position service, same-course validation, permission checks and regression tests.
 

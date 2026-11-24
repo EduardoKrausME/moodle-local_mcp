@@ -25,6 +25,7 @@
 namespace local_mcp;
 
 use advanced_testcase;
+use local_mcp\exception\api_exception;
 use local_mcp\extension\read_provider_interface;
 use local_mcp\extension\tool_provider_loader;
 use local_mcp\protocol\mcp_server;
@@ -104,6 +105,33 @@ final class tool_provider_loader_test extends advanced_testcase {
         $list->setAccessible(true);
         $definitions = $list->invoke($server, new authenticated_identity(2, 'test', ['mcp:read']));
         $this->assertSame(['get_course'], array_column($definitions, 'name'));
+    }
+
+    /**
+     * A missing WRITE scope is rejected before any tool metadata or execution.
+     *
+     * @return void
+     */
+    public function test_write_scope_is_checked_before_provider_methods(): void {
+        $server = new mcp_server('server');
+        $tool = $this->createMock(\local_mcp\write\tool_interface::class);
+        $tool->expects($this->never())->method('is_destructive');
+        $tool->expects($this->never())->method('get_input_schema');
+        $tool->expects($this->never())->method('preview');
+        $tool->expects($this->never())->method('execute');
+        $snapshot = new ReflectionProperty(mcp_server::class, 'tools');
+        $snapshot->setAccessible(true);
+        $snapshot->setValue($server, ['blocked_write' => $tool]);
+        $call = new ReflectionMethod(mcp_server::class, 'call_tool');
+        $call->setAccessible(true);
+        try {
+            $call->invoke($server, 'blocked_write', [], [],
+                new authenticated_identity(2, 'test', ['mcp:read']), '');
+            $this->fail('A READ identity must not invoke a WRITE tool.');
+        } catch (api_exception $failure) {
+            $this->assertSame('insufficient_scope', $failure->machinecode);
+            $this->assertSame(403, $failure->httpstatus);
+        }
     }
 
     /**

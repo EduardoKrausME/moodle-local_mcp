@@ -25,14 +25,41 @@
 namespace local_mcp;
 
 use advanced_testcase;
+use local_mcp\protocol\http;
 use local_mcp\protocol\message_logger;
+use ReflectionMethod;
+use ReflectionProperty;
+use RuntimeException;
 
 /**
  * Test request/response logging without exposing credentials.
  *
  * @covers \local_mcp\protocol\message_logger
+ * @covers \local_mcp\protocol\http
  */
 final class message_logger_test extends advanced_testcase {
+    /**
+     * A diagnostic failure disables tracing without replacing the original response.
+     *
+     * @return void
+     */
+    public function test_optional_trace_failure_is_contained(): void {
+        $method = new ReflectionMethod(http::class, 'optional_trace');
+        $method->setAccessible(true);
+        $property = new ReflectionProperty(http::class, 'tracemessages');
+        $property->setAccessible(true);
+        $previous = $property->getValue();
+        try {
+            $property->setValue(null, true);
+            $method->invoke(null, static function() {
+                throw new RuntimeException('Optional diagnostic failure');
+            });
+            $this->assertFalse($property->getValue());
+        } finally {
+            $property->setValue(null, $previous);
+        }
+    }
+
     /**
      * Body tracing requires explicit admin opt-in to both logging settings.
      *

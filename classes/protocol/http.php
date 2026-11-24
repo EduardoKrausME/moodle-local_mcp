@@ -50,7 +50,41 @@ final class http {
      */
     public static function trace_start(string $side): void {
         self::$traceside = $side;
-        self::$tracemessages = message_logger::enabled();
+        self::$tracemessages = false;
+        self::optional_trace(static function() {
+            self::$tracemessages = message_logger::enabled();
+        });
+    }
+
+    /**
+     * Run diagnostic operations without interfering with MCP request processing.
+     *
+     * @param callable $operation Optional diagnostic operation.
+     * @return void
+     */
+    private static function optional_trace(callable $operation): void {
+        try {
+            $operation();
+        } catch (Throwable $failure) {
+            // Disable tracing for the rest of the request without recursively logging.
+            self::$tracemessages = false;
+        }
+    }
+
+    /**
+     * Trace a message only when explicitly enabled.
+     *
+     * @param string $direction Incoming or outgoing.
+     * @param array $data Message data.
+     * @param int $status HTTP status.
+     * @return void
+     */
+    private static function trace_message(string $direction, array $data, int $status = 0): void {
+        if (self::$tracemessages) {
+            self::optional_trace(static function() use ($direction, $data, $status) {
+                message_logger::log($direction, self::$traceside, $data, $status);
+            });
+        }
     }
 
     /**
@@ -69,14 +103,7 @@ final class http {
             header($header);
         }
         $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        if (self::$tracemessages) {
-            try {
-                message_logger::log('outgoing', self::$traceside, $data, $status);
-            } catch (Throwable $failure) {
-                // Optional tracing must never prevent response delivery.
-                self::$tracemessages = false;
-            }
-        }
+        self::trace_message('outgoing', $data, $status);
         echo $json;
         exit;
     }
@@ -87,9 +114,7 @@ final class http {
      * @return never
      */
     public static function accepted(): never {
-        if (self::$tracemessages) {
-            message_logger::log('outgoing', self::$traceside, ['notice' => 'empty notification response'], 202);
-        }
+        self::trace_message('outgoing', ['notice' => 'empty notification response'], 202);
         http_response_code(202);
         header('Cache-Control: no-store');
         exit;
@@ -114,15 +139,10 @@ final class http {
             }
         }
         if (!is_array($data)) {
-            if (self::$tracemessages) {
-                message_logger::log('incoming', self::$traceside,
-                    ['error' => 'invalid_json', 'body_bytes' => strlen((string)$raw)]);
-            }
+            self::trace_message('incoming', ['error' => 'invalid_json', 'body_bytes' => strlen((string)$raw)]);
             throw new api_exception('invalid_request', 400);
         }
-        if (self::$tracemessages) {
-            message_logger::log('incoming', self::$traceside, $data);
-        }
+        self::trace_message('incoming', $data);
         return $data;
     }
 
