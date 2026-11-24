@@ -133,36 +133,40 @@ final class activity_position_service {
     public static function move(array $arguments, authenticated_identity $identity): array {
         global $CFG, $DB;
         require_once($CFG->dirroot . "/course/lib.php");
-        $transaction = $DB->start_delegated_transaction();
         $plan = self::move_preview($arguments, $identity);
-        $cm = $DB->get_record("course_modules", ["id" => $plan["cmid"]], "*", MUST_EXIST);
-        $section = $DB->get_record("course_sections", ["id" => $plan["sectionid"]], "*", MUST_EXIST);
-        $expected = $plan["sequence"];
-        array_splice($expected, $plan["index"], 0, [$plan["cmid"]]);
-        $current = array_map("intval", array_filter(explode(",", (string)$section->sequence), "strlen"));
-        $changed = (int)$cm->section !== $plan["sectionid"] || $expected !== $current;
-        if ($changed) {
-            $actionclass = \core_courseformat\local\cmactions::class;
-            if (method_exists($actionclass, "move_before") && method_exists($actionclass, "move_end_section")) {
-                $action = \core_courseformat\formatactions::cm($plan["courseid"]);
-                $ok = $plan["beforecmid"]
-                    ? $action->move_before($plan["cmid"], $plan["beforecmid"])
-                    : $action->move_end_section($plan["cmid"], $plan["sectionid"]);
-                if (!$ok) {
-                    throw new api_exception("activity_move_failed", 409);
+        $transaction = $DB->start_delegated_transaction();
+        try {
+            $cm = $DB->get_record("course_modules", ["id" => $plan["cmid"]], "*", MUST_EXIST);
+            $section = $DB->get_record("course_sections", ["id" => $plan["sectionid"]], "*", MUST_EXIST);
+            $expected = $plan["sequence"];
+            array_splice($expected, $plan["index"], 0, [$plan["cmid"]]);
+            $current = array_map("intval", array_filter(explode(",", (string)$section->sequence), "strlen"));
+            $changed = (int)$cm->section !== $plan["sectionid"] || $expected !== $current;
+            if ($changed) {
+                $actionclass = \core_courseformat\local\cmactions::class;
+                if (method_exists($actionclass, "move_before") && method_exists($actionclass, "move_end_section")) {
+                    $action = \core_courseformat\formatactions::cm($plan["courseid"]);
+                    $ok = $plan["beforecmid"]
+                        ? $action->move_before($plan["cmid"], $plan["beforecmid"])
+                        : $action->move_end_section($plan["cmid"], $plan["sectionid"]);
+                    if (!$ok) {
+                        throw new api_exception("activity_move_failed", 409);
+                    }
+                } else {
+                    $before = $plan["beforecmid"] ? (object)["id" => $plan["beforecmid"]] : null;
+                    moveto_module($cm, $section, $before);
                 }
-            } else {
-                $before = $plan["beforecmid"] ? (object)["id" => $plan["beforecmid"]] : null;
-                moveto_module($cm, $section, $before);
             }
+            $actual = $DB->get_field("course_sections", "sequence", ["id" => $section->id], MUST_EXIST);
+            $actual = array_map("intval", array_filter(explode(",", (string)$actual), "strlen"));
+            $updated = $DB->get_record("course_modules", ["id" => $cm->id], "*", MUST_EXIST);
+            if ($expected !== $actual || (int)$updated->section !== $plan["sectionid"]) {
+                throw new api_exception("activity_move_failed", 409);
+            }
+            $transaction->allow_commit();
+        } catch (\Throwable $e) {
+            $transaction->rollback($e);
         }
-        $actual = $DB->get_field("course_sections", "sequence", ["id" => $section->id], MUST_EXIST);
-        $actual = array_map("intval", array_filter(explode(",", (string)$actual), "strlen"));
-        $updated = $DB->get_record("course_modules", ["id" => $cm->id], "*", MUST_EXIST);
-        if ($expected !== $actual || (int)$updated->section !== $plan["sectionid"]) {
-            throw new api_exception("activity_move_failed", 409);
-        }
-        $transaction->allow_commit();
         unset($plan["sequence"]);
         return $plan + ["changed" => $changed, "visible" => (bool)$updated->visible];
     }
@@ -197,17 +201,21 @@ final class activity_position_service {
     public static function visibility(array $arguments, authenticated_identity $identity, bool $visible): array {
         global $CFG, $DB;
         require_once($CFG->dirroot . "/course/lib.php");
-        $transaction = $DB->start_delegated_transaction();
         $plan = self::visibility_preview($arguments, $identity, $visible);
-        $changed = $plan["previousvisible"] !== $visible || !$plan["previousvisibleoncoursepage"];
-        if ($changed && !set_coursemodule_visible($plan["cmid"], (int)$visible, 1)) {
-            throw new api_exception("activity_visibility_failed", 409);
+        $transaction = $DB->start_delegated_transaction();
+        try {
+            $changed = $plan["previousvisible"] !== $visible || !$plan["previousvisibleoncoursepage"];
+            if ($changed && !set_coursemodule_visible($plan["cmid"], (int)$visible, 1)) {
+                throw new api_exception("activity_visibility_failed", 409);
+            }
+            $cm = $DB->get_record("course_modules", ["id" => $plan["cmid"]], "*", MUST_EXIST);
+            if ((bool)$cm->visible !== $visible || !(bool)$cm->visibleoncoursepage) {
+                throw new api_exception("activity_visibility_failed", 409);
+            }
+            $transaction->allow_commit();
+        } catch (\Throwable $e) {
+            $transaction->rollback($e);
         }
-        $cm = $DB->get_record("course_modules", ["id" => $plan["cmid"]], "*", MUST_EXIST);
-        if ((bool)$cm->visible !== $visible || !(bool)$cm->visibleoncoursepage) {
-            throw new api_exception("activity_visibility_failed", 409);
-        }
-        $transaction->allow_commit();
         return $plan + ["changed" => $changed];
     }
 }

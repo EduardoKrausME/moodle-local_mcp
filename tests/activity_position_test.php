@@ -41,9 +41,9 @@ final class activity_position_test extends advanced_testcase {
         $this->resetAfterTest();
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course();
-        $a = $this->getDataGenerator()->create_module("page", ["course" => $course->id]);
-        $b = $this->getDataGenerator()->create_module("page", ["course" => $course->id]);
-        $c = $this->getDataGenerator()->create_module("page", ["course" => $course->id]);
+        $a = $this->getDataGenerator()->create_module("page", ["course" => $course->id], ["section" => 0]);
+        $b = $this->getDataGenerator()->create_module("page", ["course" => $course->id], ["section" => 0]);
+        $c = $this->getDataGenerator()->create_module("page", ["course" => $course->id], ["section" => 0]);
         $identity = new authenticated_identity($USER->id, "test", ["mcp:write"]);
         $tools = registry::get_tools();
         foreach (["move_activity", "hide_activity", "show_activity"] as $name) {
@@ -70,6 +70,27 @@ final class activity_position_test extends advanced_testcase {
         $this->assertTrue((bool)$DB->get_field("course_modules", "visible", ["id" => $a->cmid]));
     }
 
+    /** Moving between sections and appending preserve the original module. */
+    public function test_move_between_sections(): void {
+        global $USER, $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $course = $this->getDataGenerator()->create_course(["numsections" => 2]);
+        $a = $this->getDataGenerator()->create_module("page", ["course" => $course->id], ["section" => 0]);
+        $b = $this->getDataGenerator()->create_module("page", ["course" => $course->id], ["section" => 1]);
+        $identity = new authenticated_identity($USER->id, "test", ["mcp:write"]);
+        $tool = registry::get_tools()["move_activity"];
+        $result = $tool->execute(["cmid" => $a->cmid, "aftercmid" => $b->cmid], $identity);
+        $this->assertSame(1, $result["sectionnum"]);
+        $this->assertSame("$b->cmid,$a->cmid", $DB->get_field("course_sections", "sequence",
+            ["course" => $course->id, "section" => 1]));
+        $this->assertSame("", $DB->get_field("course_sections", "sequence",
+            ["course" => $course->id, "section" => 0]));
+        $result = $tool->execute(["cmid" => $a->cmid, "sectionnum" => 2], $identity);
+        $this->assertSame(2, $result["sectionnum"]);
+        $this->assertTrue($DB->record_exists("page", ["id" => $a->id]));
+    }
+
     /** Cross-course anchors are never accepted. */
     public function test_reject_cross_course_anchor(): void {
         global $USER;
@@ -88,7 +109,7 @@ final class activity_position_test extends advanced_testcase {
     public function test_student_cannot_hide(): void {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course();
-        $page = $this->getDataGenerator()->create_module("page", ["course" => $course->id]);
+        $page = $this->getDataGenerator()->create_module("page", ["course" => $course->id], ["section" => 0]);
         $student = $this->getDataGenerator()->create_user();
         $this->getDataGenerator()->enrol_user($student->id, $course->id, "student");
         $this->setUser($student);
