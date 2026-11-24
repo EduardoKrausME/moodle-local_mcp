@@ -1,5 +1,7 @@
 # Changelog
 
+- Fixed the public error fallback to use the localized generic message directly, including HTTP dispatch errors, so Moodle debug-mode exception messages cannot expose private diagnostics.
+
 ## Unreleased - 2026-10-24
 
 - Added confirmed native move_activity, hide_activity and show_activity tools, with a reusable position service, same-course validation, permission checks and regression tests.

@@ -67,7 +67,7 @@ class api_exception extends moodle_exception {
      * @return string
      */
     public function get_public_message(): string {
-        return $this->publicmessage ?? $this->getMessage();
+        return $this->publicmessage ?? get_string('error', 'local_mcp');
     }
 
     /**

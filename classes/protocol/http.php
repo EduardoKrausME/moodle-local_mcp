@@ -228,7 +228,7 @@ final class http {
                     ['side' => $side]))->out(false);
                 $headers[] = 'WWW-Authenticate: Bearer resource_metadata="' . $metadata . '"';
             }
-            self::json(['error' => $e->machinecode, 'message' => $e->getMessage(), 'details' => $e->details],
+            self::json(['error' => $e->machinecode, 'message' => $e->get_public_message(), 'details' => $e->details],
                 $e->httpstatus, $headers);
         }
         self::json(['error' => 'internal_error', 'message' => 'The request could not be completed.'], 500);

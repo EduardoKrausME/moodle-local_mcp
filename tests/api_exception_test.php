@@ -46,16 +46,22 @@ final class api_exception_test extends advanced_testcase {
         $this->assertSame(["field" => "name"], $exception->details);
     }
 
-    /** Explicit public messages do not expose legacy debug details. */
+    /**
+     * Explicit public messages do not expose legacy debug details.
+     */
     public function test_public_message_is_opt_in(): void {
         $legacy = new api_exception('invalid_request', 400, 'private debug detail');
+        $this->assertSame(get_string('error', 'local_mcp'), $legacy->get_public_message());
         $this->assertStringNotContainsString('private debug detail', $legacy->get_public_message());
+        $this->assertSame('private debug detail', $legacy->debuginfo);
         $safe = new api_exception('configuration_required', 409, 'private debug detail', [], 'Configure first.');
         $this->assertSame('Configure first.', $safe->get_public_message());
         $this->assertSame($safe, api_exception::from_throwable($safe));
     }
 
-    /** Only allowlisted native errors are converted, without leaking their arguments. */
+    /**
+     * Only allowlisted native errors are converted, without leaking their arguments.
+     */
     public function test_native_error_mapping(): void {
         $course = api_exception::from_throwable(new \moodle_exception('invalidcourseid', 'error', '', 'private'));
         $this->assertSame('course_not_found', $course->machinecode);
