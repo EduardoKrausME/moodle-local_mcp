@@ -12,6 +12,13 @@
 
 **Deployment:** updating this repository does not install the plugin on a Moodle site. Deploy the files, run Moodle's plugin upgrade, and refresh MCP tool discovery before using the new APIs.
 
+## 1.4.8 - 2026-11-24
+
+- Normalized blank-line spacing in the extension manager, Assignment tool, documentation and test files to match Moodle coding standards.
+- Updated release metadata without adding new functional tools in this tag.
+
+**Comparison:** [1.4.7...1.4.8](https://github.com/EduardoKrausME/moodle-local_mcp/compare/1.4.7...1.4.8)
+
 ## 1.4.7 - 2026-11-23
 
 - Extended the Page content READ tool to expose original HTML, formatting and a manifest of embedded images.
