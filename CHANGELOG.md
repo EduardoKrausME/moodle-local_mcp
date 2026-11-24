@@ -1,5 +1,7 @@
 # Changelog
 
+- Isolated missing or broken built-in READ and WRITE tool classes during discovery, preserving healthy tools and reserving unavailable built-in names against extension takeover.
+
 - Fixed the public error fallback to use the localized generic message directly, including HTTP dispatch errors, so Moodle debug-mode exception messages cannot expose private diagnostics.
 
 ## Unreleased - 2026-10-24

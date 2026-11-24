@@ -73,6 +73,47 @@ final class tool_provider_loader {
     }
 
     /**
+     * Instantiate built-in tools individually so an incomplete deployment cannot disable discovery.
+     *
+     * @param array $classes Built-in tool class names, whose short names are the public tool names.
+     * @param string $interface Required tool interface.
+     * @param array $conflicts Names excluded from both registries.
+     * @return array
+     */
+    public static function collect_builtins(array $classes, string $interface, array &$conflicts): array {
+        $indexed = [];
+        foreach ($classes as $class) {
+            $parts = explode('\\', $class);
+            $expected = end($parts);
+            try {
+                if (!class_exists($class)) {
+                    throw new coding_exception('MCP built-in tool class cannot be loaded.');
+                }
+                $tool = new $class();
+                if (!$tool instanceof $interface ||
+                        ($tool instanceof \local_mcp\read\tool_interface &&
+                        $tool instanceof \local_mcp\write\tool_interface)) {
+                    throw new coding_exception('Invalid MCP built-in tool interface.');
+                }
+                $name = $tool->get_name();
+                if ($name !== $expected) {
+                    throw new coding_exception('Unexpected MCP built-in tool name.');
+                }
+                if (isset($indexed[$name]) || isset($conflicts[$name])) {
+                    throw new coding_exception('Duplicate MCP built-in tool name.');
+                }
+                $indexed[$name] = $tool;
+            } catch (Throwable $failure) {
+                // Do not allow an extension to take over an unavailable built-in name.
+                unset($indexed[$expected]);
+                $conflicts[$expected] = true;
+                self::report('local_mcp', $class, 'builtin_registration', $failure, $expected);
+            }
+        }
+        return $indexed;
+    }
+
+    /**
      * Add valid extension tools and quarantine all occurrences of duplicate names.
      *
      * @param array $indexed Indexed built-in tools.

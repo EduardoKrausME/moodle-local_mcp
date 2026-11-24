@@ -60,6 +60,9 @@ final class registry_test extends advanced_testcase {
         $this->assertArrayHasKey('copy_activity_images', $write);
         $this->assertSame('mod/mcp:manage', $write['copy_activity_images']->get_required_capability());
         $this->assertArrayHasKey('purge_all_caches', $write);
+        $this->assertArrayHasKey('move_activity', $write);
+        $this->assertArrayHasKey('hide_activity', $write);
+        $this->assertArrayHasKey('show_activity', $write);
         $this->assertEmpty(array_intersect(array_keys($read), array_keys($write)));
 
         foreach ($read as $tool) {

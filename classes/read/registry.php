@@ -24,7 +24,6 @@
 
 namespace local_mcp\read;
 
-use coding_exception;
 use local_mcp\read\tool\get_course_completion_config;
 use local_mcp\extension\manager;
 use local_mcp\extension\tool_provider_loader;
@@ -78,71 +77,53 @@ final class registry {
      *
      * @param array|null $conflicts Duplicate names excluded from this registry.
      * @return array
-     * @throws coding_exception
      */
     public static function get_tools(?array &$conflicts = null): array {
-        $tools = [
-            new list_question_banks(),
-            new list_question_categories(),
-            new search_questions(),
-            new get_question(),
-            new get_assignment(),
-            new get_assignment_feedback_context(),
-            new get_assignment_feedback_queue(),
-            new get_assignment_submission_image(),
-            new get_assignments(),
-            new get_attempts(),
-            new get_calendar_events(),
-            new get_course(),
-            new get_course_groups(),
-            new get_group_members(),
-            new get_activity_restrictions(),
-            new get_activity_completion(),
-            new get_site_config(),
-            new get_password_policy(),
-            new get_site_status(),
-            new get_course_image(),
-            new get_course_activities(),
-            new get_course_contents(),
-            new get_course_participants(),
-            new get_course_sections(),
-            new get_grades(),
-            new get_gradebook_structure(),
-            new get_grade_history(),
-            new get_course_completion_config(),
-            new get_course_completion_criteria(),
-            new get_course_completion_status(),
-            new get_course_progress_report(),
-            new list_categories(),
-            new get_progress(),
-            new get_quiz(),
-            new get_quizzes(),
-            new get_submissions(),
-            new get_user(),
-            new get_user_courses(),
-            new search_courses(),
-            new search_users(),
+        $classes = [
+            list_question_banks::class,
+            list_question_categories::class,
+            search_questions::class,
+            get_question::class,
+            get_assignment::class,
+            get_assignment_feedback_context::class,
+            get_assignment_feedback_queue::class,
+            get_assignment_submission_image::class,
+            get_assignments::class,
+            get_attempts::class,
+            get_calendar_events::class,
+            get_course::class,
+            get_course_groups::class,
+            get_group_members::class,
+            get_activity_restrictions::class,
+            get_activity_completion::class,
+            get_site_config::class,
+            get_password_policy::class,
+            get_site_status::class,
+            get_course_image::class,
+            get_course_activities::class,
+            get_course_contents::class,
+            get_course_participants::class,
+            get_course_sections::class,
+            get_grades::class,
+            get_gradebook_structure::class,
+            get_grade_history::class,
+            get_course_completion_config::class,
+            get_course_completion_criteria::class,
+            get_course_completion_status::class,
+            get_course_progress_report::class,
+            list_categories::class,
+            get_progress::class,
+            get_quiz::class,
+            get_quizzes::class,
+            get_submissions::class,
+            get_user::class,
+            get_user_courses::class,
+            search_courses::class,
+            search_users::class,
         ];
         $conflicts = [];
-        return tool_provider_loader::collect(self::index($tools), manager::read_providers(),
+        $tools = tool_provider_loader::collect_builtins($classes, tool_interface::class, $conflicts);
+        return tool_provider_loader::collect($tools, manager::read_providers(),
             'get_read_tools', tool_interface::class, $conflicts);
-    }
-
-    /**
-     * Method index.
-     *
-     * @param array $tools Parameter tools.
-     * @return array Return value.
-     */
-    private static function index(array $tools): array {
-        $indexed = [];
-        foreach ($tools as $tool) {
-            $name = $tool->get_name();
-            if (isset($indexed[$name])) {
-                throw new coding_exception('Duplicate MCP READ tool: ' . $name);
-            }
-            $indexed[$name] = $tool;
-        }
-        return $indexed;
     }
 }

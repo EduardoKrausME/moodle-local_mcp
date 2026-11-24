@@ -24,7 +24,6 @@
 
 namespace local_mcp\write;
 
-use coding_exception;
 use local_mcp\write\tool\set_course_completion_config;
 use local_mcp\extension\manager;
 use local_mcp\extension\tool_provider_loader;
@@ -75,68 +74,50 @@ final class registry {
      *
      * @param array|null $conflicts Duplicate names excluded from this registry.
      * @return array
-     * @throws coding_exception
      */
     public static function get_tools(?array &$conflicts = null): array {
-        $tools = [
-            new workflow_sequence(),
-            new copy_activity_images(),
-            new delete_course_module(),
-            new move_activity(),
-            new hide_activity(),
-            new show_activity(),
-            new create_question_category(),
-            new import_gift_question_bank(),
-            new create_question(),
-            new update_question(),
-            new create_category(),
-            new bulk_create_courses(),
-            new create_course(),
-            new create_group(),
-            new add_group_members(),
-            new remove_group_members(),
-            new set_activity_groupmode(),
-            new set_activity_restrictions(),
-            new set_activity_completion(),
-            new set_course_completion_config(),
-            new create_section(),
-            new create_user(),
-            new enrol_user(),
-            new grade_submission(),
-            new set_grade_item_visibility(),
-            new save_assignment_feedback(),
-            new purge_css_cache(),
-            new purge_all_caches(),
-            new send_message(),
-            new suspend_user(),
-            new unenrol_user(),
-            new update_category(),
-            new update_course(),
-            new set_course_image(),
-            new set_site_config(),
-            new update_section(),
-            new update_user(),
+        $classes = [
+            workflow_sequence::class,
+            copy_activity_images::class,
+            delete_course_module::class,
+            move_activity::class,
+            hide_activity::class,
+            show_activity::class,
+            create_question_category::class,
+            import_gift_question_bank::class,
+            create_question::class,
+            update_question::class,
+            create_category::class,
+            bulk_create_courses::class,
+            create_course::class,
+            create_group::class,
+            add_group_members::class,
+            remove_group_members::class,
+            set_activity_groupmode::class,
+            set_activity_restrictions::class,
+            set_activity_completion::class,
+            set_course_completion_config::class,
+            create_section::class,
+            create_user::class,
+            enrol_user::class,
+            grade_submission::class,
+            set_grade_item_visibility::class,
+            save_assignment_feedback::class,
+            purge_css_cache::class,
+            purge_all_caches::class,
+            send_message::class,
+            suspend_user::class,
+            unenrol_user::class,
+            update_category::class,
+            update_course::class,
+            set_course_image::class,
+            set_site_config::class,
+            update_section::class,
+            update_user::class,
         ];
         $conflicts = [];
-        return tool_provider_loader::collect(self::index($tools), manager::write_providers(),
+        $tools = tool_provider_loader::collect_builtins($classes, tool_interface::class, $conflicts);
+        return tool_provider_loader::collect($tools, manager::write_providers(),
             'get_write_tools', tool_interface::class, $conflicts);
-    }
-
-    /**
-     * Method index.
-     *
-     * @param array $tools Parameter tools.
-     * @return array Return value.
-     */
-    private static function index(array $tools): array {
-        $indexed = [];
-        foreach ($tools as $tool) {
-            $name = $tool->get_name();
-            if (isset($indexed[$name])) {
-                throw new coding_exception('Duplicate MCP WRITE tool: ' . $name);
-            }
-            $indexed[$name] = $tool;
-        }
-        return $indexed;
     }
 }

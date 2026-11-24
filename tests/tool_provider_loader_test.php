@@ -62,6 +62,34 @@ final class tool_provider_loader_test extends advanced_testcase {
     }
 
     /**
+     * Missing or invalid built-ins must not discard healthy tools or permit name takeover.
+     */
+    public function test_builtin_registration_isolation(): void {
+        $conflicts = [];
+        $missing = 'local_mcp\\read\\tool\\missing_builtin_for_test';
+        $result = tool_provider_loader::collect_builtins([
+            \local_mcp\read\tool\get_course::class,
+            $missing,
+            \local_mcp\write\tool\create_course::class,
+            \ReflectionClass::class,
+            \local_mcp\read\tool\get_course_contents::class,
+        ], tool_interface::class, $conflicts);
+        $this->assertSame(['get_course', 'get_course_contents'], array_keys($result));
+        $this->assertSame([
+            'missing_builtin_for_test' => true,
+            'create_course' => true,
+            'ReflectionClass' => true,
+        ], $conflicts);
+
+        $extension = $this->createMock(read_provider_interface::class);
+        $replacement = $this->createMock(tool_interface::class);
+        $replacement->method('get_name')->willReturn('missing_builtin_for_test');
+        $extension->method('get_read_tools')->willReturn([$replacement]);
+        $this->assertSame($result, tool_provider_loader::collect($result, [$extension],
+            'get_read_tools', tool_interface::class, $conflicts));
+    }
+
+    /**
      * A malformed entry or throwing provider must not discard independent tools.
      */
     public function test_collection_and_duplicate_isolation(): void {
