@@ -21,12 +21,18 @@
  * @copyright 2026 Eduardo Kraus {@link https://eduardokraus.com}
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 namespace local_mcp;
 
 use advanced_testcase;
 use local_mcp\question\question_bank_factory;
 
 final class question_bank_compatibility_test extends advanced_testcase {
+    /**
+     * Verify the selected question storage driver.
+     *
+     * @covers \local_mcp\question\question_bank_factory
+     */
     public function test_driver_matches_question_storage_version(): void {
         global $CFG;
         $this->resetAfterTest();
@@ -36,6 +42,11 @@ final class question_bank_compatibility_test extends advanced_testcase {
         $this->assertSame($expected, question_bank_factory::driver());
     }
 
+    /**
+     * Verify portable PHP string and array helpers.
+     *
+     * @covers \local_mcp\compat
+     */
     public function test_php_compatibility_helpers(): void {
         $this->assertTrue(compat::starts_with('moodle', 'moo'));
         $this->assertTrue(compat::ends_with('moodle', 'dle'));
@@ -46,6 +57,11 @@ final class question_bank_compatibility_test extends advanced_testcase {
         $this->assertFalse(compat::starts_with('moodle', 'odle'));
     }
 
+    /**
+     * Verify that the installed Moodle quiz API returns a structure.
+     *
+     * @covers \mcptool_quiz\quiz_compat
+     */
     public function test_quiz_structure_uses_installed_quiz_api(): void {
         $this->resetAfterTest();
         $this->setAdminUser();

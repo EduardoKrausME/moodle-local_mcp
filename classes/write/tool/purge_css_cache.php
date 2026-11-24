@@ -30,6 +30,7 @@ use dml_exception;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\security\capability_guard;
+
 use function purge_caches;
 
 /**
