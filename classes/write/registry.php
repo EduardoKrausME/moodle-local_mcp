@@ -38,6 +38,9 @@ use local_mcp\write\tool\set_activity_restrictions;
 use local_mcp\write\tool\set_activity_completion;
 use local_mcp\write\tool\update_question;
 use local_mcp\write\tool\delete_course_module;
+use local_mcp\write\tool\move_activity;
+use local_mcp\write\tool\hide_activity;
+use local_mcp\write\tool\show_activity;
 use local_mcp\write\tool\create_question;
 use local_mcp\write\tool\create_question_category;
 use local_mcp\write\tool\import_gift_question_bank;
@@ -77,6 +80,9 @@ final class registry {
             new workflow_sequence(),
             new copy_activity_images(),
             new delete_course_module(),
+            new move_activity(),
+            new hide_activity(),
+            new show_activity(),
             new create_question_category(),
             new import_gift_question_bank(),
             new create_question(),

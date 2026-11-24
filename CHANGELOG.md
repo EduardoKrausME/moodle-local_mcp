@@ -2,6 +2,8 @@
 
 ## Unreleased - 2026-10-24
 
+- Added confirmed native move_activity, hide_activity and show_activity tools, with a reusable position service, same-course validation, permission checks and regression tests.
+
 - Added allowlisted native Moodle error mapping and opt-in public API messages without exposing debug details, preserving confirmation and unexpected-error handling.
 - Clarified tool rediscovery after plugin upgrades or missing tools, without bypassing permissions.
 

@@ -6,6 +6,19 @@ Connect your Moodle to **ChatGPT or Claude** through the **Model Context Protoco
 
 Under the hood, Moodle MCP exposes an extensible server with separate READ and WRITE tool registries.
 
+### Move, hide and show course activities
+
+The confirmed WRITE tools `move_activity`, `hide_activity` and `show_activity` apply to any supported Moodle course module. For example:
+
+- `{"cmid":8318,"aftercmid":2097}` moves a module immediately after another in the same course.
+- `{"cmid":8318,"beforecmid":2097}` moves it immediately before another.
+- `{"cmid":8318,"sectionnum":2}` moves it to the end of an existing section.
+- `{"cmid":2097}` hides or shows the selected module with the corresponding tool.
+
+Use only one anchor; if a section is supplied with an anchor, they must match. Cross-course moves are rejected.
+Optional `expectedsectionnum` or `expectedvisible` reject a changed initial state. Preview and confirmation are mandatory; `dry_run` is supported.
+Moving uses Moodle course-format actions where available and the legacy native API otherwise. Visibility uses Moodle's native API, including its gradebook, calendar and section-visibility behavior. Showing a module does not publish a mod_mcp draft or override availability restrictions. Refresh connector discovery after upgrading.
+
 ### Read Page HTML and copy authorised images inside Moodle
 
 The READ tool `page_get_content` keeps its existing plain-text `content` field for
