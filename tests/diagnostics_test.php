@@ -75,6 +75,7 @@ final class diagnostics_test extends advanced_testcase {
         $plugin = new stdClass();
         require(__DIR__ . '/../version.php');
         $this->assertSame($plugin->release, $decoded['version']);
+        $this->assertSame($plugin->version, $decoded['build']);
         $this->assertSame(str_repeat('a', 64), $decoded['catalog_sha256']);
         $this->assertSame('INFO', $decoded['level']);
         $this->assertSame('tools/list', $decoded['method']);

@@ -70,7 +70,12 @@ final class http {
         }
         $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if (self::$tracemessages) {
-            message_logger::log('outgoing', self::$traceside, $data, $status);
+            try {
+                message_logger::log('outgoing', self::$traceside, $data, $status);
+            } catch (Throwable $failure) {
+                // Optional tracing must never prevent response delivery.
+                self::$tracemessages = false;
+            }
         }
         echo $json;
         exit;
@@ -231,6 +236,7 @@ final class http {
             self::json(['error' => $e->machinecode, 'message' => $e->get_public_message(), 'details' => $e->details],
                 $e->httpstatus, $headers);
         }
-        self::json(['error' => 'internal_error', 'message' => 'The request could not be completed.'], 500);
+        self::json(['error' => 'internal_error', 'message' => 'The request could not be completed.',
+            'reference' => diagnostics::request_id()], 500);
     }
 }

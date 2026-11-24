@@ -27,6 +27,7 @@ namespace local_mcp\write;
 use coding_exception;
 use local_mcp\write\tool\set_course_completion_config;
 use local_mcp\extension\manager;
+use local_mcp\extension\tool_provider_loader;
 use local_mcp\write\tool\workflow_sequence;
 use local_mcp\write\tool\set_grade_item_visibility;
 use local_mcp\write\tool\copy_activity_images;
@@ -72,10 +73,11 @@ final class registry {
     /**
      * get_tools
      *
+     * @param array|null $conflicts Duplicate names excluded from this registry.
      * @return array
      * @throws coding_exception
      */
-    public static function get_tools(): array {
+    public static function get_tools(?array &$conflicts = null): array {
         $tools = [
             new workflow_sequence(),
             new copy_activity_images(),
@@ -115,15 +117,9 @@ final class registry {
             new update_section(),
             new update_user(),
         ];
-        foreach (manager::write_providers() as $provider) {
-            foreach ($provider->get_write_tools() as $tool) {
-                if (!$tool instanceof tool_interface) {
-                    throw new coding_exception('WRITE provider returned a non-WRITE tool.');
-                }
-                $tools[] = $tool;
-            }
-        }
-        return self::index($tools);
+        $conflicts = [];
+        return tool_provider_loader::collect(self::index($tools), manager::write_providers(),
+            'get_write_tools', tool_interface::class, $conflicts);
     }
 
     /**

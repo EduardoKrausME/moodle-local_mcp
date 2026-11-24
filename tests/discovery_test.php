@@ -51,6 +51,9 @@ final class discovery_test extends advanced_testcase {
         $this->assertIsObject($result['capabilities']['tools']);
         $this->assertSame('Moodle MCP SERVER', $result['_meta']['io.modelcontextprotocol/serverInfo']['name']);
         $this->assertSame('1.3.1', $result['_meta']['io.modelcontextprotocol/serverInfo']['version']);
+        $plugin = new \stdClass();
+        require(__DIR__ . '/../version.php');
+        $this->assertSame($plugin->version, $result['_meta']['io.modelcontextprotocol/serverInfo']['build']);
         $this->assertSame('private', $result['cacheScope']);
         $this->assertSame(discovery::CACHE_TTL_MS, $result['ttlMs']);
     }

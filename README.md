@@ -977,6 +977,8 @@ tokens, prompts, user-entered HTML, images or raw tool payloads.
 
 ## Troubleshooting OAuth and MCP tool discovery
 
+Tool providers that fail instantiation or enumeration are isolated. Duplicate names are excluded rather than allowing a provider to replace another tool. Access-policy failures still deny discovery or execution. Inspect `tool_provider_failed` and `tool_name_conflict` events with diagnostic logging enabled. The handshake and diagnostic logs include the running plugin build.
+
 An OAuth consent screen can complete successfully while the following MCP `POST`
 still fails with HTTP 401. A successful authorization-code exchange is not proof
 that the MCP endpoint received the access token. Inspect the PHP error log and

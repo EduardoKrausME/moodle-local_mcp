@@ -106,9 +106,12 @@ final class discovery {
      * @return array
      */
     public static function server_info(string $side, string $release): array {
+        $plugin = new \stdClass();
+        require(dirname(__DIR__, 2) . '/version.php');
         return [
             'name' => 'Moodle MCP ' . strtoupper($side),
             'version' => $release,
+            'build' => (int)$plugin->version,
             "websiteUrl" => self::wwwroot(),
         ];
     }

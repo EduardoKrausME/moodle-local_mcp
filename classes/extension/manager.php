@@ -43,7 +43,7 @@ final class manager {
      */
     public static function read_providers(): array {
         return array_merge(
-            self::providers('mcp_read_provider', read_provider_interface::class),
+            self::tool_callbacks('mcp_read_provider', read_provider_interface::class),
             self::class_providers(read_provider_interface::class),
             self::subplugin_providers(read_provider_interface::class)
         );
@@ -57,7 +57,7 @@ final class manager {
      */
     public static function write_providers(): array {
         return array_merge(
-            self::providers('mcp_write_provider', write_provider_interface::class),
+            self::tool_callbacks('mcp_write_provider', write_provider_interface::class),
             self::class_providers(write_provider_interface::class),
             self::subplugin_providers(write_provider_interface::class)
         );
@@ -99,17 +99,10 @@ final class manager {
                         continue;
                     }
                     $class = '\\' . $component . '\\mcp\\provider';
-                    if (!class_exists($class)) {
-                        throw new coding_exception($component . ' has classes/mcp/provider.php '
-                            . 'but the class ' . $class . ' cannot be loaded.');
+                    $provider = tool_provider_loader::load_class($class, $component);
+                    if ($provider !== null) {
+                        self::$classproviders[$component] = $provider;
                     }
-                    $provider = new $class();
-                    if (!$provider instanceof read_provider_interface &&
-                        !$provider instanceof write_provider_interface) {
-                        throw new coding_exception($component . ' MCP provider must implement '
-                            . 'a READ or WRITE provider interface.');
-                    }
-                    self::$classproviders[$component] = $provider;
                 }
             }
         }
@@ -132,6 +125,28 @@ final class manager {
     private static function plugin_enabled(string $component): bool {
         $info = core_plugin_manager::instance()->get_plugin_info($component);
         return $info && $info->is_enabled() !== false;
+    }
+
+    /**
+     * Discover tool callbacks separately from mandatory access policies.
+     *
+     * @param string $callback Callback name.
+     * @param string $interface Required interface.
+     * @return array
+     */
+    private static function tool_callbacks(string $callback, string $interface): array {
+        $providers = [];
+        foreach (get_plugins_with_function($callback, 'lib.php') as $component => $functions) {
+            foreach ($functions as $function) {
+                $provider = tool_provider_loader::load(static function() use ($function) {
+                    return $function();
+                }, $interface, $component, (string)$function);
+                if ($provider !== null) {
+                    $providers[] = $provider;
+                }
+            }
+        }
+        return $providers;
     }
 
     /**
@@ -170,13 +185,7 @@ final class manager {
                 continue;
             }
             $class = '\\' . $component . '\\provider';
-            if (!class_exists($class)) {
-                throw new coding_exception($component . ' does not define a provider class.');
-            }
-            $provider = new $class();
-            if (!$provider instanceof read_provider_interface && !$provider instanceof write_provider_interface) {
-                throw new coding_exception($component . ' must implement at least one MCP provider contract.');
-            }
+            $provider = tool_provider_loader::load_class($class, $component);
             if ($provider instanceof $interface) {
                 $providers[] = $provider;
             }

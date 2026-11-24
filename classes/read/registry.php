@@ -27,6 +27,7 @@ namespace local_mcp\read;
 use coding_exception;
 use local_mcp\read\tool\get_course_completion_config;
 use local_mcp\extension\manager;
+use local_mcp\extension\tool_provider_loader;
 use local_mcp\read\tool\get_gradebook_structure;
 use local_mcp\read\tool\get_grade_history;
 use local_mcp\read\tool\get_course_completion_criteria;
@@ -75,10 +76,11 @@ final class registry {
     /**
      * get_tools
      *
+     * @param array|null $conflicts Duplicate names excluded from this registry.
      * @return array
      * @throws coding_exception
      */
-    public static function get_tools(): array {
+    public static function get_tools(?array &$conflicts = null): array {
         $tools = [
             new list_question_banks(),
             new list_question_categories(),
@@ -121,15 +123,9 @@ final class registry {
             new search_courses(),
             new search_users(),
         ];
-        foreach (manager::read_providers() as $provider) {
-            foreach ($provider->get_read_tools() as $tool) {
-                if (!$tool instanceof tool_interface) {
-                    throw new coding_exception('READ provider returned a non-READ tool.');
-                }
-                $tools[] = $tool;
-            }
-        }
-        return self::index($tools);
+        $conflicts = [];
+        return tool_provider_loader::collect(self::index($tools), manager::read_providers(),
+            'get_read_tools', tool_interface::class, $conflicts);
     }
 
     /**

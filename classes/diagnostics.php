@@ -44,7 +44,7 @@ final class diagnostics {
         'count', 'duration_ms', 'status', 'error_code', 'error_class', 'file',
         'line', 'message', 'httpstatus', 'limit', 'used', 'dry_run',
         'confirmation', 'args_keys', 'protocol', 'read', 'write', 'catalog_sha256',
-        'provider', 'schema_path', 'expected', 'actual', 'resolution',
+        'component', 'provider', 'schema_path', 'expected', 'actual', 'resolution',
         'courseid', 'source', 'source_bytes', 'bytes', 'width', 'height', 'mime',
         'download_status', 'download_bytes', 'existing_images', 'replaced',
         'reason', 'trace',
@@ -74,16 +74,16 @@ final class diagnostics {
     /**
      * Return the release declared by the installed plugin, not the MCP client version.
      *
-     * @return string
+     * @return array
      */
-    private static function plugin_version(): string {
-        static $release = null;
-        if ($release === null) {
+    private static function plugin_version(): array {
+        static $version = null;
+        if ($version === null) {
             $plugin = new stdClass();
             require(dirname(__DIR__) . '/version.php');
-            $release = (string)$plugin->release;
+            $version = ['version' => (string)$plugin->release, 'build' => (int)$plugin->version];
         }
-        return $release;
+        return $version;
     }
 
     /**
@@ -99,8 +99,7 @@ final class diagnostics {
             'request' => self::request_id(),
             'level' => self::clean($level),
             'event' => self::clean($event),
-            'version' => self::plugin_version(),
-        ];
+        ] + self::plugin_version();
         foreach ($fields as $key => $value) {
             if (!in_array($key, self::FIELDS, true) || $value === null) {
                 continue;
@@ -137,14 +136,18 @@ final class diagnostics {
      * @return void
      */
     public static function event(string $event, array $fields = [], string $level = 'INFO'): void {
-        if (!self::enabled()) {
+        try {
+            if (!self::enabled()) {
+                return;
+            }
+            // Optional diagnostic logging must not hide the original failure.
+            // phpcs:disable moodle.PHP.ForbiddenFunctions.FoundWithAlternative
+            error_log(self::format($level, $event, $fields));
+            // phpcs:enable moodle.PHP.ForbiddenFunctions.FoundWithAlternative
+        } catch (Throwable $failure) {
+            // Never recursively log a logging failure.
             return;
         }
-
-        // The local_mcp/debuglogging setting enables MCP milestone and failure logging.
-        // phpcs:disable moodle.PHP.ForbiddenFunctions.FoundWithAlternative
-        error_log(self::format($level, $event, $fields));
-        // phpcs:enable moodle.PHP.ForbiddenFunctions.FoundWithAlternative
     }
 
     /**
