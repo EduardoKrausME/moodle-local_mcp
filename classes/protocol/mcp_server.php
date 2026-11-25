@@ -717,7 +717,8 @@ final class mcp_server {
         } catch (\Throwable $failure) {
             if ($workflowid !== "") {
                 try {
-                    sequence::fail($workflowid, $identity, (int)$context->get_course_context(false)->instanceid);
+                    sequence::fail($workflowid, $identity, (int)$context->get_course_context(false)->instanceid,
+                        diagnostics::request_id());
                 } catch (\Throwable $statefailure) {
                     // Do not mask the original exception or allow an uncertain write to be retried.
                     diagnostics::event("workflow_failure_record_failed", ["tool" => $name]);

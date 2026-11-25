@@ -54,6 +54,7 @@ final class activity_position_test extends advanced_testcase {
         $args = ["cmid" => $c->cmid, "aftercmid" => $a->cmid];
         $plan = $tools["move_activity"]->preview($args, $identity);
         $this->assertSame((int)$b->cmid, $plan["beforecmid"]);
+        $approvedhash = $plan["position_sha256"];
         $sectionid = $plan["sectionid"];
         $this->assertSame("$a->cmid,$b->cmid,$c->cmid",
             $DB->get_field("course_sections", "sequence", ["id" => $sectionid]));
@@ -61,6 +62,12 @@ final class activity_position_test extends advanced_testcase {
         $this->assertSame("$a->cmid,$c->cmid,$b->cmid",
             $DB->get_field("course_sections", "sequence", ["id" => $sectionid]));
         $this->assertFalse($tools["move_activity"]->execute($args, $identity)["changed"]);
+        try {
+            $tools["move_activity"]->preview($args + ["expected_position_sha256" => $approvedhash], $identity);
+            $this->fail("An old source ordering must not be accepted.");
+        } catch (api_exception $e) {
+            $this->assertSame("activity_position_mismatch", $e->machinecode);
+        }
         $this->assertFalse((bool)$DB->get_field("course_modules", "visible", ["id" => $c->cmid]));
         $tools["move_activity"]->execute(["cmid" => $b->cmid, "beforecmid" => $a->cmid], $identity);
         $this->assertSame("$b->cmid,$a->cmid,$c->cmid",

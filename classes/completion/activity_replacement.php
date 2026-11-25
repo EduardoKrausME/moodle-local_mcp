@@ -99,7 +99,7 @@ final class activity_replacement {
             }
         }
         $section = $DB->get_record("course_sections", ["id" => $target->section, "course" => $courseid], "*", MUST_EXIST);
-        if (empty($target->visible) || empty($section->visible) || !empty($target->availability) ||
+        if (empty($source->visible) || empty($target->visible) || empty($section->visible) || !empty($target->availability) ||
                 !empty($section->availability) || !empty($source->availability) ||
                 (int)$source->section !== (int)$target->section) {
             throw new api_exception("completion_target_not_ready", 409);
@@ -114,8 +114,11 @@ final class activity_replacement {
         foreach (["course_modules", "course_sections"] as $table) {
             $rows = $DB->get_records($table, ["course" => $courseid], "id ASC", "id,availability");
             foreach ($rows as $row) {
-                if (!empty($row->availability) && self::references(json_decode($row->availability, true), $sourceid)) {
-                    $dependencies[] = ["table" => $table, "id" => (int)$row->id];
+                if (!empty($row->availability)) {
+                    $tree = json_decode($row->availability, true);
+                    if (!is_array($tree) || self::references($tree, $sourceid)) {
+                        $dependencies[] = ["table" => $table, "id" => (int)$row->id];
+                    }
                 }
             }
         }
@@ -154,6 +157,12 @@ final class activity_replacement {
             "criteriaid" => (int)$criterion->id, "targetmodule" => $targetmod,
             "criteria_sha256" => self::fingerprint($courseid),
             "source_completion_records" => $DB->count_records("course_modules_completion", ["coursemoduleid" => $sourceid]),
+            "source_completed_students" => $DB->count_records_select("course_modules_completion",
+                "coursemoduleid = :source AND completionstate IN (:complete, :pass)",
+                ["source" => $sourceid, "complete" => COMPLETION_COMPLETE, "pass" => COMPLETION_COMPLETE_PASS]),
+            "completed_criterion_records" => $DB->count_records_select("course_completion_crit_compl",
+                "criteriaid = :criterion AND course = :course AND timecompleted > 0",
+                ["criterion" => $criterion->id, "course" => $courseid]),
             "preserved_criterion_records" => $DB->count_records("course_completion_crit_compl",
                 ["criteriaid" => $criterion->id, "course" => $courseid]),
             "dependencies" => [], "preservehistory" => true, "dependencies_reviewed" => true,
@@ -175,7 +184,9 @@ final class activity_replacement {
                 $criterion = \completion_criteria::factory((array)$record);
                 $criterion->module = $plan["targetmodule"];
                 $criterion->moduleinstance = $plan["targetcmid"];
-                $criterion->update();
+                if (!$criterion->update()) {
+                    throw new api_exception("completion_replacement_failed", 409);
+                }
                 $verified = $DB->get_record("course_completion_criteria", ["id" => $plan["criteriaid"]], "*", MUST_EXIST);
                 if ((int)$verified->moduleinstance !== $plan["targetcmid"] || $verified->module !== $plan["targetmodule"]) {
                     throw new api_exception("completion_replacement_failed", 409);

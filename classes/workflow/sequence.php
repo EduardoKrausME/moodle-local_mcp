@@ -212,7 +212,7 @@ final class sequence {
      * @param int $step One-based step.
      * @param string $tool Tool name.
      * @param context $context Tool's actual Moodle context.
-     * @return void
+     * @return int Current generation of the stage.
      */
     public static function assert_current(string $id, authenticated_identity $identity, int $step,
                                            string $tool, context $context): int {
@@ -236,6 +236,7 @@ final class sequence {
      * @param int $step One-based step.
      * @param string $tool Tool name.
      * @param context $context Actual tool context.
+     * @param int|null $generation Expected generation, if supplied.
      * @return void
      */
     public static function claim(string $id, authenticated_identity $identity, int $step,
@@ -255,12 +256,14 @@ final class sequence {
     /**
      * Record a failure, without claiming that the Moodle operation was rolled back.
      */
-    public static function fail(string $id, authenticated_identity $identity, int $courseid): void {
-        self::locked($id, function() use ($id, $identity, $courseid): void {
+    public static function fail(string $id, authenticated_identity $identity, int $courseid,
+            ?string $reference = null): void {
+        self::locked($id, function() use ($id, $identity, $courseid, $reference): void {
             $data = self::load($id, $identity, $courseid);
             if ($data["state"] === "executing") {
                 $data["state"] = "failed";
-                $data["failure"] = ["time" => time(), "requires_reconciliation" => true];
+                $data["failure"] = ["time" => time(), "requires_reconciliation" => true,
+                    "reference" => $reference];
                 self::save($id, $data);
             }
         });
@@ -342,7 +345,11 @@ final class sequence {
      */
     public static function cancel(string $id, authenticated_identity $identity, int $courseid): void {
         self::locked($id, function() use ($id, $identity, $courseid): void {
-            self::load($id, $identity, $courseid);
+            $data = self::load($id, $identity, $courseid);
+            if ($data["state"] === "executing") {
+                throw new api_exception("workflow_reconciliation_required", 409, "", [],
+                    get_string("workflowreconciliationrequired", "local_mcp"));
+            }
             unset_config(self::key($id), "local_mcp");
         });
     }

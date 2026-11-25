@@ -1,5 +1,7 @@
 # Changelog
 
+- Audit activity replacement: bind source ordering to move previews, verify both section sequences, serialize confirmation token consumption, retain executing workflows, correlate failed stages with diagnostic references, reject malformed dependencies and report completed student counts.
+
 - Hardened module positioning with course-specific locking, optimistic position hashes and legacy module metadata. Record failed workflow stages and permit a fresh confirmed retry only for idempotent moves. Added conservative view-only activity criterion replacement preserving historical records and aggregation, with dependency checks and explicit operator review.
 
 - Preserve exact HTML, CSS and JavaScript source-code arguments during WRITE typography normalization, including nested values; ordinary text and credential handling remain unchanged. Added byte-integrity regression coverage.

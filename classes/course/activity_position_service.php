@@ -119,7 +119,16 @@ final class activity_position_service {
         if (isset($arguments["expectedsectionnum"]) && (int)$arguments["expectedsectionnum"] !== (int)$cm->sectionnum) {
             throw new api_exception("course_module_changed", 409);
         }
-        $fingerprint = hash("sha256", json_encode([$position, (int)$cm->section, (bool)$cm->visible]));
+        global $DB;
+        $source = $DB->get_record("course_sections", ["id" => $cm->section, "course" => $cm->course],
+            "id,sequence", MUST_EXIST);
+        $sourceorder = array_map("intval", array_filter(explode(",", (string)$source->sequence), "strlen"));
+        if (!in_array((int)$cm->id, $sourceorder, true)) {
+            throw new api_exception("activity_position_mismatch", 409);
+        }
+        // Include the original ordering too: removing the moving ID from the destination plan
+        // otherwise masks concurrent changes to its position within the same section.
+        $fingerprint = hash("sha256", json_encode([$position, $sourceorder, (int)$cm->section, (bool)$cm->visible]));
         if (isset($arguments["expected_position_sha256"]) &&
                 !hash_equals($fingerprint, $arguments["expected_position_sha256"])) {
             throw new api_exception("activity_position_mismatch", 409);
@@ -145,6 +154,9 @@ final class activity_position_service {
             throw new api_exception("activity_position_busy", 409);
         }
         try {
+            if (method_exists(\course_modinfo::class, "clear_instance_cache")) {
+                \course_modinfo::clear_instance_cache($initial["courseid"]);
+            }
             return self::move_locked($arguments, $identity);
         } finally {
             $lock->release();
@@ -162,6 +174,9 @@ final class activity_position_service {
             $expected = $plan["sequence"];
             array_splice($expected, $plan["index"], 0, [$plan["cmid"]]);
             $current = array_map("intval", array_filter(explode(",", (string)$section->sequence), "strlen"));
+            $sourcesectionid = (int)$cm->section;
+            $sourceorder = $DB->get_field("course_sections", "sequence", ["id" => $sourcesectionid], MUST_EXIST);
+            $sourceorder = array_map("intval", array_filter(explode(",", (string)$sourceorder), "strlen"));
             $changed = (int)$cm->section !== $plan["sectionid"] || $expected !== $current;
             if ($changed) {
                 $actionclass = \core_courseformat\local\cmactions::class;
@@ -189,6 +204,16 @@ final class activity_position_service {
                     ($plan["previoussectionnum"] === $plan["sectionnum"] &&
                         (bool)$updated->visible !== $plan["previousvisible"])) {
                 throw new api_exception("activity_move_failed", 409);
+            }
+            if ($sourcesectionid !== (int)$section->id) {
+                $remaining = $DB->get_field("course_sections", "sequence", ["id" => $sourcesectionid], MUST_EXIST);
+                $remaining = array_map("intval", array_filter(explode(",", (string)$remaining), "strlen"));
+                if ($remaining !== array_values(array_diff($sourceorder, [$plan["cmid"]]))) {
+                    throw new api_exception("activity_move_failed", 409);
+                }
+            }
+            if ($changed) {
+                rebuild_course_cache($plan["courseid"], true);
             }
             $transaction->allow_commit();
         } catch (\Throwable $e) {

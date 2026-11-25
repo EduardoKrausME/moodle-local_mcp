@@ -88,7 +88,15 @@ final class workflow_sequence_test extends advanced_testcase {
         ]);
         $ctx = context_course::instance($course->id);
         sequence::claim($step["id"], $identity, 1, "move_activity", $ctx);
-        sequence::fail($step["id"], $identity, (int)$course->id);
+        try {
+            sequence::cancel($step["id"], $identity, (int)$course->id);
+            $this->fail("An executing write must not lose its workflow.");
+        } catch (api_exception $e) {
+            $this->assertSame("workflow_reconciliation_required", $e->machinecode);
+        }
+        sequence::fail($step["id"], $identity, (int)$course->id, "testreference");
+        $this->assertSame("testreference",
+            sequence::status($step["id"], $identity, (int)$course->id)["failure"]["reference"]);
         $this->assertSame("failed", sequence::status($step["id"], $identity, (int)$course->id)["state"]);
         $this->assertSame("ready", sequence::retry($step["id"], $identity, (int)$course->id)["state"]);
         $this->assertSame(1, sequence::assert_current($step["id"], $identity, 1, "move_activity", $ctx));

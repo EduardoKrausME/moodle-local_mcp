@@ -88,7 +88,25 @@ final class confirmation_service {
     public static function consume(string $token, authenticated_identity $identity, string $rawaccess,
                                    string $tool, array $arguments, context $context): void {
         global $DB;
-        $rec = $DB->get_record("local_mcp_confirm", ["tokenhash" => secret::hash($token)]);
+        $tokenhash = secret::hash($token);
+        $lock = \core\lock\lock_config::get_lock_factory("local_mcp")->get_lock("confirmation_" . $tokenhash, 5);
+        if (!$lock) {
+            throw new api_exception("confirmation_busy", 409);
+        }
+        try {
+            self::consume_locked($tokenhash, $identity, $rawaccess, $tool, $arguments, $context);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
+     * Validate and consume a token under a cross-request lock.
+     */
+    private static function consume_locked(string $tokenhash, authenticated_identity $identity, string $rawaccess,
+            string $tool, array $arguments, context $context): void {
+        global $DB;
+        $rec = $DB->get_record("local_mcp_confirm", ["tokenhash" => $tokenhash]);
         // Unknown tokens are invalid confirmations, not internal database errors.
         $valid = $rec && !$rec->used && $rec->expires >= time()
             && (int)$rec->userid === $identity->userid
