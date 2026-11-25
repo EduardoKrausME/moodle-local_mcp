@@ -80,7 +80,9 @@ final class create_activity extends base_tool {
      * @return array
      */
     public function get_input_schema(): array {
-        return $this->object_schema(['courseid' => ['type' => 'integer', 'minimum' => 1], 'sectionnum' => ['type' => 'integer', 'minimum' => 0], 'name' => ['type' => 'string', 'minLength' => 1], 'content' => ['type' => 'string'], 'intro' => ['type' => 'string']], ['courseid', 'sectionnum', 'name', 'content']);
+        return $this->object_schema(['courseid' => ['type' => 'integer', 'minimum' => 1], 'sectionnum' => ['type' => 'integer', 'minimum' => 0], 'name' => ['type' => 'string', 'minLength' => 1], 'content' => ['type' => 'string'], 'intro' => ['type' => 'string', 'description' => 'Sanitized HTML activity description.'],
+            'showdescription' => ['type' => 'boolean', 'default' => true,
+                'description' => 'Display the description on the course page.']], ['courseid', 'sectionnum', 'name', 'content']);
     }
 
     /**
@@ -120,6 +122,7 @@ final class create_activity extends base_tool {
         require_once($CFG->libdir . '/resourcelib.php');
         $info->intro = clean_text($arguments['intro'] ?? '', FORMAT_HTML);
         $info->introformat = FORMAT_HTML;
+        $info->showdescription = (int)($arguments['showdescription'] ?? true);
         // Preserve the HTML introduction when add_moduleinfo() processes the editor draft.
         $info->introeditor["text"] = $info->intro;
         $info->introeditor["format"] = FORMAT_HTML;

@@ -1,5 +1,7 @@
 # Changelog
 
+- Standardize activity creation descriptions as sanitized HTML with a private format and course-page display enabled by default; accept explicit opt-out and keep the legacy label content alias.
+
 - Audit MCP Apps host capability negotiation, reject unknown bridge versions, support text-only results, preserve cancellation during in-flight messaging, and redact metadata inside embedded JSON arrays. Extend JavaScript and logger regression tests.
 
 - Modernize the workflow MCP App with the standard JSON-RPC host bridge, legacy ChatGPT fallback, accessible localized states, dark mode and safe recovery actions. Bind widget navigation to the expected workflow step and generation, restrict WRITE tool visibility to the model, and omit host metadata and app HTML from protocol logs.

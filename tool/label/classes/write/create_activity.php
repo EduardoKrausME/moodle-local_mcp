@@ -57,16 +57,19 @@ final class create_activity extends activity_create_base {
      */
     protected function extra_properties(): array {
         return ['content' => ['type' => 'string', 'minLength' => 1,
-            'description' => 'HTML content displayed in the course section.']];
+            'description' => 'Legacy alias for intro; use intro for new calls.']];
     }
 
     /**
-     * Method extra_required.
+     * Accept the canonical intro or the legacy content field.
      *
-     * @return array Return value.
+     * @return array
      */
-    protected function extra_required(): array {
-        return ['content'];
+    public function get_input_schema(): array {
+        $schema = parent::get_input_schema();
+        $schema['properties']['intro']['minLength'] = 1;
+        $schema['anyOf'] = [['required' => ['intro']], ['required' => ['content']]];
+        return $schema;
     }
 
     /**
@@ -79,7 +82,7 @@ final class create_activity extends activity_create_base {
      */
     protected function configure(stdClass $info, array $a, authenticated_identity $identity): void {
         // Moodle mod_label derives its activity name from the HTML introduction.
-        $info->intro = clean_text($a['content'], FORMAT_HTML);
+        $info->intro = clean_text($a['intro'] ?? $a['content'], FORMAT_HTML);
         $info->introformat = FORMAT_HTML;
     }
 }

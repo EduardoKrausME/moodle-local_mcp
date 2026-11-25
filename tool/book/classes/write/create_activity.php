@@ -80,7 +80,9 @@ final class create_activity extends base_tool {
      * @return array
      */
     public function get_input_schema(): array {
-        return $this->object_schema(['courseid' => ['type' => 'integer', 'minimum' => 1], 'sectionnum' => ['type' => 'integer', 'minimum' => 0], 'name' => ['type' => 'string', 'minLength' => 1], 'intro' => ['type' => 'string']], ['courseid', 'sectionnum', 'name']);
+        return $this->object_schema(['courseid' => ['type' => 'integer', 'minimum' => 1], 'sectionnum' => ['type' => 'integer', 'minimum' => 0], 'name' => ['type' => 'string', 'minLength' => 1], 'intro' => ['type' => 'string', 'description' => 'Sanitized HTML activity description.'],
+            'showdescription' => ['type' => 'boolean', 'default' => true,
+                'description' => 'Display the description on the course page.']], ['courseid', 'sectionnum', 'name']);
     }
 
     /**
@@ -119,6 +121,7 @@ final class create_activity extends base_tool {
         $info->name = clean_param($arguments['name'], PARAM_TEXT);
         $info->intro = clean_text($arguments['intro'] ?? '', FORMAT_HTML);
         $info->introformat = FORMAT_HTML;
+        $info->showdescription = (int)($arguments['showdescription'] ?? true);
         // Preserve the HTML introduction when add_moduleinfo() processes the editor draft.
         $info->introeditor["text"] = $info->intro;
         $info->introeditor["format"] = FORMAT_HTML;

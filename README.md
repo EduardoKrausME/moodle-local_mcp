@@ -712,6 +712,8 @@ activity-specific logic are present in the server controller or registries.
 
 ### Included activity integrations
 
+All activity creation tools accept `intro` as sanitized HTML, with the format fixed internally to `FORMAT_HTML` (not a tool parameter). `showdescription` defaults to `true`; pass `false` to disable the course-page description. For labels, `intro` is the actual inline body and `content` remains a legacy alias; the label itself is not hidden by `showdescription`.
+
 - `mcptool_forum`: `forum_create_activity`, `forum_list_discussions`, `forum_get_posts`,
   `forum_create_discussion`, `forum_reply_to_post`.
 - `mcptool_page`: `page_create_activity`, `page_get_content`, `page_update_content`.

@@ -137,7 +137,9 @@ abstract class activity_create_base extends base_tool {
                 'courseid' => ['type' => 'integer', 'minimum' => 1],
                 'sectionnum' => ['type' => 'integer', 'minimum' => 0],
                 'name' => ['type' => 'string', 'minLength' => 1],
-                'intro' => ['type' => 'string'],
+                'intro' => ['type' => 'string', 'description' => 'Sanitized HTML activity description.'],
+                'showdescription' => ['type' => 'boolean', 'default' => true,
+                    'description' => 'Display the description on the course page.'],
             ] + $this->extra_properties();
         $required = ['courseid', 'sectionnum'];
         if ($this->requires_name()) {
@@ -180,6 +182,7 @@ abstract class activity_create_base extends base_tool {
             'sectionnum' => (int)$arguments['sectionnum'],
             'name' => clean_param($arguments['name'] ?? '', PARAM_TEXT),
             'module' => $this->module_name(),
+            'showdescription' => $arguments['showdescription'] ?? true,
             'filename' => isset($arguments['filename'])
                 ? clean_param($arguments['filename'], PARAM_FILE) : null,
             'upload_bytes_estimate' => isset($arguments['file_base64'])
@@ -232,6 +235,8 @@ abstract class activity_create_base extends base_tool {
             $info->cmidnumber = '';
         }
         $this->configure($info, $arguments, $identity);
+        $info->introformat = FORMAT_HTML;
+        $info->showdescription = (int)($arguments['showdescription'] ?? true);
         // The core module API takes intro and introformat from introeditor when present.
         // Synchronize after configure() because some tools replace the introduction.
         if (isset($info->introeditor)) {

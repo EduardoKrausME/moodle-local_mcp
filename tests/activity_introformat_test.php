@@ -35,6 +35,7 @@ use local_mcp\security\authenticated_identity;
  * @covers \mcptool_page\write\create_activity
  * @covers \mcptool_forum\write\create_activity
  * @covers \mcptool_label\write\create_activity
+ * @covers \mcptool_url\write\create_activity
  * @covers \mcptool_assign\write\update_activity
  * @covers \mcptool_quiz\quiz_service
  */
@@ -53,6 +54,7 @@ final class activity_introformat_test extends advanced_testcase {
             "book" => new \mcptool_book\write\create_activity(),
             "page" => new \mcptool_page\write\create_activity(),
             "forum" => new \mcptool_forum\write\create_activity(),
+            "url" => new \mcptool_url\write\create_activity(),
         ];
 
         foreach ($tools as $modulename => $tool) {
@@ -66,7 +68,17 @@ final class activity_introformat_test extends advanced_testcase {
             if ($modulename === "page") {
                 $args["content"] = "<p><em>Page body content</em></p>";
             }
+            if ($modulename === "url") {
+                $args["externalurl"] = "https://example.com/";
+            }
             $created = $tool->execute($args, $identity);
+            $cm = get_coursemodule_from_id($modulename, (int)$created["cmid"], 0, false, MUST_EXIST);
+            $this->assertSame(1, (int)$cm->showdescription);
+            $args["showdescription"] = false;
+            $args["name"] .= " hidden description";
+            $hidden = $tool->execute($args, $identity);
+            $hiddencm = get_coursemodule_from_id($modulename, (int)$hidden["cmid"], 0, false, MUST_EXIST);
+            $this->assertSame(0, (int)$hiddencm->showdescription);
             $record = $DB->get_record($modulename, ["id" => $created["instanceid"]], "*", MUST_EXIST);
             $this->assertSame($intro, $record->intro);
             $this->assertSame((int)FORMAT_HTML, (int)$record->introformat);
@@ -104,6 +116,30 @@ final class activity_introformat_test extends advanced_testcase {
         $record = $DB->get_record("label", ["id" => $created["instanceid"]], "*", MUST_EXIST);
         $this->assertSame($content, $record->intro);
         $this->assertSame((int)FORMAT_HTML, (int)$record->introformat);
+        $created = (new \\mcptool_label\\write\\create_activity())->execute([
+            "courseid" => (int)$course->id,
+            "sectionnum" => 0,
+            "intro" => $content,
+        ], $identity);
+        $record = $DB->get_record("label", ["id" => $created["instanceid"]], "*", MUST_EXIST);
+        $this->assertSame($content, $record->intro);
+        $this->assertSame((int)FORMAT_HTML, (int)$record->introformat);
+    }
+
+    /**
+     * All bundled activity creation schemas share the public description contract.
+     */
+    public function test_activity_creation_description_schema(): void {
+        foreach (["assign", "book", "feedback", "forum", "glossary", "h5p", "label", "lesson",
+            "page", "quiz", "resource", "url"] as $module) {
+            $classname = "\\mcptool_" . $module . "\\write\\create_activity";
+            $schema = (new $classname())->get_input_schema();
+            $this->assertSame("string", $schema["properties"]["intro"]["type"], $module);
+            $this->assertArrayNotHasKey("introformat", $schema["properties"], $module);
+            $this->assertSame("boolean", $schema["properties"]["showdescription"]["type"], $module);
+            $this->assertTrue($schema["properties"]["showdescription"]["default"], $module);
+            $this->assertFalse($schema["additionalProperties"], $module);
+        }
     }
 
     /**
