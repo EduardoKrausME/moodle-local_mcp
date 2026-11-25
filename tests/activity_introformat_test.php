@@ -116,7 +116,7 @@ final class activity_introformat_test extends advanced_testcase {
         $record = $DB->get_record("label", ["id" => $created["instanceid"]], "*", MUST_EXIST);
         $this->assertSame($content, $record->intro);
         $this->assertSame((int)FORMAT_HTML, (int)$record->introformat);
-        $created = (new \\mcptool_label\\write\\create_activity())->execute([
+        $created = (new \mcptool_label\write\create_activity())->execute([
             "courseid" => (int)$course->id,
             "sectionnum" => 0,
             "intro" => $content,
