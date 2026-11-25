@@ -77,6 +77,30 @@ final class workflow_sequence_test extends advanced_testcase {
         $this->assertNull($final["next"]);
     }
 
+    /** Failed moves can be reopened, but old tokens and other writes must not be replayed. */
+    public function test_failed_move_requires_new_generation(): void {
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course();
+        $identity = new authenticated_identity(2, "test", ["mcp:write"]);
+        $step = sequence::start($identity, (int)$course->id, [
+            ["title" => "Move", "tool" => "move_activity"],
+            ["title" => "Create", "tool" => "create_section"],
+        ]);
+        $ctx = context_course::instance($course->id);
+        sequence::claim($step["id"], $identity, 1, "move_activity", $ctx);
+        sequence::fail($step["id"], $identity, (int)$course->id);
+        $this->assertSame("failed", sequence::status($step["id"], $identity, (int)$course->id)["state"]);
+        $this->assertSame("ready", sequence::retry($step["id"], $identity, (int)$course->id)["state"]);
+        $this->assertSame(1, sequence::assert_current($step["id"], $identity, 1, "move_activity", $ctx));
+        sequence::claim($step["id"], $identity, 1, "move_activity", $ctx);
+        sequence::complete($step["id"], $identity, (int)$course->id, ["cmid" => 1]);
+        sequence::next($step["id"], $identity, (int)$course->id);
+        sequence::claim($step["id"], $identity, 2, "create_section", $ctx);
+        sequence::fail($step["id"], $identity, (int)$course->id);
+        $this->expectException(api_exception::class);
+        sequence::retry($step["id"], $identity, (int)$course->id);
+    }
+
     /**
      * Connection identity and stage are checked server-side, not by the model.
      *

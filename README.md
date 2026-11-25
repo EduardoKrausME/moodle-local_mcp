@@ -1043,3 +1043,7 @@ Additional MCP tools expose the gradebook structure, grade history, course
 completion criteria, per-user completion and group-scoped cohort progress.
 One confirmed WRITE operation changes grade item visibility. See
 [gradebook and completion documentation](https://github.com/EduardoKrausME/moodle-local_mcp/blob/docs/gradebook-completion-mcp.md).
+
+### Safe activity replacement
+
+`get_course_completion_criteria` returns `criteria_sha256`. `replace_course_completion_activity` takes `courseid`, `sourcecmid`, `targetcmid`, `preservehistory: true`, `dependencies_reviewed: true`, and `expected_criteria_sha256`. It supports equivalent view-only page to page or published mod_mcp, preserves criterion IDs and existing student records, rejects dependent native availability rules, activity-based badges and pending criterion evidence, and does not copy views or alter grades. Inspect custom certificate and third-party dependencies before confirming; no plugin-specific dependencies are inferred. Set dependencies_reviewed only after that review and coordinate a quiescent window without concurrent learner access or completion processing. This flag is operator attestation, not a server-side maintenance lock. `move_activity` accepts `expected_position_sha256` from a preview. Failed workflows are marked `failed`; `workflow_sequence` action `retry` reopens only failed idempotent move stages, requiring a fresh preview and token. Older uncertain `executing` workflows require manual reconciliation, not blind retry.

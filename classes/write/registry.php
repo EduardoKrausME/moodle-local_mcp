@@ -25,6 +25,7 @@
 namespace local_mcp\write;
 
 use local_mcp\write\tool\set_course_completion_config;
+use local_mcp\write\tool\replace_course_completion_activity;
 use local_mcp\extension\manager;
 use local_mcp\extension\tool_provider_loader;
 use local_mcp\write\tool\workflow_sequence;
@@ -97,6 +98,7 @@ final class registry {
             set_activity_restrictions::class,
             set_activity_completion::class,
             set_course_completion_config::class,
+            replace_course_completion_activity::class,
             create_section::class,
             create_user::class,
             enrol_user::class,

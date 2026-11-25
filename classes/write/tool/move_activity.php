@@ -61,6 +61,7 @@ final class move_activity extends base_tool {
             "aftercmid" => ["type" => "integer", "minimum" => 1],
             "sectionnum" => ["type" => "integer", "minimum" => 0],
             "expectedsectionnum" => ["type" => "integer", "minimum" => 0],
+            "expected_position_sha256" => ["type" => "string", "pattern" => "^[a-f0-9]{64}$"],
         ], ["cmid"]);
     }
 

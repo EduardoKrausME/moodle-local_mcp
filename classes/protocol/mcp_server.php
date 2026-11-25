@@ -617,7 +617,10 @@ final class mcp_server {
             $policy->authorize_tool($identity->userid, $name, $iswrite, $context, $arguments);
         }
         if ($workflowid !== "") {
-            sequence::assert_current($workflowid, $identity, $workflowstep, $name, $context);
+            $generation = sequence::assert_current($workflowid, $identity, $workflowstep, $name, $context);
+            if ($generation > 0) {
+                $confirmationarguments["_workflow_generation"] = $generation;
+            }
         }
 
         diagnostics::event('tool_permission_granted', [
@@ -658,8 +661,15 @@ final class mcp_server {
         }
 
         if ($tool->requires_confirmation() || $tool->is_destructive()) {
+            // Bind the actual ordering shown to the teacher to the one-time token.
+            // This protects old callers that do not send the optional position hash.
+            $positionpreview = null;
+            if ($name === "move_activity") {
+                $positionpreview = $tool->preview($arguments, $identity);
+                $confirmationarguments["_position_sha256"] = $positionpreview["position_sha256"];
+            }
             if ($confirmation === '') {
-                $preview = $tool->preview($arguments, $identity);
+                $preview = $positionpreview ?? $tool->preview($arguments, $identity);
                 $token = confirmation_service::issue(
                     $identity, $rawtoken, $name, $confirmationarguments, $context);
                 logger::record('tool_called', $identity, $name, 'write', $context,
@@ -687,6 +697,9 @@ final class mcp_server {
             }
             confirmation_service::consume(
                 $confirmation, $identity, $rawtoken, $name, $confirmationarguments, $context);
+            if ($positionpreview !== null) {
+                $arguments["expected_position_sha256"] = $positionpreview["position_sha256"];
+            }
             diagnostics::event('confirmation_accepted', [
                 'tool' => $name, 'userid' => $identity->userid,
                 'contextid' => (int)$context->id,
@@ -696,12 +709,22 @@ final class mcp_server {
         // Only one approved call can claim a workflow step, even if several
         // preview tokens were issued before either was confirmed.
         if ($workflowid !== "") {
-            sequence::claim($workflowid, $identity, $workflowstep, $name, $context);
+            sequence::claim($workflowid, $identity, $workflowstep, $name, $context, $generation);
         }
         $started = microtime(true);
-        // On failure leave the step in "executing" for manual reconciliation;
-        // retrying blindly could duplicate a partially persisted activity.
-        $result = $tool->execute($arguments, $identity);
+        try {
+            $result = $tool->execute($arguments, $identity);
+        } catch (\Throwable $failure) {
+            if ($workflowid !== "") {
+                try {
+                    sequence::fail($workflowid, $identity, (int)$context->get_course_context(false)->instanceid);
+                } catch (\Throwable $statefailure) {
+                    // Do not mask the original exception or allow an uncertain write to be retried.
+                    diagnostics::event("workflow_failure_record_failed", ["tool" => $name]);
+                }
+            }
+            throw $failure;
+        }
         if ($workflowid !== "") {
             $coursecontext = $context->get_course_context(false);
             $result["workflow"] = sequence::complete($workflowid, $identity,

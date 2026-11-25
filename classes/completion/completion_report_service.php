@@ -101,7 +101,8 @@ final class completion_report_service {
         return ["courseid" => $courseid,
             "enabled" => !empty($CFG->enablecompletion) && !empty($course->enablecompletion),
             "has_criteria" => $completion->has_criteria(), "criteria" => $rows,
-            "overall_aggregation" => (int)$completion->get_aggregation_method()];
+            "overall_aggregation" => (int)$completion->get_aggregation_method(),
+            "criteria_sha256" => activity_replacement::fingerprint($courseid)];
     }
 
     /**

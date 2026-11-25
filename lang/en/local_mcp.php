@@ -267,3 +267,9 @@ $string['writeapisempty'] = 'No WRITE tools available.';
 $string['writeapisonlyread'] = 'Installed plugins with READ-only APIs';
 $string['writeapisonlyreadhelp'] = 'These integrations are available through MCP READ, not WRITE. Open their READ API lists to see every tool. Installation order does not change the API type.';
 $string['writepermissions'] = 'Write permissions';
+
+$string['workflowreconciliationrequired'] = 'The workflow requires manual reconciliation before another write.';
+$string['completiondependenciespresent'] = 'Other activities or sections depend on the original completion rule.';
+$string['completionhistorypending'] = 'Some completed activities have not yet been recorded in the course criterion. Reconcile completion first.';
+
+$string['completiondependencyreviewrequired'] = 'Review certificate and custom plugin dependencies and coordinate a quiescent migration window before confirming.';

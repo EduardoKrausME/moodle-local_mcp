@@ -1,5 +1,7 @@
 # Changelog
 
+- Hardened module positioning with course-specific locking, optimistic position hashes and legacy module metadata. Record failed workflow stages and permit a fresh confirmed retry only for idempotent moves. Added conservative view-only activity criterion replacement preserving historical records and aggregation, with dependency checks and explicit operator review.
+
 - Preserve exact HTML, CSS and JavaScript source-code arguments during WRITE typography normalization, including nested values; ordinary text and credential handling remain unchanged. Added byte-integrity regression coverage.
 
 - Isolated missing or broken built-in READ and WRITE tool classes during discovery, preserving healthy tools and reserving unavailable built-in names against extension takeover.

@@ -50,6 +50,7 @@ final class activity_position_test extends advanced_testcase {
             $this->assertTrue($tools[$name]->requires_confirmation());
             $this->assertTrue($tools[$name]->supports_dry_run());
         }
+        $tools["hide_activity"]->execute(["cmid" => $c->cmid], $identity);
         $args = ["cmid" => $c->cmid, "aftercmid" => $a->cmid];
         $plan = $tools["move_activity"]->preview($args, $identity);
         $this->assertSame((int)$b->cmid, $plan["beforecmid"]);
@@ -60,6 +61,7 @@ final class activity_position_test extends advanced_testcase {
         $this->assertSame("$a->cmid,$c->cmid,$b->cmid",
             $DB->get_field("course_sections", "sequence", ["id" => $sectionid]));
         $this->assertFalse($tools["move_activity"]->execute($args, $identity)["changed"]);
+        $this->assertFalse((bool)$DB->get_field("course_modules", "visible", ["id" => $c->cmid]));
         $tools["move_activity"]->execute(["cmid" => $b->cmid, "beforecmid" => $a->cmid], $identity);
         $this->assertSame("$b->cmid,$a->cmid,$c->cmid",
             $DB->get_field("course_sections", "sequence", ["id" => $sectionid]));

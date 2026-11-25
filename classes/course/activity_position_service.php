@@ -119,7 +119,12 @@ final class activity_position_service {
         if (isset($arguments["expectedsectionnum"]) && (int)$arguments["expectedsectionnum"] !== (int)$cm->sectionnum) {
             throw new api_exception("course_module_changed", 409);
         }
-        return $position + ["cmid" => (int)$cm->id, "name" => $cm->name,
+        $fingerprint = hash("sha256", json_encode([$position, (int)$cm->section, (bool)$cm->visible]));
+        if (isset($arguments["expected_position_sha256"]) &&
+                !hash_equals($fingerprint, $arguments["expected_position_sha256"])) {
+            throw new api_exception("activity_position_mismatch", 409);
+        }
+        return $position + ["position_sha256" => $fingerprint, "cmid" => (int)$cm->id, "name" => $cm->name,
             "previoussectionnum" => (int)$cm->sectionnum, "previousvisible" => (bool)$cm->visible];
     }
 
@@ -133,6 +138,22 @@ final class activity_position_service {
     public static function move(array $arguments, authenticated_identity $identity): array {
         global $CFG, $DB;
         require_once($CFG->dirroot . "/course/lib.php");
+        $initial = self::move_preview($arguments, $identity);
+        $factory = \core\lock\lock_config::get_lock_factory("local_mcp");
+        $lock = $factory->get_lock("activity_position_" . $initial["courseid"], 5);
+        if (!$lock) {
+            throw new api_exception("activity_position_busy", 409);
+        }
+        try {
+            return self::move_locked($arguments, $identity);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /** Execute one verified movement under the course-specific lock. */
+    private static function move_locked(array $arguments, authenticated_identity $identity): array {
+        global $DB;
         $plan = self::move_preview($arguments, $identity);
         $transaction = $DB->start_delegated_transaction();
         try {
@@ -144,8 +165,9 @@ final class activity_position_service {
             $changed = (int)$cm->section !== $plan["sectionid"] || $expected !== $current;
             if ($changed) {
                 $actionclass = \core_courseformat\local\cmactions::class;
-                if (method_exists($actionclass, "move_before") && method_exists($actionclass, "move_end_section")) {
-                    $action = \core_courseformat\formatactions::cm($plan["courseid"]);
+                if (method_exists(\core_courseformat\formatactions::class, "cm") &&
+                        method_exists($actionclass, "move_before") && method_exists($actionclass, "move_end_section")) {
+                    $action = \core_courseformat\formatactions::cm(get_course($plan["courseid"]));
                     $ok = $plan["beforecmid"]
                         ? $action->move_before($plan["cmid"], $plan["beforecmid"])
                         : $action->move_end_section($plan["cmid"], $plan["sectionid"]);
@@ -153,14 +175,19 @@ final class activity_position_service {
                         throw new api_exception("activity_move_failed", 409);
                     }
                 } else {
-                    $before = $plan["beforecmid"] ? (object)["id" => $plan["beforecmid"]] : null;
+                    // Legacy API expects a real module record including the module name.
+                    $cm->modname = $DB->get_field("modules", "name", ["id" => $cm->module], MUST_EXIST);
+                    $before = $plan["beforecmid"] ?
+                        $DB->get_record("course_modules", ["id" => $plan["beforecmid"]], "*", MUST_EXIST) : null;
                     moveto_module($cm, $section, $before);
                 }
             }
             $actual = $DB->get_field("course_sections", "sequence", ["id" => $section->id], MUST_EXIST);
             $actual = array_map("intval", array_filter(explode(",", (string)$actual), "strlen"));
             $updated = $DB->get_record("course_modules", ["id" => $cm->id], "*", MUST_EXIST);
-            if ($expected !== $actual || (int)$updated->section !== $plan["sectionid"]) {
+            if ($expected !== $actual || (int)$updated->section !== $plan["sectionid"] ||
+                    ($plan["previoussectionnum"] === $plan["sectionnum"] &&
+                        (bool)$updated->visible !== $plan["previousvisible"])) {
                 throw new api_exception("activity_move_failed", 409);
             }
             $transaction->allow_commit();

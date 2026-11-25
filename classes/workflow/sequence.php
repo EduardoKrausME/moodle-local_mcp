@@ -143,6 +143,8 @@ final class sequence {
                    "action" => "workflow_sequence", "courseid" => (int)$data["courseid"],
                    "workflow_id" => $id] : null,
             "completed" => $data["completed"] ?? [],
+            "failure" => $data["failure"] ?? null,
+            "generation" => (int)($data["generation"] ?? 0),
             "expires" => (int)$data["expires"],
         ];
     }
@@ -213,7 +215,7 @@ final class sequence {
      * @return void
      */
     public static function assert_current(string $id, authenticated_identity $identity, int $step,
-                                           string $tool, context $context): void {
+                                           string $tool, context $context): int {
         $coursecontext = $context->get_course_context(false);
         if (!$coursecontext) {
             throw new api_exception("workflow_context_mismatch", 409);
@@ -223,6 +225,7 @@ final class sequence {
                 $tool !== $data["items"][$data["index"]]["tool"]) {
             throw new api_exception("workflow_step_mismatch", 409);
         }
+        return (int)($data["generation"] ?? 0);
     }
 
     /**
@@ -236,13 +239,48 @@ final class sequence {
      * @return void
      */
     public static function claim(string $id, authenticated_identity $identity, int $step,
-                                  string $tool, context $context): void {
-        self::locked($id, function() use ($id, $identity, $step, $tool, $context): void {
-            self::assert_current($id, $identity, $step, $tool, $context);
+                                  string $tool, context $context, ?int $generation = null): void {
+        self::locked($id, function() use ($id, $identity, $step, $tool, $context, $generation): void {
+            $currentgeneration = self::assert_current($id, $identity, $step, $tool, $context);
+            if ($generation !== null && $generation !== $currentgeneration) {
+                throw new api_exception("workflow_step_mismatch", 409);
+            }
             $coursecontext = $context->get_course_context(false);
             $data = self::load($id, $identity, (int)$coursecontext->instanceid);
             $data["state"] = "executing";
             self::save($id, $data);
+        });
+    }
+
+    /**
+     * Record a failure, without claiming that the Moodle operation was rolled back.
+     */
+    public static function fail(string $id, authenticated_identity $identity, int $courseid): void {
+        self::locked($id, function() use ($id, $identity, $courseid): void {
+            $data = self::load($id, $identity, $courseid);
+            if ($data["state"] === "executing") {
+                $data["state"] = "failed";
+                $data["failure"] = ["time" => time(), "requires_reconciliation" => true];
+                self::save($id, $data);
+            }
+        });
+    }
+
+    /**
+     * Reopen only a failed, idempotent move; new preview and token remain mandatory.
+     * Other operations may have persisted data and must be reconciled manually.
+     */
+    public static function retry(string $id, authenticated_identity $identity, int $courseid): array {
+        return self::locked($id, function() use ($id, $identity, $courseid): array {
+            $data = self::load($id, $identity, $courseid);
+            if ($data["state"] !== "failed" || $data["items"][$data["index"]]["tool"] !== "move_activity") {
+                throw new api_exception("workflow_reconciliation_required", 409, "", [],
+                    get_string("workflowreconciliationrequired", "local_mcp"));
+            }
+            $data["generation"] = (int)($data["generation"] ?? 0) + 1;
+            $data["state"] = "ready";
+            self::save($id, $data);
+            return self::snapshot($id, $data);
         });
     }
 
@@ -263,6 +301,7 @@ final class sequence {
                 throw new api_exception("workflow_step_mismatch", 409);
             }
             $data["state"] = "done";
+            unset($data["failure"]);
             $data["completed"][] = [
                 "step" => (int)$data["index"] + 1,
                 "tool" => $data["items"][$data["index"]]["tool"],

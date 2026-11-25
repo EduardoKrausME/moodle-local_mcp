@@ -51,6 +51,7 @@ final class workflow_sequence extends base_tool {
             . "workflow_id and workflow_step to the ordinary WRITE tool call. After a successful confirmed "
             . "WRITE, the result contains workflow progress and, on supported hosts, a Next button. "
             . "Calling next only advances the plan; it never authorizes or executes a Moodle WRITE. "
+            . "Retry reopens only failed idempotent move_activity stages; a fresh preview and confirmation are required. "
             . "Status and cancel require the original course and connection. Never invent progress.";
     }
 
@@ -62,7 +63,7 @@ final class workflow_sequence extends base_tool {
     /** @return array */
     public function get_input_schema(): array {
         return $this->object_schema([
-            "action" => ["type" => "string", "enum" => ["start", "status", "next", "cancel"]],
+            "action" => ["type" => "string", "enum" => ["start", "status", "next", "cancel", "retry"]],
             "courseid" => ["type" => "integer", "minimum" => 1],
             "workflow_id" => ["type" => "string", "pattern" => "^[a-f0-9]{24}$"],
             "items" => [
@@ -107,8 +108,9 @@ final class workflow_sequence extends base_tool {
                 sequence::cancel($id, $identity, $courseid);
                 return ["cancelled" => true, "workflow_id" => $id];
             }
-            $workflow = $action === "next" ? sequence::next($id, $identity, $courseid)
-                : sequence::status($id, $identity, $courseid);
+            $workflow = $action === "retry" ? sequence::retry($id, $identity, $courseid)
+                : ($action === "next" ? sequence::next($id, $identity, $courseid)
+                    : sequence::status($id, $identity, $courseid));
         }
         return ["workflow" => $workflow, "message" =>
             "Process only the current step. For course changes, show a fresh preview and obtain "
