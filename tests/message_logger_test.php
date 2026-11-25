@@ -182,7 +182,8 @@ final class message_logger_test extends advanced_testcase {
             "result" => ["contents" => [["uri" => "ui://local-mcp/workflow-next",
                 "mimeType" => "text/html;profile=mcp-app", "text" => "<script>private-app-source</script>",
                 "_meta" => $meta]],
-                "content" => [["type" => "text", "text" => json_encode(["_meta" => $meta])]]],
+                "content" => [["type" => "text", "text" => json_encode(["_meta" => $meta])],
+                    ["type" => "text", "text" => json_encode([["_meta" => $meta]])]]],
         ], 200);
         $log = implode("\n", $lines);
         $this->assertStringNotContainsString("private-", $log);

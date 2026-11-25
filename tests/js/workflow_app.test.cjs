@@ -38,7 +38,7 @@ function harness(legacy = false) {
 test("standard handshake, result and user action; no direct write or duplicate", async () => {
     const h = harness();
     assert.equal(h.sent[0].method, "ui/initialize");
-    h.receive({id: h.sent[0].id, result: {protocolVersion: "2026-01-26", hostCapabilities: {}}});
+    h.receive({id: h.sent[0].id, result: {protocolVersion: "2026-01-26", hostCapabilities: {message: {text: {}}}}});
     await tick();
     assert.equal(h.sent[1].method, "ui/notifications/initialized");
     h.receive({method: "ui/notifications/tool-result", params: {structuredContent: h.output}}, {});
@@ -63,7 +63,7 @@ test("legacy fallback, failed non-move and cancellation", async () => {
     await tick();
     assert.equal(h.legacySent.length, 1);
     const x = harness();
-    x.receive({id: x.sent[0].id, result: {protocolVersion: "2026-01-26", hostCapabilities: {}}});
+    x.receive({id: x.sent[0].id, result: {protocolVersion: "2026-01-26", hostCapabilities: {message: {text: {}}}}});
     await tick();
     x.output.workflow.state = "failed";
     x.output.workflow.tool = "create_section";
@@ -76,7 +76,7 @@ test("legacy fallback, failed non-move and cancellation", async () => {
 
 test("failed move error includes recovery, denied message is not resent", async () => {
     const h = harness(true);
-    h.receive({id: h.sent[0].id, result: {protocolVersion: "2026-01-26", hostCapabilities: {}}});
+    h.receive({id: h.sent[0].id, result: {protocolVersion: "2026-01-26", hostCapabilities: {message: {text: {}}}}});
     await tick();
     h.output.workflow.state = "failed";
     h.output.workflow.failure = {reference: "abc123"};
@@ -95,11 +95,46 @@ test("failed move error includes recovery, denied message is not resent", async 
 });
 test("teardown acknowledges host and prevents further requests", async () => {
     const h = harness();
-    h.receive({id: h.sent[0].id, result: {protocolVersion: "2026-01-26", hostCapabilities: {}}});
+    h.receive({id: h.sent[0].id, result: {protocolVersion: "2026-01-26", hostCapabilities: {message: {text: {}}}}});
     await tick();
     h.receive({method: "ui/notifications/tool-result", params: {structuredContent: h.output}});
     h.receive({id: 99, method: "ui/resource-teardown", params: {}});
     assert.equal(h.sent.at(-1).id, 99);
     h.element("next").click();
     assert.ok(!h.sent.some(x => x.method === "ui/message"));
+});
+
+test("host without message capability displays status but cannot send", async () => {
+    const h = harness(true);
+    h.receive({id: h.sent[0].id, result: {protocolVersion: "2026-01-26", hostCapabilities: {}}});
+    await tick();
+    h.receive({method: "ui/notifications/tool-result", params: {structuredContent: h.output}});
+    assert.equal(h.element("next").hidden, true);
+    assert.equal(h.element("status").textContent, "unsupported");
+    h.element("next").click();
+    assert.equal(h.sent.filter(x => x.method === "ui/message").length, 0);
+    assert.equal(h.legacySent.length, 0);
+});
+test("text-only result and cancellation during a pending request", async () => {
+    const h = harness();
+    h.receive({id: h.sent[0].id, result: {protocolVersion: "2026-01-26", hostCapabilities: {message: {text: {}}}}});
+    await tick();
+    h.receive({method: "ui/notifications/tool-result", params: {content: [{type: "text", text: JSON.stringify(h.output)}]}});
+    assert.equal(h.element("next").hidden, false);
+    h.element("next").click();
+    const msg = h.sent.find(x => x.method === "ui/message");
+    h.receive({method: "ui/notifications/tool-cancelled", params: {}});
+    h.receive({id: msg.id, error: {code: -32603}});
+    await tick();
+    assert.equal(h.element("status").textContent, "cancelled");
+    assert.equal(h.element("title").textContent, "");
+    assert.equal(h.element("progress").hidden, true);
+});
+test("reject unsupported protocol version and unrelated message origins", async () => {
+    const h = harness();
+    h.receive({id: h.sent[0].id, result: {protocolVersion: "unknown", hostCapabilities: {message: {text: {}}}}});
+    await tick();
+    h.receive({method: "ui/notifications/tool-result", params: {structuredContent: h.output}});
+    assert.equal(h.sent.filter(x => x.method === "ui/notifications/initialized").length, 0);
+    assert.equal(h.element("status").textContent, "unsupported");
 });

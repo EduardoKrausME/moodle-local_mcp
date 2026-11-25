@@ -87,7 +87,7 @@
   const pending = new Map();
   let serial = 0, origin = "*", transport = "", workflow = null, site = "", busy = false;
   let closed = false, settled = false, received = false, submitted = false, observer = null;
-  let dataTimer;
+  let dataTimer, canMessage = false, cancelled = false;
   function post(message) {
     if (!closed && parent !== window) {
       parent.postMessage(Object.assign({jsonrpc: "2.0"}, message), origin);
@@ -132,6 +132,17 @@
     } catch (error) { return ""; }
   }
   function hideActions() { buttons.forEach(button => { button.hidden = true; button.disabled = true; }); }
+  function clearDetails() {
+    progress.hidden = true;
+    progress.textContent = "";
+    el("title").textContent = "";
+    el("reference").textContent = "";
+    el("reference").hidden = true;
+    hideActions();
+  }
+  function interactive() {
+    return !!site && (transport === "legacy" || (transport === "standard" && canMessage));
+  }
   function render() {
     hideActions();
     if (!valid(workflow)) return;
@@ -149,9 +160,9 @@
     if (w.state === "failed" && !canRetry) key = "reconcile";
     if (busy) key = "sending";
     else if (submitted) key = "sent";
-    else if (!transport || !site) key = "unsupported";
+    else if (!interactive() && (canNext || canRetry || ["ready", "executing", "failed"].includes(w.state))) key = "unsupported";
     setStatus(key);
-    if (!transport || !site) return;
+    if (!interactive()) return;
     el("next").hidden = !canNext;
     el("retry").hidden = !canRetry;
     el("refresh").hidden = !["failed", "executing", "ready"].includes(w.state);
@@ -161,12 +172,21 @@
     if (closed) return;
     received = true;
     clearTimeout(dataTimer);
-    const data = result && (result.structuredContent || result);
+    if (cancelled) return;
+    let data = result && (result.structuredContent || result);
+    // Older hosts may deliver only the ordinary textual MCP result.
+    if (result && !result.structuredContent && Array.isArray(result.content)) {
+      const block = result.content.find(item => item && item.type === "text" && typeof item.text === "string");
+      if (block && block.text.length <= 65536) {
+        try { data = JSON.parse(block.text); } catch (error) { /* No valid structured data. */ }
+      }
+    }
     workflow = data && valid(data.workflow) ? data.workflow : null;
     site = validSite(data && data.moodle_wwwroot);
+    if (!workflow) clearDetails();
     if (result && (result.isError || (data && data.is_error)) && !workflow) {
       panel.hidden = false;
-      hideActions(); setStatus("toolerror"); return;
+      setStatus("toolerror"); return;
     }
     if (!workflow) {
       // This resource is associated with WRITE tools; ordinary non-workflow results need no panel.
@@ -215,15 +235,15 @@
     if (message.method === "ui/notifications/tool-result") accept(message.params);
     else if (message.method === "ui/notifications/host-context-changed") setTheme(message.params);
     else if (message.method === "ui/notifications/tool-cancelled") {
-      received = true; clearTimeout(dataTimer); workflow = null; panel.hidden = false;
-      hideActions(); setStatus("cancelled");
+      received = true; cancelled = true; clearTimeout(dataTimer); workflow = null; panel.hidden = false;
+      clearDetails(); setStatus("cancelled");
     } else if (message.method === "ui/resource-teardown") {
       if (message.id !== undefined) post({id: message.id, result: {}});
       teardown();
     } else if (message.method === "ping" && message.id !== undefined) post({id: message.id, result: {}});
   }
   async function send(action) {
-    if (closed || busy || submitted || !valid(workflow) || !site || !transport || el(action).hidden) return;
+    if (closed || cancelled || busy || submitted || !valid(workflow) || !interactive() || el(action).hidden) return;
     const w = workflow;
     const generation = Number.isSafeInteger(w.generation) && w.generation >= 0 ? w.generation : 0;
     const prefix = "On Moodle " + site + ", workflow " + w.id + ", course " + w.courseid +
@@ -240,10 +260,11 @@
       } else {
         await window.openai.sendFollowUpMessage({prompt});
       }
+      if (closed || cancelled) return;
       submitted = true;
       busy = false; render();
     } catch (error) {
-      if (closed) return;
+      if (closed || cancelled) return;
       // A timeout is ambiguous: never automatically resend through another bridge.
       submitted = true; busy = false; hideActions(); setStatus("error");
     }
@@ -255,7 +276,13 @@
   request("ui/initialize", {appInfo: {name: "Moodle workflow", version: "1.4.8"},
     appCapabilities: {}, protocolVersion: "2026-01-26"}).then(result => {
       if (closed) return;
-      if (!result || !result.protocolVersion || !result.hostCapabilities) throw new Error("Invalid handshake");
+      if (!result || result.protocolVersion !== "2026-01-26" || !result.hostCapabilities ||
+          typeof result.hostCapabilities !== "object" || Array.isArray(result.hostCapabilities)) {
+        throw new Error("Invalid handshake");
+      }
+      const message = result.hostCapabilities.message;
+      canMessage = !!(message && typeof message === "object" && message.text &&
+        typeof message.text === "object");
       transport = "standard"; settled = true;
       setTheme(result.hostContext);
       notify("ui/notifications/initialized", {});
@@ -267,7 +294,7 @@
       if (closed) return;
       settled = true;
       onLegacy();
-      if (!transport) setStatus("unsupported");
+      if (!transport && !received) setStatus("unsupported");
     });
 }());
 </script>

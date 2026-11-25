@@ -143,7 +143,7 @@ final class message_logger {
         if (!is_string($value)) {
             return $value;
         }
-        if ($key === 'text' && compat::starts_with(ltrim($value), '{')) {
+        if ($key === 'text' && (compat::starts_with(ltrim($value), '{') || compat::starts_with(ltrim($value), '['))) {
             $nested = json_decode($value, true);
             if (is_array($nested)) {
                 $value = json_encode(self::redact($nested, '', $depth + 1),
