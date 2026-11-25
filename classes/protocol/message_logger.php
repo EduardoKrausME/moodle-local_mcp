@@ -119,9 +119,19 @@ final class message_logger {
         }
         if (is_array($value) || is_object($value)) {
             $result = [];
+            $resource = (array)$value;
+            $isui = isset($resource['uri'], $resource['mimeType']) &&
+                is_string($resource['uri']) && compat::starts_with($resource['uri'], 'ui://') &&
+                $resource['mimeType'] === 'text/html;profile=mcp-app';
             foreach ($value as $childkey => $child) {
                 $name = (string)$childkey;
-                if (preg_match('/(?:password|passwd|passphrase|secret|token|authorization|cookie|'
+                if ($isui && $name === 'text' && is_string($child)) {
+                    $result[$childkey] = '[UI HTML omitted; bytes=' . strlen($child) . ']';
+                } else if (strtolower($name) === '_meta' || stripos($name, 'openai/') === 0) {
+                    // Host metadata may contain opaque account, session, location and device identifiers.
+                    // Retain no arbitrary extension values, including in embedded JSON.
+                    $result[$childkey] = '[metadata omitted]';
+                } else if (preg_match('/(?:password|passwd|passphrase|secret|token|authorization|cookie|'
                     . 'code_verifier|private_key|api_key|image_base64|file_base64|audio_base64|credentials)/i', $name)) {
                     $result[$childkey] = '[REDACTED]';
                 } else {

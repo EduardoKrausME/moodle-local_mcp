@@ -7,6 +7,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  workflow-app:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/js/workflow_app.test.cjs
   test:
     runs-on: ubuntu-22.04
 

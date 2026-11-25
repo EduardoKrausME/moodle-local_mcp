@@ -273,9 +273,14 @@ final class sequence {
      * Reopen only a failed, idempotent move; new preview and token remain mandatory.
      * Other operations may have persisted data and must be reconciled manually.
      */
-    public static function retry(string $id, authenticated_identity $identity, int $courseid): array {
-        return self::locked($id, function() use ($id, $identity, $courseid): array {
+    public static function retry(string $id, authenticated_identity $identity, int $courseid,
+            ?int $expectedstep = null, ?int $expectedgeneration = null): array {
+        return self::locked($id, function() use ($id, $identity, $courseid, $expectedstep, $expectedgeneration): array {
             $data = self::load($id, $identity, $courseid);
+            if (($expectedstep !== null && $expectedstep !== (int)$data["index"] + 1) ||
+                    ($expectedgeneration !== null && $expectedgeneration !== (int)($data["generation"] ?? 0))) {
+                throw new api_exception("workflow_step_mismatch", 409);
+            }
             if ($data["state"] !== "failed" || $data["items"][$data["index"]]["tool"] !== "move_activity") {
                 throw new api_exception("workflow_reconciliation_required", 409, "", [],
                     get_string("workflowreconciliationrequired", "local_mcp"));
@@ -323,9 +328,14 @@ final class sequence {
      * @param int $courseid Course ID.
      * @return array
      */
-    public static function next(string $id, authenticated_identity $identity, int $courseid): array {
-        return self::locked($id, function() use ($id, $identity, $courseid): array {
+    public static function next(string $id, authenticated_identity $identity, int $courseid,
+            ?int $expectedstep = null, ?int $expectedgeneration = null): array {
+        return self::locked($id, function() use ($id, $identity, $courseid, $expectedstep, $expectedgeneration): array {
             $data = self::load($id, $identity, $courseid);
+            if (($expectedstep !== null && $expectedstep !== (int)$data["index"] + 1) ||
+                    ($expectedgeneration !== null && $expectedgeneration !== (int)($data["generation"] ?? 0))) {
+                throw new api_exception("workflow_step_mismatch", 409);
+            }
             if ($data["state"] === "done" && isset($data["items"][$data["index"] + 1])) {
                 $data["index"]++;
                 $data["state"] = "ready";

@@ -98,7 +98,13 @@ final class workflow_sequence_test extends advanced_testcase {
         $this->assertSame("testreference",
             sequence::status($step["id"], $identity, (int)$course->id)["failure"]["reference"]);
         $this->assertSame("failed", sequence::status($step["id"], $identity, (int)$course->id)["state"]);
-        $this->assertSame("ready", sequence::retry($step["id"], $identity, (int)$course->id)["state"]);
+        try {
+            sequence::retry($step["id"], $identity, (int)$course->id, 1, 9);
+            $this->fail("Stale widget generation accepted.");
+        } catch (api_exception $e) {
+            $this->assertSame("workflow_step_mismatch", $e->machinecode);
+        }
+        $this->assertSame("ready", sequence::retry($step["id"], $identity, (int)$course->id, 1, 0)["state"]);
         $this->assertSame(1, sequence::assert_current($step["id"], $identity, 1, "move_activity", $ctx));
         sequence::claim($step["id"], $identity, 1, "move_activity", $ctx);
         sequence::complete($step["id"], $identity, (int)$course->id, ["cmid" => 1]);
@@ -158,6 +164,8 @@ final class workflow_sequence_test extends advanced_testcase {
         $this->assertArrayHasKey("workflow_sequence", $indexed);
         $this->assertSame("ui://local-mcp/workflow-next",
             $indexed["create_section"]["_meta"]["ui"]["resourceUri"]);
+        $this->assertSame(["model"], $indexed["create_section"]["_meta"]["ui"]["visibility"]);
+        $this->assertFalse($indexed["create_section"]["_meta"]["openai/widgetAccessible"]);
         // JSON Schema properties must be JSON objects after tool_schema::normalize().
         $sectionproperties = $indexed["create_section"]["inputSchema"]["properties"];
         $workflowproperties = $indexed["workflow_sequence"]["inputSchema"]["properties"];

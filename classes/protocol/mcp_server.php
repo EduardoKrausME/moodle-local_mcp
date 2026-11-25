@@ -65,6 +65,9 @@ final class mcp_server {
     /** @var bool Selected destructive tool flag for failure auditing. */
     private bool $selecteddestructive = false;
 
+    /** @var array|null Authorized snapshot of a failed claimed workflow. */
+    private ?array $failedworkflow = null;
+
     /**
      * Method __construct.
      *
@@ -193,14 +196,32 @@ final class mcp_server {
                 global $OUTPUT;
                 $html = $OUTPUT->render_from_template("local_mcp/workflow_next", [
                     "nextlabel" => get_string("next"),
-                    "lang" => current_language(),
+                    "lang" => str_replace("_", "-", current_language() === "pt_br" ? "pt-BR" : current_language()),
+                    "loading" => get_string("workflowapploading", "local_mcp"),
+                    "nodata" => get_string("workflowappnodata", "local_mcp"),
+                    "ready" => get_string("workflowappready", "local_mcp"),
+                    "executing" => get_string("workflowappexecuting", "local_mcp"),
+                    "done" => get_string("workflowappdone", "local_mcp"),
+                    "finished" => get_string("workflowappfinished", "local_mcp"),
+                    "failed" => get_string("workflowappfailed", "local_mcp"),
+                    "reconcile" => get_string("workflowappreconcile", "local_mcp"),
+                    "retry" => get_string("workflowappretry", "local_mcp"),
+                    "refresh" => get_string("workflowapprefresh", "local_mcp"),
+                    "sending" => get_string("workflowappsending", "local_mcp"),
+                    "sent" => get_string("workflowappsent", "local_mcp"),
+                    "error" => get_string("workflowapperror", "local_mcp"),
+                    "cancelled" => get_string("workflowappcancelled", "local_mcp"),
+                    "toolerror" => get_string("workflowapptoolerror", "local_mcp"),
+                    "unsupported" => get_string("workflowappunsupported", "local_mcp"),
+                    "heading" => get_string("workflowappheading", "local_mcp"),
                 ]);
                 http::json(["jsonrpc" => "2.0", "id" => $id, "result" => discovery::decorate_result([
                     "contents" => [[
                         "uri" => "ui://local-mcp/workflow-next",
                         "mimeType" => "text/html;profile=mcp-app",
                         "text" => $html,
-                        "_meta" => ["ui" => ["prefersBorder" => false]],
+                        "_meta" => ["ui" => ["prefersBorder" => false,
+                            "csp" => ["connectDomains" => [], "resourceDomains" => []]]],
                     ]],
                 ], $modern)]);
             }
@@ -300,6 +321,9 @@ final class mcp_server {
                         'message' => $e->get_public_message(),
                         'details' => $e->details,
                     ];
+                    if ($this->failedworkflow !== null) {
+                        $error['workflow'] = $this->failedworkflow;
+                    }
                     $error = discovery::with_site_identity($error);
                     http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => [
                             'content' => [[
@@ -331,6 +355,9 @@ final class mcp_server {
                         "message" => "The Moodle tool failed internally. Reference " . $reference . ".",
                         'reference' => $reference,
                     ];
+                    if ($this->failedworkflow !== null) {
+                        $error['workflow'] = $this->failedworkflow;
+                    }
                     $error = discovery::with_site_identity($error);
                     http::json(['jsonrpc' => '2.0', 'id' => $id, 'result' => [
                             'content' => [[
@@ -433,8 +460,10 @@ final class mcp_server {
                     "_meta" => $iswrite ? [
                         "ui" => [
                             "resourceUri" => "ui://local-mcp/workflow-next",
-                            "visibility" => ["model", "app"],
+                            "visibility" => ["model"],
                         ],
+                        "openai/outputTemplate" => "ui://local-mcp/workflow-next",
+                        "openai/widgetAccessible" => false,
                     ] : (object)[],
 
                     'annotations' => [
@@ -724,8 +753,10 @@ final class mcp_server {
         } catch (\Throwable $failure) {
             if ($workflowid !== "") {
                 try {
-                    sequence::fail($workflowid, $identity, (int)$context->get_course_context(false)->instanceid,
-                        diagnostics::request_id());
+                    $courseid = (int)$context->get_course_context(false)->instanceid;
+                    sequence::fail($workflowid, $identity, $courseid, diagnostics::request_id());
+                    // Only after a successful claim may the tool expose the authorized workflow snapshot.
+                    $this->failedworkflow = sequence::status($workflowid, $identity, $courseid);
                 } catch (\Throwable $statefailure) {
                     // Do not mask the original exception or allow an uncertain write to be retried.
                     diagnostics::event("workflow_failure_record_failed", ["tool" => $name]);

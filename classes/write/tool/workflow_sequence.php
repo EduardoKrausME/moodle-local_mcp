@@ -65,6 +65,8 @@ final class workflow_sequence extends base_tool {
         return $this->object_schema([
             "action" => ["type" => "string", "enum" => ["start", "status", "next", "cancel", "retry"]],
             "courseid" => ["type" => "integer", "minimum" => 1],
+            "expectedstep" => ["type" => "integer", "minimum" => 1],
+            "expectedgeneration" => ["type" => "integer", "minimum" => 0],
             "workflow_id" => ["type" => "string", "pattern" => "^[a-f0-9]{24}$"],
             "items" => [
                 "type" => "array", "minItems" => 2, "maxItems" => sequence::MAX_ITEMS,
@@ -108,8 +110,10 @@ final class workflow_sequence extends base_tool {
                 sequence::cancel($id, $identity, $courseid);
                 return ["cancelled" => true, "workflow_id" => $id];
             }
-            $workflow = $action === "retry" ? sequence::retry($id, $identity, $courseid)
-                : ($action === "next" ? sequence::next($id, $identity, $courseid)
+            $step = $arguments["expectedstep"] ?? null;
+            $generation = $arguments["expectedgeneration"] ?? null;
+            $workflow = $action === "retry" ? sequence::retry($id, $identity, $courseid, $step, $generation)
+                : ($action === "next" ? sequence::next($id, $identity, $courseid, $step, $generation)
                     : sequence::status($id, $identity, $courseid));
         }
         return ["workflow" => $workflow, "message" =>

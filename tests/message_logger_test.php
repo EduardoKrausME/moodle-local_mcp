@@ -169,4 +169,26 @@ final class message_logger_test extends advanced_testcase {
         $this->assertStringNotContainsString($newpassword, $serialized);
         $this->assertStringContainsString('[REDACTED]', $serialized);
     }
+
+    /**
+     * Host metadata and app source must not leak into diagnostic logs.
+     */
+    public function test_app_metadata_and_html_are_omitted(): void {
+        $meta = ["openai/userLocation" => ["city" => "Private city"], "openai/session" => "private-session",
+            "openai/subject" => "private-subject", "openai/organization" => "private-org",
+            "openai/userAgent" => "private-agent", "nested" => ["arbitrary" => "private-extra"]];
+        $lines = message_logger::format("outgoing", "server", [
+            "params" => ["_meta" => $meta],
+            "result" => ["contents" => [["uri" => "ui://local-mcp/workflow-next",
+                "mimeType" => "text/html;profile=mcp-app", "text" => "<script>private-app-source</script>",
+                "_meta" => $meta]],
+                "content" => [["type" => "text", "text" => json_encode(["_meta" => $meta])]]],
+        ], 200);
+        $log = implode("\n", $lines);
+        $this->assertStringNotContainsString("private-", $log);
+        $this->assertStringNotContainsString("Private city", $log);
+        $this->assertStringContainsString("metadata omitted", $log);
+        $this->assertStringContainsString("UI HTML omitted", $log);
+        $this->assertStringContainsString("ui://local-mcp/workflow-next", $log);
+    }
 }

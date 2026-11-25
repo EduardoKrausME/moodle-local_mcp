@@ -27,65 +27,248 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-  body { font: 14px system-ui, sans-serif; margin: 0; color: var(--color-text-primary, #202124); }
-  #panel { padding: 12px; border: 1px solid var(--color-border-default,#ccc); border-radius: 10px; }
-  #progress { opacity: .75; font-size: 12px; }
-  #title { margin: 6px 0 10px; overflow-wrap: anywhere; }
-  button { border: none; border-radius: 7px; padding: 9px 18px; cursor: pointer;
-    background: var(--color-background-primary,#222); color: var(--color-text-primary,#fff); }
-  button:disabled { opacity: .6; cursor: default; }
+  :root { color-scheme: light dark; }
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { font: 14px/1.5 system-ui, sans-serif; margin: 0; color: CanvasText; background: transparent; }
+  #panel { padding: 12px; border: 1px solid var(--color-border-primary, GrayText); border-radius: 10px; }
+  h1 { font-size: 1rem; margin: 0 0 4px; }
+  #progress { font-size: .875rem; font-variant-numeric: tabular-nums; }
+  #title, #status, #reference { overflow-wrap: anywhere; margin: 4px 0; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  button { font: inherit; min-height: 44px; border: 1px solid CanvasText; border-radius: 8px;
+    padding: 8px 14px; cursor: pointer; background: Canvas; color: CanvasText; }
+  button:focus-visible { outline: 3px solid Highlight; outline-offset: 2px; }
+  button:disabled { cursor: default; opacity: .65; }
+  [hidden] { display: none !important; }
 </style>
 </head>
 <body>
-<div id="panel" hidden>
-  <div id="progress" aria-live="polite"></div>
+<section id="panel" aria-labelledby="heading" aria-busy="true">
+  <h1 id="heading">{{heading}}</h1>
+  <div id="progress" hidden></div>
   <div id="title"></div>
-  <button type="button" id="next" hidden>{{nextlabel}}</button>
+  <div id="status" role="status" aria-live="polite">{{loading}}</div>
+  <div id="reference" hidden></div>
+  <div class="actions">
+    <button type="button" id="next" hidden>{{nextlabel}}</button>
+    <button type="button" id="retry" hidden>{{retry}}</button>
+    <button type="button" id="refresh" hidden>{{refresh}}</button>
+  </div>
+</section>
+<div hidden id="labels">
+  <span id="label-loading">{{loading}}</span>
+  <span id="label-nodata">{{nodata}}</span>
+  <span id="label-ready">{{ready}}</span>
+  <span id="label-executing">{{executing}}</span>
+  <span id="label-done">{{done}}</span>
+  <span id="label-finished">{{finished}}</span>
+  <span id="label-failed">{{failed}}</span>
+  <span id="label-reconcile">{{reconcile}}</span>
+  <span id="label-retry">{{retry}}</span>
+  <span id="label-refresh">{{refresh}}</span>
+  <span id="label-sending">{{sending}}</span>
+  <span id="label-sent">{{sent}}</span>
+  <span id="label-error">{{error}}</span>
+  <span id="label-cancelled">{{cancelled}}</span>
+  <span id="label-toolerror">{{toolerror}}</span>
+  <span id="label-unsupported">{{unsupported}}</span>
+  <span id="label-heading">{{heading}}</span>
 </div>
 <script>
 (function () {
   "use strict";
-  const panel = document.getElementById("panel");
-  const progress = document.getElementById("progress");
-  const title = document.getElementById("title");
-  const button = document.getElementById("next");
-  let workflow = null;
-  let pending = false;
+  const el = id => document.getElementById(id);
+  const label = id => el("label-" + id).textContent;
+  const panel = el("panel"), status = el("status"), progress = el("progress");
+  const buttons = ["next", "retry", "refresh"].map(el);
+  const parent = window.parent;
+  const pending = new Map();
+  let serial = 0, origin = "*", transport = "", workflow = null, site = "", busy = false;
+  let closed = false, settled = false, received = false, submitted = false, observer = null;
+  let dataTimer;
+  function post(message) {
+    if (!closed && parent !== window) {
+      parent.postMessage(Object.assign({jsonrpc: "2.0"}, message), origin);
+    }
+  }
+  function request(method, params) {
+    return new Promise((resolve, reject) => {
+      if (closed || parent === window) { reject(new Error("No host")); return; }
+      const id = "moodle-workflow-" + (++serial);
+      const timer = setTimeout(() => {
+        pending.delete(id);
+        reject(new Error("Host timeout"));
+      }, 8000);
+      pending.set(id, {resolve, reject, timer});
+      try { post({id, method, params}); } catch (error) {
+        clearTimeout(timer); pending.delete(id); reject(error);
+      }
+    });
+  }
+  function notify(method, params) { post({method, params}); }
+  function setStatus(key) {
+    status.textContent = label(key);
+    panel.setAttribute("aria-busy", key === "loading" || key === "sending" ? "true" : "false");
+  }
+  function setTheme(context) {
+    const theme = context && context.theme;
+    if (theme === "light" || theme === "dark") {
+      document.documentElement.setAttribute("data-theme", theme);
+    }
+  }
+  function valid(w) {
+    return w && /^[a-f0-9]{24}$/.test(w.id) && Number.isSafeInteger(w.courseid) && w.courseid > 0 &&
+      Number.isSafeInteger(w.step) && Number.isSafeInteger(w.total) && w.step > 0 &&
+      w.step <= w.total && w.total <= 30 &&
+      ["ready", "executing", "done", "failed"].includes(w.state);
+  }
+  function validSite(value) {
+    try {
+      const url = new URL(value);
+      return ["http:", "https:"].includes(url.protocol) && !url.username && !url.password &&
+        !url.search && !url.hash ? url.href.replace(/\/$/, "") : "";
+    } catch (error) { return ""; }
+  }
+  function hideActions() { buttons.forEach(button => { button.hidden = true; button.disabled = true; }); }
   function render() {
-    const output = window.openai && window.openai.toolOutput;
-    workflow = output && output.workflow;
-    if (!workflow || !Number.isInteger(workflow.step) || !Number.isInteger(workflow.total)) {
+    hideActions();
+    if (!valid(workflow)) return;
+    const w = workflow;
+    progress.hidden = false;
+    progress.textContent = w.step + " / " + w.total;
+    el("title").textContent = typeof w.title === "string" ? w.title.slice(0, 160) : "";
+    const reference = w.failure && w.failure.reference;
+    el("reference").hidden = typeof reference !== "string" || !/^[a-zA-Z0-9_-]{1,64}$/.test(reference);
+    el("reference").textContent = el("reference").hidden ? "" : reference;
+    let key = w.state;
+    const canNext = w.state === "done" && w.next && w.next.step === w.step + 1 && w.step < w.total;
+    const canRetry = w.state === "failed" && w.tool === "move_activity";
+    if (w.state === "done" && !canNext) key = "finished";
+    if (w.state === "failed" && !canRetry) key = "reconcile";
+    if (busy) key = "sending";
+    else if (submitted) key = "sent";
+    else if (!transport || !site) key = "unsupported";
+    setStatus(key);
+    if (!transport || !site) return;
+    el("next").hidden = !canNext;
+    el("retry").hidden = !canRetry;
+    el("refresh").hidden = !["failed", "executing", "ready"].includes(w.state);
+    buttons.forEach(button => { button.disabled = busy || submitted; });
+  }
+  function accept(result) {
+    if (closed) return;
+    received = true;
+    clearTimeout(dataTimer);
+    const data = result && (result.structuredContent || result);
+    workflow = data && valid(data.workflow) ? data.workflow : null;
+    site = validSite(data && data.moodle_wwwroot);
+    if (result && (result.isError || (data && data.is_error)) && !workflow) {
+      panel.hidden = false;
+      hideActions(); setStatus("toolerror"); return;
+    }
+    if (!workflow) {
+      // This resource is associated with WRITE tools; ordinary non-workflow results need no panel.
       panel.hidden = true;
       return;
     }
     panel.hidden = false;
-    progress.textContent = workflow.step + " / " + workflow.total;
-    title.textContent = workflow.title || "";
-    button.hidden = workflow.state !== "done" || !workflow.next;
-    button.disabled = pending;
+    render();
   }
-  button.addEventListener("click", async function () {
-    if (pending || !workflow || !workflow.next ||
-        !window.openai || typeof window.openai.sendFollowUpMessage !== "function") {
+  function onLegacy() {
+    if (closed || transport === "standard") return;
+    const host = window.openai;
+    if (!host) return;
+    setTheme(host);
+    if (typeof host.sendFollowUpMessage === "function" && settled) transport = "legacy";
+    if (host.toolOutput && settled) accept(host.toolOutput);
+  }
+  function resize() {
+    if (transport !== "standard" || closed) return;
+    notify("ui/notifications/size-changed", {height: panel.hidden ? 0 : Math.ceil(panel.getBoundingClientRect().height)});
+  }
+  function teardown() {
+    closed = true;
+    clearTimeout(dataTimer);
+    if (observer) observer.disconnect();
+    window.removeEventListener("message", onMessage);
+    window.removeEventListener("openai:set_globals", onLegacy);
+    for (const item of pending.values()) { clearTimeout(item.timer); item.reject(new Error("Closed")); }
+    pending.clear();
+  }
+  function onMessage(event) {
+    if (closed || event.source !== parent || (origin !== "*" && event.origin !== origin)) return;
+    const message = event.data;
+    if (!message || message.jsonrpc !== "2.0") return;
+    if (!message.method && pending.has(message.id)) {
+      const item = pending.get(message.id);
+      pending.delete(message.id); clearTimeout(item.timer);
+      if (message.error) item.reject(new Error("Host rejected request"));
+      else {
+        if (origin === "*" && event.origin && event.origin !== "null") origin = event.origin;
+        item.resolve(message.result);
+      }
       return;
     }
-    pending = true;
-    button.disabled = true;
-    const prompt = "Next. On the same Moodle site, call workflow_sequence with action=next, " +
-      "courseid=" + workflow.courseid + ", workflow_id=" + workflow.id + ". " +
-      "Then prepare only a preview for step " + workflow.next.step + " of " +
-      workflow.total + " (" + workflow.next.title + "). Include workflow_id and " +
-      "workflow_step in the WRITE tool arguments. Do not execute any WRITE " +
-      "until I explicitly approve that new step.";
+    if (transport !== "standard") return;
+    if (message.method === "ui/notifications/tool-result") accept(message.params);
+    else if (message.method === "ui/notifications/host-context-changed") setTheme(message.params);
+    else if (message.method === "ui/notifications/tool-cancelled") {
+      received = true; clearTimeout(dataTimer); workflow = null; panel.hidden = false;
+      hideActions(); setStatus("cancelled");
+    } else if (message.method === "ui/resource-teardown") {
+      if (message.id !== undefined) post({id: message.id, result: {}});
+      teardown();
+    } else if (message.method === "ping" && message.id !== undefined) post({id: message.id, result: {}});
+  }
+  async function send(action) {
+    if (closed || busy || submitted || !valid(workflow) || !site || !transport || el(action).hidden) return;
+    const w = workflow;
+    const generation = Number.isSafeInteger(w.generation) && w.generation >= 0 ? w.generation : 0;
+    const prefix = "On Moodle " + site + ", workflow " + w.id + ", course " + w.courseid +
+      ", first read workflow_sequence status and verify step " + w.step + " and generation " + generation + ". ";
+    const prompt = action === "refresh" ? prefix + "Report current status only; do not change anything." :
+      prefix + "If the state and step still match, call workflow_sequence action=" + action +
+      " with expectedstep=" + w.step + " and expectedgeneration=" + generation +
+      ". Then prepare only the current step preview. Never approve or execute a Moodle WRITE from this action.";
+    busy = true; render();
     try {
-      await window.openai.sendFollowUpMessage({prompt: prompt});
+      if (transport === "standard") {
+        const result = await request("ui/message", {role: "user", content: [{type: "text", text: prompt}]});
+        if (result && result.isError) throw new Error("Rejected");
+      } else {
+        await window.openai.sendFollowUpMessage({prompt});
+      }
+      submitted = true;
+      busy = false; render();
     } catch (error) {
-      pending = false;
-      button.disabled = false;
+      if (closed) return;
+      // A timeout is ambiguous: never automatically resend through another bridge.
+      submitted = true; busy = false; hideActions(); setStatus("error");
     }
-  });
-  window.addEventListener("openai:set_globals", render);
-  render();
+  }
+  buttons.forEach(button => button.addEventListener("click", () => send(button.id)));
+  window.addEventListener("message", onMessage);
+  window.addEventListener("openai:set_globals", onLegacy);
+  dataTimer = setTimeout(() => { if (!received) setStatus("nodata"); }, 15000);
+  request("ui/initialize", {appInfo: {name: "Moodle workflow", version: "1.4.8"},
+    appCapabilities: {}, protocolVersion: "2026-01-26"}).then(result => {
+      if (closed) return;
+      if (!result || !result.protocolVersion || !result.hostCapabilities) throw new Error("Invalid handshake");
+      transport = "standard"; settled = true;
+      setTheme(result.hostContext);
+      notify("ui/notifications/initialized", {});
+      if (typeof ResizeObserver === "function") {
+        observer = new ResizeObserver(resize); observer.observe(panel);
+      }
+      resize();
+    }).catch(() => {
+      if (closed) return;
+      settled = true;
+      onLegacy();
+      if (!transport) setStatus("unsupported");
+    });
 }());
 </script>
 </body>
