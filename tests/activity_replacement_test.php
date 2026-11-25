@@ -63,7 +63,30 @@ final class activity_replacement_test extends advanced_testcase {
         $this->assertSame((int)$criterionid, $plan["criteriaid"]);
         $this->assertSame(1, $plan["source_completed_students"]);
         $this->assertSame(1, $plan["completed_criterion_records"]);
+        // A content change after approval must invalidate the migration plan.
+        $DB->set_field("page", "content", "Revised material", ["id" => $target->id]);
+        try {
+            activity_replacement::preview($args + ["expected_replacement_sha256" => $plan["replacement_sha256"]], $identity);
+            $this->fail("Stale content approval was accepted.");
+        } catch (\local_mcp\exception\api_exception $e) {
+            $this->assertSame("completion_criteria_changed", $e->machinecode);
+        }
+        // Pending activity evidence must never be lost when changing the criterion.
+        $other = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($other->id, $course->id, "student");
+        $pending = $DB->insert_record("course_modules_completion", (object)[
+            "coursemoduleid" => $source->cmid, "userid" => $other->id,
+            "completionstate" => COMPLETION_COMPLETE, "timemodified" => 12346]);
+        try {
+            activity_replacement::preview($args, $identity);
+            $this->fail("Pending academic evidence was accepted.");
+        } catch (\local_mcp\exception\api_exception $e) {
+            $this->assertSame("completion_history_pending", $e->machinecode);
+        }
+        $DB->insert_record("course_completion_crit_compl", (object)["course" => $course->id,
+            "userid" => $other->id, "criteriaid" => $criterionid, "timecompleted" => 12346]);
         $this->assertTrue(activity_replacement::execute($args, $identity)["updated"]);
+        $this->assertTrue($DB->record_exists("course_modules_completion", ["id" => $pending]));
         $this->assertEquals($before, $DB->get_record("course_completion_crit_compl", ["id" => $historyid]));
         $this->assertSame((int)$target->cmid, (int)$DB->get_field("course_completion_criteria", "moduleinstance",
             ["id" => $criterionid]));

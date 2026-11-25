@@ -92,14 +92,25 @@ final class activity_replacement {
         if ($sourcemod !== "page" || !in_array($targetmod, ["page", "mcp"], true)) {
             throw new api_exception("completion_rules_not_equivalent", 409);
         }
+        $sourcecontent = $DB->get_record("page", ["id" => $source->instance], "*", MUST_EXIST);
+        $targetcontent = null;
         if ($targetmod === "mcp") {
             $instance = $DB->get_record("mcp", ["id" => $target->instance], "*", MUST_EXIST);
             if (!empty($instance->completioninteractive) || empty($instance->publishedrevision)) {
                 throw new api_exception("completion_target_not_ready", 409);
             }
+            $revision = $DB->get_record("mcp_revisions", ["id" => $instance->publishedrevision,
+                "mcpid" => $instance->id], "id,content,sha256");
+            if (!$revision || !hash_equals((string)$revision->sha256, hash("sha256", $revision->content))) {
+                throw new api_exception("completion_target_not_ready", 409);
+            }
+            $targetcontent = ["instance" => (int)$instance->id, "revision" => (int)$revision->id, "sha256" => $revision->sha256];
+        } else {
+            $targetcontent = $DB->get_record("page", ["id" => $target->instance], "*", MUST_EXIST);
         }
         $section = $DB->get_record("course_sections", ["id" => $target->section, "course" => $courseid], "*", MUST_EXIST);
-        if (empty($source->visible) || empty($target->visible) || empty($section->visible) || !empty($target->availability) ||
+        if (empty($source->visible) || empty($target->visible) || empty($target->visibleoncoursepage) ||
+                empty($section->visible) || !empty($target->availability) ||
                 !empty($section->availability) || !empty($source->availability) ||
                 (int)$source->section !== (int)$target->section) {
             throw new api_exception("completion_target_not_ready", 409);
@@ -153,7 +164,7 @@ final class activity_replacement {
             throw new api_exception("completion_history_pending", 409, "", ["pending" => $missing],
                 get_string("completionhistorypending", "local_mcp"));
         }
-        return ["courseid" => $courseid, "sourcecmid" => $sourceid, "targetcmid" => $targetid,
+        $plan = ["courseid" => $courseid, "sourcecmid" => $sourceid, "targetcmid" => $targetid,
             "criteriaid" => (int)$criterion->id, "targetmodule" => $targetmod,
             "criteria_sha256" => self::fingerprint($courseid),
             "source_completion_records" => $DB->count_records("course_modules_completion", ["coursemoduleid" => $sourceid]),
@@ -167,6 +178,14 @@ final class activity_replacement {
                 ["criteriaid" => $criterion->id, "course" => $courseid]),
             "dependencies" => [], "preservehistory" => true, "dependencies_reviewed" => true,
             "operator_must_coordinate_quiescent_window" => true];
+        // Bind the reviewed content and the current evidence counts to confirmation.
+        // No student identifiers or authored content are returned by this fingerprint.
+        $plan["replacement_sha256"] = hash("sha256", serialize([$plan, $source, $target, $sourcecontent, $targetcontent]));
+        if (isset($a["expected_replacement_sha256"]) &&
+                !hash_equals($plan["replacement_sha256"], $a["expected_replacement_sha256"])) {
+            throw new api_exception("completion_criteria_changed", 409);
+        }
+        return $plan;
     }
 
     /** Update only the existing native criterion, never delete or manufacture student evidence. */

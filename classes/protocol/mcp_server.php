@@ -664,12 +664,16 @@ final class mcp_server {
             // Bind the actual ordering shown to the teacher to the one-time token.
             // This protects old callers that do not send the optional position hash.
             $positionpreview = null;
+            $replacementpreview = null;
             if ($name === "move_activity") {
                 $positionpreview = $tool->preview($arguments, $identity);
                 $confirmationarguments["_position_sha256"] = $positionpreview["position_sha256"];
+            } else if ($name === "replace_course_completion_activity") {
+                $replacementpreview = $tool->preview($arguments, $identity);
+                $confirmationarguments["_replacement_sha256"] = $replacementpreview["replacement_sha256"];
             }
             if ($confirmation === '') {
-                $preview = $positionpreview ?? $tool->preview($arguments, $identity);
+                $preview = $positionpreview ?? $replacementpreview ?? $tool->preview($arguments, $identity);
                 $token = confirmation_service::issue(
                     $identity, $rawtoken, $name, $confirmationarguments, $context);
                 logger::record('tool_called', $identity, $name, 'write', $context,
@@ -699,6 +703,9 @@ final class mcp_server {
                 $confirmation, $identity, $rawtoken, $name, $confirmationarguments, $context);
             if ($positionpreview !== null) {
                 $arguments["expected_position_sha256"] = $positionpreview["position_sha256"];
+            }
+            if ($replacementpreview !== null) {
+                $arguments["expected_replacement_sha256"] = $replacementpreview["replacement_sha256"];
             }
             diagnostics::event('confirmation_accepted', [
                 'tool' => $name, 'userid' => $identity->userid,
