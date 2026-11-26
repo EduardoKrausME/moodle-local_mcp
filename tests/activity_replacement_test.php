@@ -32,6 +32,16 @@ use local_mcp\security\authenticated_identity;
  * @covers \local_mcp\completion\activity_replacement
  */
 final class activity_replacement_test extends advanced_testcase {
+    /** The API no longer exposes or requires the redundant review flag. */
+    public function test_schema_without_review_flag(): void {
+        $tool = new \local_mcp\write\tool\replace_course_completion_activity();
+        $schema = $tool->get_input_schema();
+        $this->assertArrayNotHasKey("dependencies_reviewed", $schema["properties"]);
+        $this->assertNotContains("dependencies_reviewed", $schema["required"]);
+        $this->assertContains("preservehistory", $schema["required"]);
+        $this->assertContains("expected_criteria_sha256", $schema["required"]);
+    }
+
     /** A completed criterion keeps its ID and timestamp. */
     public function test_preserve_history(): void {
         global $CFG, $DB, $USER;
@@ -57,10 +67,12 @@ final class activity_replacement_test extends advanced_testcase {
         $before = $DB->get_record("course_completion_crit_compl", ["id" => $historyid], "*", MUST_EXIST);
         $identity = new authenticated_identity($USER->id, "test", ["mcp:write"]);
         $args = ["courseid" => (int)$course->id, "sourcecmid" => (int)$source->cmid,
-            "targetcmid" => (int)$target->cmid, "preservehistory" => true, "dependencies_reviewed" => true,
+            "targetcmid" => (int)$target->cmid, "preservehistory" => true,
             "expected_criteria_sha256" => activity_replacement::fingerprint($course->id)];
         $plan = activity_replacement::preview($args, $identity);
         $this->assertSame((int)$criterionid, $plan["criteriaid"]);
+        $this->assertArrayNotHasKey("dependencies_reviewed", $plan);
+        $this->assertContains("completion_custom_dependencies_unverified", array_column($plan["warnings"], "code"));
         $this->assertSame(1, $plan["source_completed_students"]);
         $this->assertSame(1, $plan["completed_criterion_records"]);
         // A content change after approval must invalidate the migration plan.
@@ -120,7 +132,7 @@ final class activity_replacement_test extends advanced_testcase {
             "criteriatype" => COMPLETION_CRITERIA_TYPE_ACTIVITY, "module" => "page", "moduleinstance" => $source->cmid]);
         $identity = new authenticated_identity($USER->id, "test", ["mcp:write"]);
         $args = ["courseid" => (int)$course->id, "sourcecmid" => (int)$source->cmid,
-            "targetcmid" => (int)$target->cmid, "preservehistory" => true, "dependencies_reviewed" => true,
+            "targetcmid" => (int)$target->cmid, "preservehistory" => true,
             "expected_criteria_sha256" => activity_replacement::fingerprint($course->id)];
         $plan = activity_replacement::preview($args, $identity);
         $this->assertSame((int)$criterionid, $plan["criteriaid"]);
@@ -128,6 +140,7 @@ final class activity_replacement_test extends advanced_testcase {
         $this->assertEqualsCanonicalizing([
             "completion_source_hidden", "completion_target_stealth", "completion_sections_differ",
             "completion_source_restricted", "completion_target_restricted", "completion_availability_differs",
+            "completion_custom_dependencies_unverified",
         ], array_column($plan["warnings"], "code"));
         $DB->set_field("course_sections", "availability", null, ["id" => $targetcm->section]);
         try {

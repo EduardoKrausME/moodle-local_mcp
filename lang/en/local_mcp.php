@@ -289,7 +289,7 @@ $string['workflowreconciliationrequired'] = 'The workflow requires manual reconc
 $string['completiondependenciespresent'] = 'Other activities or sections depend on the original completion rule.';
 $string['completionhistorypending'] = 'Some completed activities have not yet been recorded in the course criterion. Reconcile completion first.';
 
-$string['completiondependencyreviewrequired'] = 'Review certificate and custom plugin dependencies and coordinate a quiescent migration window before confirming.';
+$string['apiwarning_completion_custom_dependencies_unverified'] = 'Custom certificate and plugin dependencies are not checked automatically. Review them and coordinate a migration window without concurrent learner access or completion processing before confirming.';
 
 $string['apierror_activity_move_failed'] = 'Moodle could not complete or verify the requested activity movement and section order. Check the course layout and permissions before requesting a new preview.';
 $string['apierror_activity_not_found'] = 'The activity could not be found, is being deleted, or is unavailable to this connection. Check the CMID and access rights.';

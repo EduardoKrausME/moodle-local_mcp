@@ -289,7 +289,7 @@ $string['workflowreconciliationrequired'] = 'O fluxo exige reconciliação manua
 $string['completiondependenciespresent'] = 'Outras atividades ou seções dependem da conclusão original.';
 $string['completionhistorypending'] = 'Algumas conclusões de atividades ainda não constam no critério do curso. Reconcilie a conclusão primeiro.';
 
-$string['completiondependencyreviewrequired'] = 'Revise dependências de certificados e plugins personalizados e coordene uma janela sem alterações concorrentes antes de confirmar.';
+$string['apiwarning_completion_custom_dependencies_unverified'] = 'Dependências de certificados e plugins personalizados não são verificadas automaticamente. Revise essas dependências e coordene uma janela sem acesso de alunos ou processamento concorrente de conclusão antes de confirmar.';
 
 $string['apierror_activity_move_failed'] = 'O Moodle não conseguiu concluir ou validar a movimentação da atividade e a ordem das seções. Confira a estrutura do curso e as permissões antes de solicitar nova prévia.';
 $string['apierror_activity_not_found'] = 'A atividade não foi encontrada, está sendo excluída ou não está disponível para esta conexão. Confira o CMID e as permissões.';

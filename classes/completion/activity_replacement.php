@@ -180,16 +180,14 @@ final class activity_replacement {
         foreach ($badges as $badge) {
             $dependencies[] = ["table" => "badge", "id" => (int)$badge->id];
         }
-        // Non-core availability conditions and certificate plugins may use arbitrary storage.
-        // The operator must review them and coordinate a quiescent migration window.
+        // Native dependencies are blocking; custom storage cannot be inferred automatically.
         if ($dependencies) {
             throw new api_exception("completion_dependencies_present", 409, "", ["dependencies" => $dependencies],
                 get_string("completiondependenciespresent", "local_mcp"));
         }
-        if (empty($a["dependencies_reviewed"])) {
-            throw new api_exception("completion_dependency_review_required", 409, "", [],
-                get_string("completiondependencyreviewrequired", "local_mcp"));
-        }
+        // Report external dependency and concurrency limitations without a redundant input flag.
+        $warnings[] = ["code" => "completion_custom_dependencies_unverified",
+            "message" => get_string("apiwarning_completion_custom_dependencies_unverified", "local_mcp")];
         $params = ["source" => $sourceid, "criterion" => $criterion->id, "course" => $courseid,
             "complete" => COMPLETION_COMPLETE, "pass" => COMPLETION_COMPLETE_PASS];
         $missing = $DB->count_records_sql("SELECT COUNT(1) FROM {course_modules_completion} mc
@@ -213,7 +211,7 @@ final class activity_replacement {
                 ["criterion" => $criterion->id, "course" => $courseid]),
             "preserved_criterion_records" => $DB->count_records("course_completion_crit_compl",
                 ["criteriaid" => $criterion->id, "course" => $courseid]),
-            "dependencies" => [], "warnings" => $warnings, "preservehistory" => true, "dependencies_reviewed" => true,
+            "dependencies" => [], "warnings" => $warnings, "preservehistory" => true,
             "operator_must_coordinate_quiescent_window" => true];
         // Bind the reviewed content and the current evidence counts to confirmation.
         // No student identifiers or authored content are returned by this fingerprint.

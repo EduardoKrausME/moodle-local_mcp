@@ -44,7 +44,7 @@ final class replace_course_completion_activity extends base_tool {
     public function get_description(): string {
         return "Replace an equivalent published view-only page or mod_mcp criterion without deleting academic history. "
             . "Review access warnings, certificate and custom dependencies and coordinate a quiescent migration window first. "
-            . "Set dependencies_reviewed only after that review; explicit confirmation is still required.";
+            . "The preview reports native checks and external dependency warnings; explicit confirmation is required.";
     }
 
     /** @return string Capability. */
@@ -59,9 +59,8 @@ final class replace_course_completion_activity extends base_tool {
             "sourcecmid" => ["type" => "integer", "minimum" => 1],
             "targetcmid" => ["type" => "integer", "minimum" => 1],
             "preservehistory" => ["type" => "boolean"],
-            "dependencies_reviewed" => ["type" => "boolean"],
             "expected_criteria_sha256" => ["type" => "string", "pattern" => "^[a-f0-9]{64}$"],
-        ], ["courseid", "sourcecmid", "targetcmid", "preservehistory", "dependencies_reviewed", "expected_criteria_sha256"]);
+        ], ["courseid", "sourcecmid", "targetcmid", "preservehistory", "expected_criteria_sha256"]);
     }
 
     /** @return context Course context. */
