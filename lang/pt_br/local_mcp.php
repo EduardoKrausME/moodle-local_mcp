@@ -265,6 +265,7 @@ $string['workflowappheading'] = 'Fluxo do Moodle';
 $string['workflowapploading'] = 'Aguardando dados do fluxo…';
 $string['workflowappnodata'] = 'Dados do fluxo não recebidos. Continue na conversa.';
 $string['workflowappready'] = 'Pronto para a prévia. Alterações exigem aprovação.';
+$string['workflowappauthorized'] = 'Plano aprovado. A próxima operação será executada sequencialmente.';
 $string['workflowappreconcile'] = 'Reconciliação manual necessária. Não repita a operação.';
 $string['workflowapprefresh'] = 'Consultar estado';
 $string['workflowappretry'] = 'Recuperar movimentação';
