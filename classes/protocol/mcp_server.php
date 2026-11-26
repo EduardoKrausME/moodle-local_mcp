@@ -202,6 +202,7 @@ final class mcp_server {
                     "loading" => get_string("workflowapploading", "local_mcp"),
                     "nodata" => get_string("workflowappnodata", "local_mcp"),
                     "ready" => get_string("workflowappready", "local_mcp"),
+                    "authorized" => get_string("workflowappauthorized", "local_mcp"),
                     "executing" => get_string("workflowappexecuting", "local_mcp"),
                     "done" => get_string("workflowappdone", "local_mcp"),
                     "finished" => get_string("workflowappfinished", "local_mcp"),
@@ -796,6 +797,10 @@ final class mcp_server {
         // Only one approved call can claim a workflow step, even if several
         // preview tokens were issued before either was confirmed.
         if ($workflowid !== "") {
+            if ($planexecution) {
+                approved_plan::assert_baseline($workflowid, (int)$context->get_course_context(false)->instanceid,
+                    $workflowstep, $generation, $identity, $planaccesshash);
+            }
             sequence::claim($workflowid, $identity, $workflowstep, $name, $context, $generation,
                 $planarguments, $planaccesshash);
         }
@@ -822,6 +827,14 @@ final class mcp_server {
                 } catch (\Throwable $statefailure) {
                     // Do not mask the original exception or allow an uncertain write to be retried.
                     diagnostics::event("workflow_failure_record_failed", ["tool" => $name]);
+                }
+            }
+            if ($workflowaction === "run_next") {
+                try {
+                    $this->failedworkflow = sequence::status($arguments["workflow_id"], $identity,
+                        (int)$arguments["courseid"]);
+                } catch (\Throwable $ignored) {
+                    // Do not expose a workflow that cannot be read by this connection.
                 }
             }
             throw $failure;
