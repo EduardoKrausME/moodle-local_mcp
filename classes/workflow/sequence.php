@@ -340,7 +340,7 @@ final class sequence {
             $data["completed"][] = [
                 "step" => (int)$data["index"] + 1,
                 "tool" => $data["items"][$data["index"]]["tool"],
-                "result_id" => (int)($result["id"] ?? $result["cmid"] ?? 0),
+                "result_id" => (int)($result["id"] ?? $result["cmid"] ?? $result["sectionid"] ?? 0),
             ];
             self::save($id, $data);
             return self::snapshot($id, $data);
@@ -437,6 +437,7 @@ final class sequence {
                     $generation !== (int)($data["generation"] ?? 0) || $data["state"] !== "done") {
                 throw new api_exception("workflow_step_mismatch", 409);
             }
+            $data["completed"][count($data["completed"]) - 1]["verified"] = true;
             $data["approved"]["baseline"] = $afterhash;
             $data["approved"]["nextstep"] = $step + 1;
             if (isset($data["items"][$data["index"] + 1])) {
