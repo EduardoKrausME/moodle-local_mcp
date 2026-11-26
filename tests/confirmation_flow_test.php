@@ -62,6 +62,11 @@ final class confirmation_flow_test extends advanced_testcase {
         $this->assertSame('create_category', $pending['tool']);
         $this->assertSame('MCP Pending Approval Test', $pending['preview']['name']);
         $this->assertStringStartsWith('mcp_confirm_', $pending['confirmation_token']);
+        $this->assertSame(1800, $pending['confirmation_ttl_seconds']);
+        $this->assertSame(gmdate('Y-m-d\TH:i:s\Z', $pending['confirmation_expires_at']),
+            $pending['confirmation_expires_at_utc']);
+        $this->assertStringContainsString('1800', $pending['message']);
+        $this->assertStringContainsString($pending['confirmation_expires_at_utc'], $pending['message']);
         $this->assertFalse($DB->record_exists('course_categories', [
             'name' => $args['name'], 'parent' => 0,
         ]));
@@ -133,6 +138,9 @@ final class confirmation_flow_test extends advanced_testcase {
         } catch (api_exception $e) {
             $this->assertSame("confirmation_expired", $e->machinecode);
             $this->assertSame(409, $e->httpstatus);
+            $this->assertSame("invalid_or_unbound", $e->details["reason"]);
+            $this->assertArrayNotHasKey("confirmation_expires_at", $e->details);
+            $this->assertStringContainsString("1800", $e->get_public_message());
         }
         $this->assertFalse($DB->record_exists("course_categories", ["name" => $args["name"]]));
 
@@ -227,8 +235,58 @@ final class confirmation_flow_test extends advanced_testcase {
         } catch (api_exception $e) {
             $this->assertSame("confirmation_expired", $e->machinecode);
             $this->assertSame(409, $e->httpstatus);
+            $this->assertSame("expired", $e->details["reason"]);
+            $this->assertSame(0, $e->details["confirmation_remaining_seconds"]);
+            $this->assertStringContainsString($e->details["confirmation_expires_at_utc"], $e->get_public_message());
         }
         $this->assertEquals(0, $DB->get_field("local_mcp_confirm", "used", ["tokenhash" => $expiredhash]));
     }
 
+
+    /**
+     * Distinguish request mismatches and reused tokens without disclosing another connection's data.
+     */
+    public function test_confirmation_failure_reasons(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        set_config("confirmationttl", 600, "local_mcp");
+        $identity = new authenticated_identity((int)get_admin()->id, "test", ["mcp:write"]);
+        $context = context_system::instance();
+        $course = $this->getDataGenerator()->create_course();
+        $othercontext = \context_course::instance($course->id);
+        $args = ["name" => "MCP confirmation reasons"];
+        $access = "test-access";
+        $token = confirmation_service::issue($identity, $access, "create_category", $args, $context);
+        $attempts = [
+            ["invalid_or_unbound", "different-access", "create_category", $args, $context],
+            ["tool_mismatch", $access, "update_category", $args, $context],
+            ["context_mismatch", $access, "create_category", $args, $othercontext],
+            ["arguments_mismatch", $access, "create_category", ["name" => "Changed"], $context],
+        ];
+        foreach ($attempts as [$reason, $credential, $tool, $arguments, $requestcontext]) {
+            try {
+                confirmation_service::consume($token, $identity, $credential, $tool, $arguments, $requestcontext);
+                $this->fail("Invalid confirmation accepted: " . $reason);
+            } catch (api_exception $e) {
+                $this->assertSame("confirmation_expired", $e->machinecode);
+                $this->assertSame($reason, $e->details["reason"]);
+                $this->assertStringContainsString("600", $e->get_public_message());
+                $this->assertStringNotContainsString($token, $e->get_public_message());
+                if ($reason === "invalid_or_unbound") {
+                    $this->assertArrayNotHasKey("confirmation_expires_at", $e->details);
+                } else {
+                    $this->assertSame(600, $e->details["confirmation_ttl_seconds"]);
+                    $this->assertGreaterThan(0, $e->details["confirmation_remaining_seconds"]);
+                }
+            }
+        }
+        confirmation_service::consume($token, $identity, $access, "create_category", $args, $context);
+        try {
+            confirmation_service::consume($token, $identity, $access, "create_category", $args, $context);
+            $this->fail("Consumed confirmation accepted.");
+        } catch (api_exception $e) {
+            $this->assertSame("used", $e->details["reason"]);
+            $this->assertSame(600, $e->details["confirmation_ttl_seconds"]);
+        }
+    }
 }

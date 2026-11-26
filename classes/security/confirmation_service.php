@@ -50,13 +50,17 @@ final class confirmation_service {
      * @param string $tool Parameter tool.
      * @param array $arguments Parameter arguments.
      * @param context $context Parameter context.
+     * @param array|null $metadata Public lifetime metadata for the issued token.
      * @return string Return value.
      */
     public static function issue(authenticated_identity $identity, string $rawaccess, string $tool,
-                                 array $arguments, context $context): string {
+                                 array $arguments, context $context, ?array &$metadata = null): string {
         global $DB;
         $token = secret::generate('mcp_confirm_', 32);
-        $ttl = (int)get_config("local_mcp", "confirmationttl") ?: 1800;
+        $ttl = self::configured_ttl();
+        $created = time();
+        $expires = $created + $ttl;
+        $metadata = self::lifetime_metadata($created, $expires);
         $DB->insert_record('local_mcp_confirm', (object)[
             'prefix' => secret::prefix($token),
             'tokenhash' => secret::hash($token),
@@ -67,9 +71,9 @@ final class confirmation_service {
             'tool' => $tool,
             'argshash' => self::args_hash($arguments),
             'contextid' => $context->id,
-            'expires' => time() + $ttl,
+            'expires' => $expires,
             'used' => 0,
-            'timecreated' => time(),
+            'timecreated' => $created,
         ]);
         return $token;
     }
@@ -91,7 +95,7 @@ final class confirmation_service {
         $tokenhash = secret::hash($token);
         $lock = \core\lock\lock_config::get_lock_factory("local_mcp")->get_lock("confirmation_" . $tokenhash, 5);
         if (!$lock) {
-            throw new api_exception("confirmation_busy", 409);
+            throw new api_exception("confirmation_busy", 409, "", ["reason" => "busy"]);
         }
         try {
             self::consume_locked($tokenhash, $identity, $rawaccess, $tool, $arguments, $context);
@@ -107,19 +111,64 @@ final class confirmation_service {
             string $tool, array $arguments, context $context): void {
         global $DB;
         $rec = $DB->get_record("local_mcp_confirm", ["tokenhash" => $tokenhash]);
-        // Unknown tokens are invalid confirmations, not internal database errors.
-        $valid = $rec && !$rec->used && $rec->expires >= time()
-            && (int)$rec->userid === $identity->userid
-            && $rec->tool === $tool
-            && hash_equals($rec->argshash, self::args_hash($arguments))
+        // Do not distinguish unknown tokens from tokens belonging to another credential.
+        $owned = $rec && (int)$rec->userid === $identity->userid
             && hash_equals($rec->accesshash, secret::hash($rawaccess))
-            && (int)$rec->contextid === (int)$context->id
             && (($rec->clientid === null && $identity->clientid === null) || (int)$rec->clientid === (int)$identity->clientid)
             && (($rec->connectionid === null && $identity->connectionid === null) || (int)$rec->connectionid === (int)$identity->connectionid);
-        if (!$valid) {
-            throw new api_exception('confirmation_expired', 409);
+        if (!$owned) {
+            $ttl = self::configured_ttl();
+            throw new api_exception("confirmation_expired", 409, "",
+                ["reason" => "invalid_or_unbound", "confirmation_configured_ttl_seconds" => $ttl],
+                get_string("confirmation_invalid_or_unbound", "local_mcp", $ttl));
+        }
+        $now = time();
+        if ($rec->used) {
+            $reason = "used";
+        } else if ($rec->expires < $now) {
+            $reason = "expired";
+        } else if ($rec->tool !== $tool) {
+            $reason = "tool_mismatch";
+        } else if ((int)$rec->contextid !== (int)$context->id) {
+            $reason = "context_mismatch";
+        } else if (!hash_equals($rec->argshash, self::args_hash($arguments))) {
+            $reason = "arguments_mismatch";
+        } else {
+            $reason = null;
+        }
+        if ($reason !== null) {
+            $metadata = self::lifetime_metadata((int)$rec->timecreated, (int)$rec->expires);
+            $details = ["reason" => $reason,
+                "confirmation_remaining_seconds" => max(0, (int)$rec->expires - $now)] + $metadata;
+            $message = get_string("confirmation_" . $reason, "local_mcp") . " "
+                . get_string("confirmation_lifetime", "local_mcp", (object)$metadata);
+            throw new api_exception("confirmation_expired", 409, "", $details, $message);
         }
         $DB->set_field('local_mcp_confirm', 'used', 1, ['id' => $rec->id]);
+    }
+
+    /**
+     * Return the configured lifetime for new confirmations in seconds.
+     *
+     * @return int
+     */
+    private static function configured_ttl(): int {
+        return (int)get_config("local_mcp", "confirmationttl") ?: 1800;
+    }
+
+    /**
+     * Build public lifetime metadata from the persisted timestamps.
+     *
+     * @param int $created Creation timestamp.
+     * @param int $expires Expiration timestamp.
+     * @return array
+     */
+    private static function lifetime_metadata(int $created, int $expires): array {
+        return [
+            "confirmation_ttl_seconds" => $expires - $created,
+            "confirmation_expires_at" => $expires,
+            "confirmation_expires_at_utc" => gmdate("Y-m-d\TH:i:s\Z", $expires),
+        ];
     }
 
     /**

@@ -704,8 +704,9 @@ final class mcp_server {
             }
             if ($confirmation === '') {
                 $preview = $positionpreview ?? $replacementpreview ?? $tool->preview($arguments, $identity);
+                $confirmationmetadata = null;
                 $token = confirmation_service::issue(
-                    $identity, $rawtoken, $name, $confirmationarguments, $context);
+                    $identity, $rawtoken, $name, $confirmationarguments, $context, $confirmationmetadata);
                 logger::record('tool_called', $identity, $name, 'write', $context,
                     summary::from_call($name, $arguments),
                     $tool->is_destructive(), false, false, 'confirmation_pending');
@@ -722,10 +723,9 @@ final class mcp_server {
                     'tool' => $name,
                     'preview' => $preview,
                     'confirmation_token' => $token,
-                    'message' => 'No changes have been made. Show this preview to the user and '
-                        . 'request explicit approval. Only if approved, call the same tool again '
-                        . 'with identical original arguments plus confirmation_token.',
-                ] + ($workflowid !== "" ? ["workflow" =>
+                    'message' => get_string("confirmation_preview_instruction", "local_mcp") . " "
+                        . get_string("confirmation_lifetime", "local_mcp", (object)$confirmationmetadata),
+                ] + $confirmationmetadata + ($workflowid !== "" ? ["workflow" =>
                     sequence::status($workflowid, $identity,
                         (int)$context->get_course_context(false)->instanceid)] : []);
             }
