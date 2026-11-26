@@ -26,6 +26,7 @@ namespace local_mcp\read\tool;
 
 use context;
 use local_mcp\security\authenticated_identity;
+use local_mcp\write\tool\update_section;
 
 /**
  * Class get_course_contents.
@@ -94,7 +95,10 @@ class get_course_contents extends base_tool {
      * @return array Return value.
      */
     public function execute(array $arguments, authenticated_identity $identity): array {
+        global $DB;
         $course = get_course((int)$arguments['courseid']);
+        $canupdate = has_capability('moodle/course:update', $this->resolve_context($arguments), $identity->userid);
+        $records = $canupdate ? $DB->get_records('course_sections', ['course' => $course->id]) : [];
         $modinfo = get_fast_modinfo($course, $identity->userid);
         $sections = [];
         foreach ($modinfo->get_section_info_all() as $section) {
@@ -110,8 +114,16 @@ class get_course_contents extends base_tool {
                 $activities[] = ['cmid' => (int)$cm->id, 'name' => $cm->name, 'modname' => $cm->modname,
                     'url' => $cm->url ? $cm->url->out(false) : null];
             }
-            $sections[] = ['id' => (int)$section->id, 'section' => (int)$section->section,
+            $item = ['id' => (int)$section->id, 'section' => (int)$section->section,
                 'name' => get_section_name($course, $section), 'activities' => $activities];
+            if ($canupdate && isset($records[$section->id])) {
+                $record = $records[$section->id];
+                $item['summary'] = $record->summary;
+                $item['summaryformat'] = (int)$record->summaryformat;
+                $item['visible'] = (bool)$record->visible;
+                $item['section_sha256'] = update_section::fingerprint($record);
+            }
+            $sections[] = $item;
         }
         return ['courseid' => (int)$course->id, 'sections' => $sections];
     }
