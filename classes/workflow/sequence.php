@@ -143,7 +143,7 @@ final class sequence {
             "title" => $current["title"],
             "tool" => $current["tool"],
             "state" => $data["state"],
-            "next" => $next,
+            "next" => $approval === null ? $next : null,
             "next_action" => $next !== null && $approval === null
                 ? ["label" => get_string("next"), "requires_explicit_user_action" => true,
                    "action" => "workflow_sequence", "courseid" => (int)$data["courseid"],
