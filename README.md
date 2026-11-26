@@ -1056,7 +1056,7 @@ One confirmed WRITE operation changes grade item visibility. See
 
 An executing workflow cannot be cancelled while its outcome is unknown. Failure snapshots include a diagnostic reference when available. Move fingerprints cover both the original ordering and the destination; tokens are consumed under a lock. Course criterion replacement reports existing completed activity and criterion counts separately. A historical criterion completion is preserved, but the replacement module's own activity checkbox will not be falsely marked as viewed.
 
-Replacement confirmations bind the current source and target content metadata, native module settings and evidence counts. A hidden-from-course-page target or missing/corrupt published revision is rejected. Changes between preview and execution require a fresh confirmation. The administrator must still coordinate a quiescent migration window; this does not lock Moodle core or third-party academic processes.
+Replacement confirmations bind the current source and target content metadata, native module settings and evidence counts. Hidden destination activities or sections, interactive completion and missing, empty or corrupt published revisions are rejected. A hidden origin, a stealth destination, different sections and access restrictions are reported as localized warnings for operator review. Native dependencies, including circular destination completion conditions, still block replacement. Section access settings are bound to confirmation. Changes between preview and execution require a fresh confirmation. The administrator must still coordinate a quiescent migration window; this does not lock Moodle core or third-party academic processes.
 
 ### MCP Apps workflow panel
 
