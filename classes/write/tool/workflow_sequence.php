@@ -29,6 +29,7 @@ use context_course;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
 use local_mcp\workflow\sequence;
+use local_mcp\workflow\approved_plan;
 
 /**
  * Create and advance persisted workflows without performing course writes.
@@ -52,6 +53,11 @@ final class workflow_sequence extends base_tool {
             . "WRITE, the result contains workflow progress and, on supported hosts, a Next button. "
             . "Calling next only advances the plan; it never authorizes or executes a Moodle WRITE. "
             . "Retry reopens only failed idempotent move_activity stages; a fresh preview and confirmation are required. "
+            . "Optional single approval: action=authorize previews exact steps for all remaining supported "
+            . "operations (create_section, update_section and append move_activity). Only retry authorize "
+            . "with its confirmation_token after the teacher approves the complete preview. Then call "
+            . "action=run_next with the returned step and generation, one at a time, without arguments "
+            . "or new confirmations. Stop on any failure or changed state. "
             . "Status and cancel require the original course and connection. Never invent progress.";
     }
 
@@ -63,11 +69,12 @@ final class workflow_sequence extends base_tool {
     /** @return array */
     public function get_input_schema(): array {
         return $this->object_schema([
-            "action" => ["type" => "string", "enum" => ["start", "status", "next", "cancel", "retry"]],
+            "action" => ["type" => "string", "enum" => ["start", "status", "next", "cancel", "retry", "authorize", "run_next"]],
             "courseid" => ["type" => "integer", "minimum" => 1],
             "expectedstep" => ["type" => "integer", "minimum" => 1],
             "expectedgeneration" => ["type" => "integer", "minimum" => 0],
             "workflow_id" => ["type" => "string", "pattern" => "^[a-f0-9]{24}$"],
+            "steps" => approved_plan::steps_schema(),
             "items" => [
                 "type" => "array", "minItems" => 2, "maxItems" => sequence::MAX_ITEMS,
                 "items" => ["type" => "object", "additionalProperties" => false,
@@ -95,6 +102,10 @@ final class workflow_sequence extends base_tool {
     public function execute(array $arguments, authenticated_identity $identity): array {
         $courseid = (int)$arguments["courseid"];
         $action = (string)$arguments["action"];
+        // Plan approval and execution require the authenticated protocol dispatcher.
+        if (in_array($action, ["authorize", "run_next"], true) || isset($arguments["steps"])) {
+            throw new api_exception("invalid_workflow", 400);
+        }
         if ($action === "start") {
             if (!isset($arguments["items"]) || !is_array($arguments["items"]) ||
                     isset($arguments["workflow_id"])) {
