@@ -138,3 +138,20 @@ test("reject unsupported protocol version and unrelated message origins", async 
     assert.equal(h.sent.filter(x => x.method === "ui/notifications/initialized").length, 0);
     assert.equal(h.element("status").textContent, "unsupported");
 });
+
+test("approved sequential plan does not show a manual Next approval or a false completion", async () => {
+    const h = harness();
+    h.receive({id: h.sent[0].id, result: {protocolVersion: "2026-01-26", hostCapabilities: {message: {text: {}}}}});
+    await tick();
+    h.output.workflow.state = "ready";
+    h.output.workflow.approval = {state: "authorized"};
+    h.receive({method: "ui/notifications/tool-result", params: {structuredContent: h.output}});
+    assert.equal(h.element("status").textContent, "authorized");
+    assert.equal(h.element("next").hidden, true);
+    h.output.workflow.state = "done";
+    h.output.workflow.approval.state = "blocked";
+    h.receive({method: "ui/notifications/tool-result", params: {structuredContent: h.output}});
+    assert.equal(h.element("status").textContent, "reconcile");
+    assert.equal(h.element("next").hidden, true);
+    assert.equal(h.element("refresh").hidden, false);
+});
