@@ -406,3 +406,17 @@ $string['apierror_invalid_activity_intro'] = 'The introduction exceeds 30000 cha
 $string['apierror_activity_metadata_empty'] = 'Supply at least one of name, intro or showdescription.';
 $string['apierror_activity_metadata_busy'] = 'Another metadata update is in progress for this activity. Check its current state and request a fresh preview.';
 $string['apierror_activity_metadata_update_failed'] = 'The requested metadata could not be verified. Check the activity state before retrying.';
+
+$string['apierror_completion_target_interactive'] = 'The destination requires interactive completion, which is not equivalent to viewing a page.';
+$string['apierror_completion_target_not_published'] = 'The destination has no published revision. Publish its content before replacing the criterion.';
+$string['apierror_completion_target_revision_missing'] = 'The published revision is missing or does not belong to the destination.';
+$string['apierror_completion_target_checksum_mismatch'] = 'The published revision checksum does not match its stored content.';
+$string['apierror_completion_target_content_empty'] = 'The published revision contains no content.';
+$string['apierror_completion_target_hidden'] = 'The destination activity is hidden from students.';
+$string['apierror_completion_target_section_hidden'] = 'The destination section is hidden from students.';
+$string['apiwarning_completion_source_hidden'] = 'The original activity or its section is hidden. Historical records are preserved.';
+$string['apiwarning_completion_target_stealth'] = 'The destination is not displayed on the course page. Ensure students have a working link.';
+$string['apiwarning_completion_sections_differ'] = 'The activities are in different sections. Review their placement.';
+$string['apiwarning_completion_source_restricted'] = 'The original activity or section has access conditions.';
+$string['apiwarning_completion_target_restricted'] = 'The destination activity or section has access conditions. Check that students can satisfy them.';
+$string['apiwarning_completion_availability_differs'] = 'The source and destination access conditions differ. Review their effect before confirming.';
