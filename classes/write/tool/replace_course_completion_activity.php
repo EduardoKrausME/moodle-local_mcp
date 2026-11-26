@@ -43,7 +43,7 @@ final class replace_course_completion_activity extends base_tool {
     /** @return string Tool description. */
     public function get_description(): string {
         return "Replace an equivalent published view-only page or mod_mcp criterion without deleting academic history. "
-            . "Review certificate and custom dependencies and coordinate a quiescent migration window first. "
+            . "Review access warnings, certificate and custom dependencies and coordinate a quiescent migration window first. "
             . "Set dependencies_reviewed only after that review; explicit confirmation is still required.";
     }
 
