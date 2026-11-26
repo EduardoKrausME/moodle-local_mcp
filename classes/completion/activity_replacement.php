@@ -96,24 +96,58 @@ final class activity_replacement {
         $targetcontent = null;
         if ($targetmod === "mcp") {
             $instance = $DB->get_record("mcp", ["id" => $target->instance], "*", MUST_EXIST);
-            if (!empty($instance->completioninteractive) || empty($instance->publishedrevision)) {
-                throw new api_exception("completion_target_not_ready", 409);
+            if (!empty($instance->completioninteractive)) {
+                throw new api_exception("completion_target_interactive", 409, "", ["targetcmid" => $targetid]);
+            }
+            // mod_mcp only records views of published content.
+            if (empty($instance->publishedrevision)) {
+                throw new api_exception("completion_target_not_published", 409, "", ["targetcmid" => $targetid]);
             }
             $revision = $DB->get_record("mcp_revisions", ["id" => $instance->publishedrevision,
                 "mcpid" => $instance->id], "id,content,sha256");
-            if (!$revision || !hash_equals((string)$revision->sha256, hash("sha256", $revision->content))) {
-                throw new api_exception("completion_target_not_ready", 409);
+            if (!$revision) {
+                throw new api_exception("completion_target_revision_missing", 409, "", [
+                    "targetcmid" => $targetid, "revisionid" => (int)$instance->publishedrevision,
+                ]);
+            }
+            if (!hash_equals((string)$revision->sha256, hash("sha256", $revision->content))) {
+                throw new api_exception("completion_target_checksum_mismatch", 409, "", [
+                    "targetcmid" => $targetid, "revisionid" => (int)$revision->id,
+                ]);
+            }
+            if (trim($revision->content) === "") {
+                throw new api_exception("completion_target_content_empty", 409, "", ["targetcmid" => $targetid]);
             }
             $targetcontent = ["instance" => (int)$instance->id, "revision" => (int)$revision->id, "sha256" => $revision->sha256];
         } else {
             $targetcontent = $DB->get_record("page", ["id" => $target->instance], "*", MUST_EXIST);
         }
         $section = $DB->get_record("course_sections", ["id" => $target->section, "course" => $courseid], "*", MUST_EXIST);
-        if (empty($source->visible) || empty($target->visible) || empty($target->visibleoncoursepage) ||
-                empty($section->visible) || !empty($target->availability) ||
-                !empty($section->availability) || !empty($source->availability) ||
-                (int)$source->section !== (int)$target->section) {
-            throw new api_exception("completion_target_not_ready", 409);
+        $sourcesection = $DB->get_record("course_sections", ["id" => $source->section, "course" => $courseid],
+            "*", MUST_EXIST);
+        if (empty($target->visible)) {
+            throw new api_exception("completion_target_hidden", 409, "", ["targetcmid" => $targetid]);
+        }
+        if (empty($section->visible)) {
+            throw new api_exception("completion_target_section_hidden", 409, "", [
+                "targetcmid" => $targetid, "sectionid" => (int)$section->id,
+            ]);
+        }
+        // Organisation and legitimate conditional access do not change the view-only rule.
+        $warnings = [];
+        $conditions = [
+            "completion_source_hidden" => empty($source->visible) || empty($sourcesection->visible),
+            "completion_target_stealth" => empty($target->visibleoncoursepage),
+            "completion_sections_differ" => (int)$source->section !== (int)$target->section,
+            "completion_source_restricted" => !empty($source->availability) || !empty($sourcesection->availability),
+            "completion_target_restricted" => !empty($target->availability) || !empty($section->availability),
+            "completion_availability_differs" => (string)$source->availability !== (string)$target->availability ||
+                (string)$sourcesection->availability !== (string)$section->availability,
+        ];
+        foreach ($conditions as $code => $applies) {
+            if ($applies) {
+                $warnings[] = ["code" => $code, "message" => get_string("apiwarning_" . $code, "local_mcp")];
+            }
         }
         $criterion = $DB->get_record("course_completion_criteria", ["course" => $courseid,
             "criteriatype" => COMPLETION_CRITERIA_TYPE_ACTIVITY, "moduleinstance" => $sourceid], "*", MUST_EXIST);
@@ -127,7 +161,10 @@ final class activity_replacement {
             foreach ($rows as $row) {
                 if (!empty($row->availability)) {
                     $tree = json_decode($row->availability, true);
-                    if (!is_array($tree) || self::references($tree, $sourceid)) {
+                    $targetaccess = ($table === "course_modules" && (int)$row->id === $targetid) ||
+                        ($table === "course_sections" && (int)$row->id === (int)$section->id);
+                    if (!is_array($tree) || self::references($tree, $sourceid) ||
+                            ($targetaccess && self::references($tree, $targetid))) {
                         $dependencies[] = ["table" => $table, "id" => (int)$row->id];
                     }
                 }
@@ -176,11 +213,13 @@ final class activity_replacement {
                 ["criterion" => $criterion->id, "course" => $courseid]),
             "preserved_criterion_records" => $DB->count_records("course_completion_crit_compl",
                 ["criteriaid" => $criterion->id, "course" => $courseid]),
-            "dependencies" => [], "preservehistory" => true, "dependencies_reviewed" => true,
+            "dependencies" => [], "warnings" => $warnings, "preservehistory" => true, "dependencies_reviewed" => true,
             "operator_must_coordinate_quiescent_window" => true];
         // Bind the reviewed content and the current evidence counts to confirmation.
         // No student identifiers or authored content are returned by this fingerprint.
-        $plan["replacement_sha256"] = hash("sha256", serialize([$plan, $source, $target, $sourcecontent, $targetcontent]));
+        $plan["replacement_sha256"] = hash("sha256", serialize([
+            $plan, $source, $target, $sourcesection, $section, $sourcecontent, $targetcontent,
+        ]));
         if (isset($a["expected_replacement_sha256"]) &&
                 !hash_equals($plan["replacement_sha256"], $a["expected_replacement_sha256"])) {
             throw new api_exception("completion_criteria_changed", 409);
