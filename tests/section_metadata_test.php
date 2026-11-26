@@ -50,17 +50,19 @@ final class section_metadata_test extends advanced_testcase {
         $preview = $tool->preview($args, $identity);
         $this->assertTrue($tool->requires_confirmation());
         $this->assertTrue($tool->supports_dry_run());
+        $this->assertSame((int)FORMAT_HTML, $preview["changes"]["summaryformat"]);
         $this->assertSame($before->summary, $DB->get_field('course_sections', 'summary', ['id' => $before->id]));
         $args['expected_section_sha256'] = $preview['section_sha256'];
         $result = $tool->execute($args, $identity);
         $this->assertSame($args['summary'], $result['summary']);
-        $this->assertSame(FORMAT_HTML, $result['summaryformat']);
+        $this->assertSame((int)FORMAT_HTML, $result["summaryformat"]);
         $this->assertSame((int)$before->id, $result['sectionid']);
         $this->assertSame($before->sequence, $DB->get_field('course_sections', 'sequence', ['id' => $before->id]));
         $this->assertTrue($DB->record_exists('course_modules', ['id' => $page->cmid, 'section' => $before->id]));
         $sections = (new get_course_sections())->execute(['courseid' => (int)$course->id], $identity);
         $this->assertSame($result['section_sha256'], $sections['sections'][0]['section_sha256']);
         $this->assertSame($args['summary'], $sections['sections'][0]['summary']);
+        $this->assertSame((int)FORMAT_HTML, $sections["sections"][0]["summaryformat"]);
         $this->expectException(api_exception::class);
         $tool->execute($args, $identity);
     }
@@ -80,6 +82,25 @@ final class section_metadata_test extends advanced_testcase {
         $result = $tool->execute($base + ['summary' => ''], $identity);
         $this->assertSame('', $result['summary']);
         $this->assertSame('New name', $result['name']);
+    }
+
+    /** A non-HTML format or a format without a summary must not be accepted. */
+    public function test_invalid_summaryformat_rejected(): void {
+        global $USER;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $course = $this->getDataGenerator()->create_course();
+        $identity = new authenticated_identity($USER->id, "test", ["mcp:write"]);
+        $tool = new update_section();
+        $base = ["courseid" => (int)$course->id, "sectionnum" => 0];
+        foreach ([["summary" => "<p>Invalid</p>", "summaryformat" => 0], ["summaryformat" => 1]] as $invalid) {
+            try {
+                $tool->preview($base + $invalid, $identity);
+                $this->fail("Invalid summary format was accepted.");
+            } catch (api_exception $e) {
+                $this->assertSame("invalid_summaryformat", $e->machinecode);
+            }
+        }
     }
 
     /** Students cannot edit a section by calling the write tool directly. */

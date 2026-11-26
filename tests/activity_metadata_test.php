@@ -87,12 +87,17 @@ final class activity_metadata_test extends advanced_testcase {
         $args = ["cmid" => (int)$page->cmid, "intro" => "", "showdescription" => false];
         $preview = $tool->preview($args, $identity);
         $this->assertSame("<p>Old</p>", $preview["intro"]);
+        $this->assertSame((int)FORMAT_HTML, $preview["changes"]["introformat"]);
         $result = $tool->execute($args + ["expected_metadata_sha256" => $preview["metadata_sha256"]], $identity);
         $this->assertSame("", $result["intro"]);
+        $this->assertSame((int)FORMAT_HTML, $result["introformat"]);
         $this->assertFalse($result["showdescription"]);
         $this->assertSame("Keep name", $result["name"]);
         $this->assertSame("<p>Keep content</p>", $DB->get_field("page", "content", ["id" => $page->id]));
         $this->assertFalse((bool)$DB->get_field("course_modules", "showdescription", ["id" => $page->cmid]));
+        $unchanged = $tool->execute($args + ["expected_metadata_sha256" => $result["metadata_sha256"]], $identity);
+        $this->assertFalse($unchanged["updated"]);
+        $this->assertSame([], $unchanged["changed_fields"]);
     }
 
     /**

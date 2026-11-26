@@ -121,12 +121,12 @@ final class update_section extends base_tool {
             $data->name = clean_param($arguments['name'], PARAM_TEXT);
         }
         if (isset($arguments['summaryformat']) &&
-                ((int)$arguments['summaryformat'] !== FORMAT_HTML || !array_key_exists('summary', $arguments))) {
+                ((int)$arguments["summaryformat"] !== (int)FORMAT_HTML || !array_key_exists("summary", $arguments))) {
             throw new api_exception('invalid_summaryformat', 400, 'Supply summary with summaryformat=1 (HTML).');
         }
         if (array_key_exists('summary', $arguments)) {
             $data->summary = clean_param((string)$arguments['summary'], PARAM_CLEANHTML);
-            $data->summaryformat = FORMAT_HTML;
+            $data->summaryformat = (int)FORMAT_HTML;
         }
         if (array_key_exists('visible', $arguments)) {
             capability_guard::check('moodle/course:sectionvisibility', $context, $identity->userid);

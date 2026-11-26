@@ -103,7 +103,8 @@ final class activity_metadata_service {
                 throw new api_exception("invalid_activity_intro", 400);
             }
             $changes["intro"] = clean_text($arguments["intro"], FORMAT_HTML);
-            $changes["introformat"] = FORMAT_HTML;
+            // Moodle declares FORMAT_HTML as a string; metadata and JSON use integers.
+            $changes["introformat"] = (int)FORMAT_HTML;
         }
         if (array_key_exists("showdescription", $arguments)) {
             if (!$current["supports_showdescription"]) {
