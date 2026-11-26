@@ -62,7 +62,8 @@ final class reconciliation_service {
         capability_guard::check("moodle/course:update", context_course::instance($courseid), $identity->userid);
         $verifier = reconciliation_registry::get($condition["type"] ?? "");
         if ($verifier === null) {
-            throw new api_exception("workflow_postcondition_unavailable", 409);
+            throw new api_exception("workflow_postcondition_unavailable", 409, "", [],
+                        get_string("workflowpostconditionunavailable", "local_mcp"));
         }
         return $verifier->verify($condition, $identity, $courseid);
     }

@@ -26,6 +26,7 @@ namespace local_mcp;
 
 use advanced_testcase;
 use context_module;
+use context_course;
 use local_mcp\exception\api_exception;
 use local_mcp\protocol\mcp_server;
 use local_mcp\security\authenticated_identity;
@@ -212,5 +213,171 @@ final class workflow_reconciliation_test extends advanced_testcase {
         $this->call("workflow_reconcile", $reconcile + ["confirmation_token" => $preview["confirmation_token"]], $identity);
         $this->expectException(api_exception::class);
         $this->call("set_activity_completion", $args + ["confirmation_token" => $original["confirmation_token"]], $identity);
+    }
+
+    /** The current activity cannot be replaced by another activity in the same course. */
+    public function test_bound_target_cannot_be_changed(): void {
+        [$identity, $args, $reconcile] = $this->fixture();
+        $this->call("set_activity_completion", $args, $identity);
+        $other = $this->getDataGenerator()->create_module("page", [
+            "course" => $reconcile["courseid"], "completion" => 0,
+        ]);
+        $args["cmid"] = (int)$other->cmid;
+        try {
+            $this->call("set_activity_completion", $args, $identity);
+            $this->fail("A bound step cannot be retargeted.");
+        } catch (api_exception $e) {
+            $this->assertSame("workflow_postcondition_mismatch", $e->machinecode);
+        }
+    }
+
+    /** Legacy metadata is never upgraded into an externally asserted condition. */
+    public function test_legacy_plan_cannot_acquire_postcondition(): void {
+        [$identity, $args, $reconcile] = $this->fixture();
+        $key = "workflow_" . $reconcile["workflow_id"];
+        $stored = json_decode(get_config("local_mcp", $key), true);
+        unset($stored["reconciliation_version"]);
+        set_config($key, json_encode($stored), "local_mcp");
+        $original = $this->call("set_activity_completion", $args, $identity);
+        $this->assertFalse($original["workflow"]["has_reconciliation_postcondition"]);
+        $this->configure($args["cmid"]);
+        try {
+            $this->call("workflow_reconcile", $reconcile, $identity);
+            $this->fail("A legacy plan has no trustworthy postcondition.");
+        } catch (api_exception $e) {
+            $this->assertSame("workflow_postcondition_unavailable", $e->machinecode);
+        }
+    }
+
+    /** Ordinary confirmed completion remains available with a server-bound condition. */
+    public function test_original_confirmed_operation_still_works(): void {
+        [$identity, $args, $reconcile] = $this->fixture();
+        $preview = $this->call("set_activity_completion", $args, $identity);
+        $result = $this->call("set_activity_completion",
+            $args + ["confirmation_token" => $preview["confirmation_token"]], $identity);
+        $this->assertSame("done", $result["workflow"]["state"]);
+        $this->assertSame(2, $result["completion"]);
+        $this->assertArrayNotHasKey("completion_method", $result["workflow"]["completed"][0]);
+    }
+
+    /** A confirmation token must actually be valid even when the state matches. */
+    public function test_invalid_reconciliation_token_is_rejected(): void {
+        [$identity, $args, $reconcile] = $this->fixture();
+        $this->call("set_activity_completion", $args, $identity);
+        $this->configure($args["cmid"]);
+        $this->call("workflow_reconcile", $reconcile, $identity);
+        try {
+            $this->call("workflow_reconcile", $reconcile + ["confirmation_token" => "invalid-token"], $identity);
+            $this->fail("An invalid token cannot reconcile.");
+        } catch (api_exception $e) {
+            $this->assertSame("confirmation_expired", $e->machinecode);
+        }
+        $this->assertSame("ready", sequence::status($reconcile["workflow_id"], $identity, $reconcile["courseid"])["state"]);
+    }
+
+    /** A write scope is independently required for reconciliation. */
+    public function test_read_scope_cannot_reconcile(): void {
+        [$identity, $args, $reconcile] = $this->fixture();
+        $this->call("set_activity_completion", $args, $identity);
+        $this->configure($args["cmid"]);
+        $read = new authenticated_identity($identity->userid, "test", ["mcp:read"], 10, 20);
+        try {
+            $this->call("workflow_reconcile", $reconcile, $read);
+            $this->fail("Read-only identity cannot reconcile.");
+        } catch (api_exception $e) {
+            $this->assertSame("insufficient_scope", $e->machinecode);
+        }
+    }
+
+    /** A capability removed after preview must be rechecked against the original module. */
+    public function test_revoked_module_permission_is_rejected(): void {
+        global $DB;
+        [$admin, $args, $reconcile] = $this->fixture();
+        $teacher = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($teacher->id, $reconcile["courseid"], "editingteacher");
+        $identity = new authenticated_identity((int)$teacher->id, "test", ["mcp:write"], 10, 20);
+        $coursecontext = context_course::instance($reconcile["courseid"]);
+        $this->assertTrue(has_capability("moodle/course:update", $coursecontext, $teacher->id));
+        $workflow = sequence::start($identity, $reconcile["courseid"], [
+            ["title" => "Configure view", "tool" => "set_activity_completion"],
+            ["title" => "Next step", "tool" => "create_section"],
+        ]);
+        $args["workflow_id"] = $workflow["id"];
+        $reconcile["workflow_id"] = $workflow["id"];
+        $this->setUser($teacher);
+        $this->call("set_activity_completion", $args, $identity);
+        $this->configure($args["cmid"]);
+        $preview = $this->call("workflow_reconcile", $reconcile, $identity);
+        $role = $DB->get_record("role", ["shortname" => "editingteacher"], "*", MUST_EXIST);
+        assign_capability("moodle/course:manageactivities", CAP_PROHIBIT, $role->id,
+            context_module::instance($args["cmid"])->id, true);
+        $this->assertFalse(has_capability("moodle/course:manageactivities",
+            context_module::instance($args["cmid"]), $teacher->id));
+        try {
+            $this->call("workflow_reconcile",
+                $reconcile + ["confirmation_token" => $preview["confirmation_token"]], $identity);
+            $this->fail("Revoked module permission cannot reconcile.");
+        } catch (api_exception $e) {
+            $this->assertSame("permission_denied", $e->machinecode);
+        }
+    }
+
+    /** A student record appearing after preview prevents conservative reconciliation. */
+    public function test_new_student_completion_record_is_preserved(): void {
+        global $DB;
+        [$identity, $args, $reconcile] = $this->fixture();
+        $this->call("set_activity_completion", $args, $identity);
+        $this->configure($args["cmid"]);
+        $preview = $this->call("workflow_reconcile", $reconcile, $identity);
+        $student = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($student->id, $reconcile["courseid"], "student");
+        $id = $DB->insert_record("course_modules_completion", (object)[
+            "coursemoduleid" => $args["cmid"], "userid" => $student->id,
+            "completionstate" => 1, "viewed" => 1, "timemodified" => time(),
+        ]);
+        $record = $DB->get_record("course_modules_completion", ["id" => $id], "*", MUST_EXIST);
+        try {
+            $this->call("workflow_reconcile",
+                $reconcile + ["confirmation_token" => $preview["confirmation_token"]], $identity);
+            $this->fail("Student history must prevent reconciliation.");
+        } catch (api_exception $e) {
+            $this->assertSame("workflow_postcondition_mismatch", $e->machinecode);
+        }
+        $this->assertEquals($record, $DB->get_record("course_modules_completion", ["id" => $id], "*", MUST_EXIST));
+    }
+
+    /** A failed operation with a known matching result can be recognized, but never retried. */
+    public function test_failed_step_can_be_verified(): void {
+        [$identity, $args, $reconcile] = $this->fixture();
+        $this->call("set_activity_completion", $args, $identity);
+        $original = $args;
+        unset($original["workflow_id"], $original["workflow_step"]);
+        sequence::claim($reconcile["workflow_id"], $identity, 1, "set_activity_completion",
+            context_module::instance($args["cmid"]), 0, \local_mcp\security\confirmation_service::args_hash($original));
+        sequence::fail($reconcile["workflow_id"], $identity, $reconcile["courseid"], "test-failure");
+        $this->configure($args["cmid"]);
+        $preview = $this->call("workflow_reconcile", $reconcile, $identity);
+        $saved = $this->call("workflow_reconcile",
+            $reconcile + ["confirmation_token" => $preview["confirmation_token"]], $identity);
+        $this->assertSame("done", $saved["workflow"]["state"]);
+        $this->assertNull($saved["workflow"]["failure"]);
+    }
+
+    /** Revalidate again at Next, without authorizing the next operation. */
+    public function test_next_refuses_configuration_drift(): void {
+        global $DB;
+        [$identity, $args, $reconcile] = $this->fixture();
+        $this->call("set_activity_completion", $args, $identity);
+        $this->configure($args["cmid"]);
+        $preview = $this->call("workflow_reconcile", $reconcile, $identity);
+        $this->call("workflow_reconcile", $reconcile + ["confirmation_token" => $preview["confirmation_token"]], $identity);
+        $DB->set_field("course_modules", "completionview", 0, ["id" => $args["cmid"]]);
+        try {
+            sequence::next($reconcile["workflow_id"], $identity, $reconcile["courseid"], 1, 1);
+            $this->fail("Changed configuration must prevent navigation.");
+        } catch (api_exception $e) {
+            $this->assertSame("workflow_postcondition_mismatch", $e->machinecode);
+        }
+        $this->assertSame(1, sequence::status($reconcile["workflow_id"], $identity, $reconcile["courseid"])["step"]);
     }
 }

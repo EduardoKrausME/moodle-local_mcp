@@ -285,6 +285,8 @@ $string['writeapisonlyread'] = 'Installed plugins with READ-only APIs';
 $string['writeapisonlyreadhelp'] = 'These integrations are available through MCP READ, not WRITE. Open their READ API lists to see every tool. Installation order does not change the API type.';
 $string['writepermissions'] = 'Write permissions';
 
+$string['workflowpostconditionmismatch'] = 'The current activity configuration does not match the recorded workflow condition. Nothing was reconciled.';
+$string['workflowpostconditionunavailable'] = 'No trusted reconciliation condition is available for this workflow step.';
 $string['workflowreconciliationrequired'] = 'The workflow requires manual reconciliation before another write.';
 $string['completiondependenciespresent'] = 'Other activities or sections depend on the original completion rule.';
 $string['completionhistorypending'] = 'Some completed activities have not yet been recorded in the course criterion. Reconcile completion first.';

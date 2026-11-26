@@ -285,6 +285,8 @@ $string['writeapisonlyread'] = 'Plugins instalados com APIs somente READ';
 $string['writeapisonlyreadhelp'] = 'Essas integrações estão disponíveis pelo MCP READ, não pelo WRITE. Acesse a lista READ para consultar todas as ferramentas. A ordem de instalação não altera o tipo das APIs.';
 $string['writepermissions'] = 'Permissões de gravação';
 
+$string['workflowpostconditionmismatch'] = 'A configuração atual da atividade não corresponde à condição registrada no fluxo. Nenhuma reconciliação foi realizada.';
+$string['workflowpostconditionunavailable'] = 'Não existe uma condição confiável de reconciliação para esta etapa do fluxo.';
 $string['workflowreconciliationrequired'] = 'O fluxo exige reconciliação manual antes de outra alteração.';
 $string['completiondependenciespresent'] = 'Outras atividades ou seções dependem da conclusão original.';
 $string['completionhistorypending'] = 'Algumas conclusões de atividades ainda não constam no critério do curso. Reconcilie a conclusão primeiro.';

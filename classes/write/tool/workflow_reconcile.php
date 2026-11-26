@@ -91,7 +91,8 @@ final class workflow_reconcile extends base_tool {
      */
     public function execute(array $arguments, authenticated_identity $identity): array {
         if (empty($arguments["_expected_reconciliation_sha256"])) {
-            throw new api_exception("workflow_postcondition_unavailable", 409);
+            throw new api_exception("workflow_postcondition_unavailable", 409, "", [],
+                        get_string("workflowpostconditionunavailable", "local_mcp"));
         }
         return sequence::reconcile($arguments["workflow_id"], $identity, (int)$arguments["courseid"],
             (int)$arguments["expectedstep"], (int)$arguments["expectedgeneration"],

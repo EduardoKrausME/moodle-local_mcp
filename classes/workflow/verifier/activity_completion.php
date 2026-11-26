@@ -57,6 +57,14 @@ final class activity_completion implements verifier_interface {
             if ($modname !== "mcp") {
                 return null;
             }
+            // Fail closed if a newer mod_mcp declares additional custom rules.
+            if (class_exists('\core_completion\activity_custom_completion')) {
+                $customclass = '\mod_mcp\completion\custom_completion';
+                if (!is_callable([$customclass, 'get_defined_custom_rules']) ||
+                        $customclass::get_defined_custom_rules() !== ["completioninteractive"]) {
+                    return null;
+                }
+            }
             $instance = $DB->get_record("mcp", ["id" => $cm->instance], "*", MUST_EXIST);
             if (!property_exists($instance, "completioninteractive") || (int)$instance->completioninteractive !== 0) {
                 return null;
@@ -78,13 +86,23 @@ final class activity_completion implements verifier_interface {
      * {@inheritdoc}
      */
     public function capture(array $arguments, array $preview, authenticated_identity $identity, context $context): ?array {
+        $allowed = ["cmid", "completion", "expected_completion", "requireview", "requiregrade"];
+        if (array_diff(array_keys($arguments), $allowed)) {
+            return null;
+        }
         $after = $preview["after"];
         if ((int)$after["completion"] !== COMPLETION_TRACKING_AUTOMATIC || (int)$after["completionview"] !== 1 ||
                 $after["completiongradeitemnumber"] !== null || (int)$after["completionpassgrade"] !== 0) {
             return null;
         }
         $actual = $this->read_state((int)$preview["cmid"], $identity);
-        if ($actual === null || $actual["completion"] !== (int)$arguments["expected_completion"]) {
+        $before = $preview["before"];
+        $beforegrade = $before["completiongradeitemnumber"] === null
+            ? null : (int)$before["completiongradeitemnumber"];
+        if ($actual === null || $actual["completion"] !== (int)$arguments["expected_completion"] ||
+                $actual["completion"] !== (int)$before["completion"] ||
+                $actual["completionview"] !== (int)$before["completionview"] ||
+                $actual["completiongradeitemnumber"] !== $beforegrade) {
             return null;
         }
         $expected = array_replace($actual, $after);
@@ -112,7 +130,8 @@ final class activity_completion implements verifier_interface {
         if (!($context instanceof context_module) || (int)$context->id !== (int)$condition["contextid"] ||
                 (int)$context->get_course_context(false)->instanceid !== $courseid ||
                 !hash_equals($condition["argshash"], confirmation_service::args_hash($arguments))) {
-            throw new api_exception("workflow_postcondition_mismatch", 409);
+            throw new api_exception("workflow_postcondition_mismatch", 409, "", [],
+                        get_string("workflowpostconditionmismatch", "local_mcp"));
         }
         capability_guard::check($original->get_required_capability(), $context, $identity->userid);
         foreach (manager::access_policies() as $policy) {
@@ -123,7 +142,8 @@ final class activity_completion implements verifier_interface {
         }
         $actual = $this->read_state((int)$arguments["cmid"], $identity);
         if ($actual === null || $actual !== $condition["expected"]) {
-            throw new api_exception("workflow_postcondition_mismatch", 409);
+            throw new api_exception("workflow_postcondition_mismatch", 409, "", [],
+                        get_string("workflowpostconditionmismatch", "local_mcp"));
         }
         return $actual;
     }

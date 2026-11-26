@@ -253,7 +253,8 @@ final class sequence {
             $data = self::load($id, $identity, (int)$coursecontext->instanceid);
             $condition = $data["items"][$data["index"]]["postcondition"] ?? null;
             if ($condition !== null && ($argshash === null || !hash_equals($condition["argshash"], $argshash))) {
-                throw new api_exception("workflow_postcondition_mismatch", 409);
+                throw new api_exception("workflow_postcondition_mismatch", 409, "", [],
+                        get_string("workflowpostconditionmismatch", "local_mcp"));
             }
             $data["state"] = "executing";
             self::save($id, $data);
@@ -389,14 +390,16 @@ final class sequence {
                 if (!hash_equals($existing["argshash"], $argshash) ||
                         (int)$existing["contextid"] !== (int)$context->id ||
                         ($condition !== null && $existing !== $condition)) {
-                    throw new api_exception("workflow_postcondition_mismatch", 409);
+                    throw new api_exception("workflow_postcondition_mismatch", 409, "", [],
+                        get_string("workflowpostconditionmismatch", "local_mcp"));
                 }
                 return;
             }
             if ($condition !== null) {
                 if (!hash_equals($condition["argshash"], $argshash) ||
                         (int)$condition["contextid"] !== (int)$context->id) {
-                    throw new api_exception("workflow_postcondition_mismatch", 409);
+                    throw new api_exception("workflow_postcondition_mismatch", 409, "", [],
+                        get_string("workflowpostconditionmismatch", "local_mcp"));
                 }
                 $data["items"][$index]["postcondition"] = $condition;
                 self::save($id, $data);
@@ -426,7 +429,8 @@ final class sequence {
         $item = $data["items"][$data["index"]];
         if (($data["reconciliation_version"] ?? 0) !== 1 || empty($item["postcondition"]) ||
                 $item["tool"] !== "set_activity_completion") {
-            throw new api_exception("workflow_postcondition_unavailable", 409);
+            throw new api_exception("workflow_postcondition_unavailable", 409, "", [],
+                        get_string("workflowpostconditionunavailable", "local_mcp"));
         }
         return ["condition" => $item["postcondition"], "state" => $data["state"]];
     }
@@ -447,7 +451,8 @@ final class sequence {
         return self::locked($id, function() use ($id, $identity, $courseid, $step, $generation, $expectedhash): array {
             $preview = reconciliation_service::preview($id, $identity, $courseid, $step, $generation);
             if (!hash_equals($preview["reconciliation_sha256"], $expectedhash)) {
-                throw new api_exception("workflow_postcondition_mismatch", 409);
+                throw new api_exception("workflow_postcondition_mismatch", 409, "", [],
+                        get_string("workflowpostconditionmismatch", "local_mcp"));
             }
             $data = self::load($id, $identity, $courseid);
             $data["state"] = "done";

@@ -730,7 +730,7 @@ final class mcp_server {
                     'tool' => $name,
                     'preview' => $preview,
                     'confirmation_token' => $token,
-                    'message' => 'No changes have been made. Show this preview to the user and '
+                    'message' => 'No course or academic changes have been made. Show this preview to the user and '
                         . 'request explicit approval. Only if approved, call the same tool again '
                         . 'with identical original arguments plus confirmation_token.',
                 ] + ($workflowid !== "" ? ["workflow" =>
