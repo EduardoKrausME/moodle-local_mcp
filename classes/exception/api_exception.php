@@ -63,11 +63,24 @@ class api_exception extends moodle_exception {
     }
 
     /**
-     * Return the explicitly approved message or the existing localized generic message.
+     * Return an approved message, a localized error explanation or a safe status-based fallback.
      * @return string
      */
     public function get_public_message(): string {
-        return $this->publicmessage ?? get_string('error', 'local_mcp');
+        if ($this->publicmessage !== null && trim($this->publicmessage) !== '') {
+            return $this->publicmessage;
+        }
+        // Look up only static language strings; never expose debuginfo or interpolate user data.
+        $key = 'apierror_' . $this->machinecode;
+        if (preg_match('/^[a-z][a-z0-9_]*$/D', $this->machinecode) &&
+                get_string_manager()->string_exists($key, 'local_mcp')) {
+            return get_string($key, 'local_mcp');
+        }
+        $statuskey = 'apierror_http' . $this->httpstatus;
+        if (get_string_manager()->string_exists($statuskey, 'local_mcp')) {
+            return get_string($statuskey, 'local_mcp');
+        }
+        return get_string($this->httpstatus >= 500 ? 'apierror_http500' : 'apierror_http400', 'local_mcp');
     }
 
     /**

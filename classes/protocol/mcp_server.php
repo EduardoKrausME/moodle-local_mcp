@@ -312,7 +312,8 @@ final class mcp_server {
                             "error" => [
                                 "code" => -32602,
                                 "message" => "Invalid params",
-                                "data" => ["error" => "invalid_params", "details" => $e->details],
+                                "data" => ["error" => "invalid_params", "message" => $e->get_public_message(),
+                                    "details" => $e->details],
                             ],
                         ]);
                     }

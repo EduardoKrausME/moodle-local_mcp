@@ -47,11 +47,11 @@ final class api_exception_test extends advanced_testcase {
     }
 
     /**
-     * Explicit public messages do not expose legacy debug details.
+     * Localized and explicit public messages do not expose legacy debug details.
      */
-    public function test_public_message_is_opt_in(): void {
+    public function test_public_message_is_safe(): void {
         $legacy = new api_exception('invalid_request', 400, 'private debug detail');
-        $this->assertSame(get_string('error', 'local_mcp'), $legacy->get_public_message());
+        $this->assertSame(get_string('apierror_invalid_request', 'local_mcp'), $legacy->get_public_message());
         $this->assertStringNotContainsString('private debug detail', $legacy->get_public_message());
         $this->assertSame('private debug detail', $legacy->debuginfo);
         $safe = new api_exception('configuration_required', 409, 'private debug detail', [], 'Configure first.');
@@ -72,5 +72,40 @@ final class api_exception_test extends advanced_testcase {
         $this->assertNull(api_exception::from_throwable(new \moodle_exception('invalidcourseid', 'custom')));
         $this->assertNull(api_exception::from_throwable(new \RuntimeException('SQL or secret')));
         $this->assertNull(api_exception::from_throwable(new \coding_exception('private details')));
+    }
+    /**
+     * Section and activity errors have dedicated explanations in both languages.
+     */
+    public function test_section_and_activity_error_messages(): void {
+        $codes = [
+            'section_not_found', 'course_section_changed', 'course_section_busy', 'invalid_summaryformat',
+            'activity_not_found', 'invalid_activity_position', 'activity_position_mismatch', 'course_module_changed',
+            'activity_position_busy', 'activity_move_failed', 'activity_visibility_failed',
+        ];
+        foreach (['en', 'pt_br'] as $language) {
+            $string = [];
+            require(__DIR__ . '/../lang/' . $language . '/local_mcp.php');
+            foreach ($codes as $code) {
+                $key = 'apierror_' . $code;
+                $this->assertArrayHasKey($key, $string);
+                $this->assertNotSame('', trim($string[$key]));
+                $error = new api_exception($code, 409, 'private SQL or secret');
+                $this->assertSame(get_string($key, 'local_mcp'), $error->get_public_message());
+                $this->assertStringNotContainsString('private SQL or secret', $error->get_public_message());
+            }
+        }
+    }
+
+    /**
+     * New or external machine codes still receive a safe, actionable explanation.
+     */
+    public function test_unknown_error_uses_http_status_without_leaking_debug(): void {
+        foreach ([400, 401, 403, 404, 409, 422, 429, 500, 503] as $status) {
+            $error = new api_exception('unknown_future_error', $status, 'secret debug details');
+            $this->assertSame(get_string('apierror_http' . $status, 'local_mcp'), $error->get_public_message());
+            $this->assertStringNotContainsString('secret debug details', $error->get_public_message());
+        }
+        $error = new api_exception('unknown_future_error', 599, 'secret');
+        $this->assertSame(get_string('apierror_http500', 'local_mcp'), $error->get_public_message());
     }
 }
