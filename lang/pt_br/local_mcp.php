@@ -406,3 +406,17 @@ $string['apierror_invalid_activity_intro'] = 'A descrição excede 30000 caracte
 $string['apierror_activity_metadata_empty'] = 'Informe pelo menos um dos campos name, intro ou showdescription.';
 $string['apierror_activity_metadata_busy'] = 'Outra atualização de metadados está em andamento nesta atividade. Confira o estado atual e solicite uma nova prévia.';
 $string['apierror_activity_metadata_update_failed'] = 'Não foi possível verificar os metadados solicitados. Confira o estado da atividade antes de tentar novamente.';
+
+$string['apierror_completion_target_interactive'] = 'O destino exige conclusão interativa, incompatível com a visualização da página.';
+$string['apierror_completion_target_not_published'] = 'O destino não possui revisão publicada. Publique o conteúdo antes de substituir o critério.';
+$string['apierror_completion_target_revision_missing'] = 'A revisão publicada não existe ou não pertence à atividade de destino.';
+$string['apierror_completion_target_checksum_mismatch'] = 'O checksum da revisão publicada não corresponde ao conteúdo armazenado.';
+$string['apierror_completion_target_content_empty'] = 'A revisão publicada não possui conteúdo.';
+$string['apierror_completion_target_hidden'] = 'A atividade de destino está oculta para os estudantes.';
+$string['apierror_completion_target_section_hidden'] = 'A seção de destino está oculta para os estudantes.';
+$string['apiwarning_completion_source_hidden'] = 'A atividade original ou sua seção está oculta. Os registros históricos serão preservados.';
+$string['apiwarning_completion_target_stealth'] = 'O destino não aparece na página do curso. Garanta que os estudantes tenham um link funcional.';
+$string['apiwarning_completion_sections_differ'] = 'As atividades estão em seções diferentes. Confira o posicionamento.';
+$string['apiwarning_completion_source_restricted'] = 'A atividade ou seção original possui condições de acesso.';
+$string['apiwarning_completion_target_restricted'] = 'A atividade ou seção de destino possui condições de acesso. Verifique se os estudantes conseguem atendê-las.';
+$string['apiwarning_completion_availability_differs'] = 'As condições de acesso da origem e do destino são diferentes. Revise seu efeito antes de confirmar.';
