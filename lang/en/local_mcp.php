@@ -265,6 +265,7 @@ $string['workflowappheading'] = 'Moodle workflow';
 $string['workflowapploading'] = 'Waiting for workflow data…';
 $string['workflowappnodata'] = 'No workflow data received. Continue in the conversation.';
 $string['workflowappready'] = 'Ready for preview. Approval is required for changes.';
+$string['workflowappauthorized'] = 'Plan approved. The next operation will run in sequence.';
 $string['workflowappreconcile'] = 'Manual reconciliation required. Do not repeat the operation.';
 $string['workflowapprefresh'] = 'Check status';
 $string['workflowappretry'] = 'Recover move';
