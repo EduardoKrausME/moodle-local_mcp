@@ -26,7 +26,6 @@ namespace local_mcp\workflow\verifier;
 
 use context;
 use context_module;
-use local_mcp\course\activity_settings_service;
 use local_mcp\exception\api_exception;
 use local_mcp\extension\manager;
 use local_mcp\security\authenticated_identity;
@@ -44,11 +43,16 @@ final class activity_completion implements verifier_interface {
      * @return array|null
      */
     private function read_state(int $cmid, authenticated_identity $identity): ?array {
-        global $DB;
-        $state = activity_settings_service::completion(["cmid" => $cmid], $identity);
+        global $CFG, $DB;
+        $context = context_module::instance($cmid, MUST_EXIST);
+        capability_guard::check("moodle/course:manageactivities", $context, $identity->userid);
+        // Read flags and instance identity from the same database row.
         $cm = $DB->get_record("course_modules", ["id" => $cmid], "*", MUST_EXIST);
-        $modname = $state["modname"];
-        if (!$state["enabled_for_course"] || $state["existing_student_records"] !== 0 ||
+        $course = $DB->get_record("course", ["id" => $cm->course], "id, enablecompletion", MUST_EXIST);
+        $modname = (string)$DB->get_field("modules", "name", ["id" => $cm->module], MUST_EXIST);
+        if (empty($CFG->enablecompletion) || empty($course->enablecompletion) ||
+                !empty($cm->deletioninprogress) ||
+                $DB->record_exists("course_modules_completion", ["coursemoduleid" => $cmid]) ||
                 !plugin_supports("mod", $modname, FEATURE_COMPLETION_TRACKS_VIEWS, false)) {
             return null;
         }
@@ -72,13 +76,14 @@ final class activity_completion implements verifier_interface {
         }
         return [
             "cmid" => $cmid,
-            "courseid" => (int)$state["courseid"],
+            "courseid" => (int)$course->id,
             "instanceid" => (int)$cm->instance,
             "modname" => $modname,
-            "completion" => (int)$state["completion"],
-            "completionview" => (int)$state["completionview"],
-            "completiongradeitemnumber" => $state["completiongradeitemnumber"],
-            "completionpassgrade" => (int)$state["completionpassgrade"],
+            "completion" => (int)$cm->completion,
+            "completionview" => (int)$cm->completionview,
+            "completiongradeitemnumber" => $cm->completiongradeitemnumber === null
+                ? null : (int)$cm->completiongradeitemnumber,
+            "completionpassgrade" => (int)($cm->completionpassgrade ?? 0),
         ];
     }
 
@@ -102,7 +107,8 @@ final class activity_completion implements verifier_interface {
         if ($actual === null || $actual["completion"] !== (int)$arguments["expected_completion"] ||
                 $actual["completion"] !== (int)$before["completion"] ||
                 $actual["completionview"] !== (int)$before["completionview"] ||
-                $actual["completiongradeitemnumber"] !== $beforegrade) {
+                $actual["completiongradeitemnumber"] !== $beforegrade ||
+                $actual["completionpassgrade"] !== (int)$before["completionpassgrade"]) {
             return null;
         }
         $expected = array_replace($actual, $after);

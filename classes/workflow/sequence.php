@@ -30,6 +30,7 @@ use core\lock\lock_config;
 use core_text;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
+use local_mcp\security\confirmation_service;
 use local_mcp\write\registry;
 
 /**
@@ -66,8 +67,10 @@ final class sequence {
      * @return array
      */
     private static function load(string $id, authenticated_identity $identity, int $courseid): array {
+        global $DB;
         $key = self::key($id);
-        $json = get_config("local_mcp", $key);
+        // Do not return a cached pre-lock snapshot to a transition.
+        $json = $DB->get_field("config_plugins", "value", ["plugin" => "local_mcp", "name" => $key]);
         $data = is_string($json) ? json_decode($json, true) : null;
         if (!is_array($data) ||
                 (int)($data["userid"] ?? 0) !== $identity->userid ||
@@ -226,6 +229,15 @@ final class sequence {
         if ($data["state"] !== "ready" || $step !== (int)$data["index"] + 1 ||
                 $tool !== $data["items"][$data["index"]]["tool"]) {
             throw new api_exception("workflow_step_mismatch", 409);
+        }
+        // Do not rely on a reconciled condition that drifted after Next.
+        if ((int)$data["index"] > 0) {
+            $last = end($data["completed"]);
+            if (($last["completion_method"] ?? "") === "reconciled" &&
+                    (int)$last["step"] === (int)$data["index"]) {
+                reconciliation_service::verify($data["items"][$data["index"] - 1]["postcondition"],
+                    $identity, (int)$coursecontext->instanceid);
+            }
         }
         return (int)($data["generation"] ?? 0);
     }
@@ -389,12 +401,18 @@ final class sequence {
             if ($existing !== null) {
                 if (!hash_equals($existing["argshash"], $argshash) ||
                         (int)$existing["contextid"] !== (int)$context->id ||
-                        ($condition !== null && $existing !== $condition)) {
+                        ($condition !== null && !hash_equals(confirmation_service::args_hash($existing),
+                            confirmation_service::args_hash($condition)))) {
                     throw new api_exception("workflow_postcondition_mismatch", 409, "", [],
                         get_string("workflowpostconditionmismatch", "local_mcp"));
                 }
                 return;
             }
+            // An unsupported first preview cannot later become reconcilable.
+            if (!empty($data["items"][$index]["reconciliation_preview_seen"])) {
+                return;
+            }
+            $data["items"][$index]["reconciliation_preview_seen"] = true;
             if ($condition !== null) {
                 if (!hash_equals($condition["argshash"], $argshash) ||
                         (int)$condition["contextid"] !== (int)$context->id) {
@@ -402,8 +420,8 @@ final class sequence {
                         get_string("workflowpostconditionmismatch", "local_mcp"));
                 }
                 $data["items"][$index]["postcondition"] = $condition;
-                self::save($id, $data);
             }
+            self::save($id, $data);
         });
     }
 
@@ -472,6 +490,8 @@ final class sequence {
             self::save($id, $data);
             return [
                 "cmid" => $preview["cmid"],
+                "contextid" => $preview["contextid"],
+                "workflow_id" => $id,
                 "workflow_step" => $step,
                 "workflow_generation" => $data["generation"],
                 "completion_method" => "reconciled",

@@ -252,7 +252,8 @@ final class activity_settings_service {
         }
         return ["cmid" => (int)$cm->id, "before" => [
             "completion" => (int)$cm->completion, "completionview" => (int)$cm->completionview,
-            "completiongradeitemnumber" => $cm->completiongradeitemnumber],
+            "completiongradeitemnumber" => $cm->completiongradeitemnumber,
+                "completionpassgrade" => (int)($cm->completionpassgrade ?? 0)],
             "after" => ["completion" => $mode, "completionview" => $view,
                 "completiongradeitemnumber" => $number, "completionpassgrade" => 0]];
     }

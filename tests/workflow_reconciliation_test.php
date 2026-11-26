@@ -122,6 +122,13 @@ final class workflow_reconciliation_test extends advanced_testcase {
         $this->assertSame("done", $saved["workflow"]["state"]);
         $this->assertSame("reconciled", $saved["workflow"]["completed"][0]["completion_method"]);
         $this->assertSame(1, $saved["workflow"]["generation"]);
+        $audit = $DB->get_record("local_mcp_audit", [
+            "tool" => "workflow_reconcile", "status" => "ok", "confirmation" => 1,
+        ], "*", MUST_EXIST);
+        $metadata = json_decode($audit->metadata, true);
+        $this->assertSame($reconcile["workflow_id"], $metadata["workflow_id"]);
+        $this->assertSame("reconciled", $metadata["completion_method"]);
+        $this->assertSame(1, $metadata["workflow_generation"]);
         $this->assertEquals($before, $DB->get_record("course_modules", ["id" => $args["cmid"]], "*", MUST_EXIST));
         $this->assertEquals($criteria, $DB->get_records("course_completion_criteria", ["course" => $reconcile["courseid"]]));
         $this->assertEquals($history, $DB->get_records("course_modules_completion", ["coursemoduleid" => $args["cmid"]]));
@@ -379,5 +386,62 @@ final class workflow_reconciliation_test extends advanced_testcase {
             $this->assertSame("workflow_postcondition_mismatch", $e->machinecode);
         }
         $this->assertSame(1, sequence::status($reconcile["workflow_id"], $identity, $reconcile["courseid"])["step"]);
+    }
+
+    /** An equivalent JSON object may be serialized with a different key order. */
+    public function test_preview_key_order_is_irrelevant(): void {
+        [$identity, $args, $reconcile] = $this->fixture();
+        $this->call("set_activity_completion", $args, $identity);
+        $second = $this->call("set_activity_completion", array_reverse($args, true), $identity);
+        $this->assertTrue($second["workflow"]["has_reconciliation_postcondition"]);
+    }
+
+    /** A first unsupported preview cannot subsequently create a trusted condition. */
+    public function test_unsupported_first_preview_cannot_bind_later(): void {
+        [$identity, $args, $reconcile] = $this->fixture();
+        $unsupported = $args;
+        $unsupported["completion"] = 1;
+        $first = $this->call("set_activity_completion", $unsupported, $identity);
+        $this->assertFalse($first["workflow"]["has_reconciliation_postcondition"]);
+        $second = $this->call("set_activity_completion", $args, $identity);
+        $this->assertFalse($second["workflow"]["has_reconciliation_postcondition"]);
+        $this->configure($args["cmid"]);
+        $this->expectException(api_exception::class);
+        $this->call("workflow_reconcile", $reconcile, $identity);
+    }
+
+    /** State reads must not return the stale configuration cache. */
+    public function test_status_reads_persisted_workflow_without_config_cache(): void {
+        global $DB;
+        [$identity, $args, $reconcile] = $this->fixture();
+        $key = "workflow_" . $reconcile["workflow_id"];
+        $stored = json_decode(get_config("local_mcp", $key), true);
+        $stored["state"] = "executing";
+        $DB->set_field("config_plugins", "value", json_encode($stored), [
+            "plugin" => "local_mcp", "name" => $key,
+        ]);
+        $this->assertSame("executing", sequence::status($reconcile["workflow_id"], $identity,
+            $reconcile["courseid"])["state"]);
+    }
+
+    /** Drift after Next must prevent the following tool from claiming its stage. */
+    public function test_following_stage_refuses_configuration_drift(): void {
+        global $DB;
+        [$identity, $args, $reconcile] = $this->fixture();
+        $this->call("set_activity_completion", $args, $identity);
+        $this->configure($args["cmid"]);
+        $preview = $this->call("workflow_reconcile", $reconcile, $identity);
+        $this->call("workflow_reconcile", $reconcile + ["confirmation_token" => $preview["confirmation_token"]], $identity);
+        sequence::next($reconcile["workflow_id"], $identity, $reconcile["courseid"], 1, 1);
+        $DB->set_field("course_modules", "completionview", 0, ["id" => $args["cmid"]]);
+        try {
+            sequence::claim($reconcile["workflow_id"], $identity, 2, "create_section",
+                context_course::instance($reconcile["courseid"]), 1);
+            $this->fail("Drift must prevent claiming the next stage.");
+        } catch (api_exception $e) {
+            $this->assertSame("workflow_postcondition_mismatch", $e->machinecode);
+        }
+        $this->assertSame("ready", sequence::status($reconcile["workflow_id"], $identity,
+            $reconcile["courseid"])["state"]);
     }
 }

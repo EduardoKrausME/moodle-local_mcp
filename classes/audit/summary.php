@@ -73,8 +73,9 @@ final class summary {
         if ($result !== null) {
             if ($tool === "workflow_reconcile" && ($result["completion_method"] ?? "") === "reconciled") {
                 $metadata["completion_method"] = "reconciled";
-                $metadata["workflow_step"] = $result["workflow_step"];
-                $metadata["workflow_generation"] = $result["workflow_generation"];
+                $metadata["workflow_id"] = $result["workflow_id"] ?? null;
+                $metadata["workflow_step"] = $result["workflow_step"] ?? null;
+                $metadata["workflow_generation"] = $result["workflow_generation"] ?? null;
             }
             $resultids = [];
             self::collect_ids($result, $resultids);
@@ -104,6 +105,10 @@ final class summary {
         $safe = [];
         if (($metadata["completion_method"] ?? "") === "reconciled") {
             $safe["completion_method"] = "reconciled";
+            if (isset($metadata["workflow_id"]) && is_string($metadata["workflow_id"]) &&
+                    preg_match('/^[a-f0-9]{24}$/D', $metadata["workflow_id"])) {
+                $safe["workflow_id"] = $metadata["workflow_id"];
+            }
             foreach (["workflow_step", "workflow_generation"] as $key) {
                 if (isset($metadata[$key]) && is_int($metadata[$key]) && $metadata[$key] >= 0) {
                     $safe[$key] = $metadata[$key];
