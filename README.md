@@ -6,6 +6,10 @@ Connect your Moodle to **ChatGPT or Claude** through the **Model Context Protoco
 
 Under the hood, Moodle MCP exposes an extensible server with separate READ and WRITE tool registries.
 
+### Rename and edit course activity metadata
+
+`rename_course_module` accepts a CMID and any combination of `name`, `intro` (sanitized HTML) and `showdescription` (boolean). Omitted fields remain unchanged. An empty intro clears the description; false hides it on the course page, not the activity. Only supported module features are accepted. The preview binds the current metadata hash to the confirmation, and an optional `expectedname` or `expected_metadata_sha256` checks the caller's prior state. Existing files are retained; uploading new files is not part of this operation. Native renaming synchronizes related grade item and calendar metadata. In modules where the introduction is the actual displayed content, changing it changes that content. Example: `{"cmid":50,"name":"Aplicação dos conceitos regenerativos"}`.
+
 ### Move, hide and show course activities
 
 The confirmed WRITE tools `move_activity`, `hide_activity` and `show_activity` apply to any supported Moodle course module. For example:

@@ -40,6 +40,7 @@ use local_mcp\write\tool\set_activity_completion;
 use local_mcp\write\tool\update_question;
 use local_mcp\write\tool\delete_course_module;
 use local_mcp\write\tool\move_activity;
+use local_mcp\write\tool\rename_course_module;
 use local_mcp\write\tool\hide_activity;
 use local_mcp\write\tool\show_activity;
 use local_mcp\write\tool\create_question;
@@ -82,6 +83,7 @@ final class registry {
             copy_activity_images::class,
             delete_course_module::class,
             move_activity::class,
+            rename_course_module::class,
             hide_activity::class,
             show_activity::class,
             create_question_category::class,
