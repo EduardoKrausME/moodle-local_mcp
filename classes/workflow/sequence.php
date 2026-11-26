@@ -35,7 +35,7 @@ use local_mcp\write\registry;
 /**
  * Persist one independently confirmed operation per workflow step.
  *
- * Only labels and tool names are persisted, never tool arguments or tokens.
+ * Only labels, tool names and bounded server-generated postconditions are persisted, never tokens.
  */
 final class sequence {
     /** Maximum number of planned operations. */
@@ -144,6 +144,7 @@ final class sequence {
                    "workflow_id" => $id] : null,
             "completed" => $data["completed"] ?? [],
             "failure" => $data["failure"] ?? null,
+            "has_reconciliation_postcondition" => isset($current["postcondition"]),
             "generation" => (int)($data["generation"] ?? 0),
             "expires" => (int)$data["expires"],
         ];
@@ -169,7 +170,7 @@ final class sequence {
             }
             $tool = (string)($item["tool"] ?? "");
             $title = trim((string)($item["title"] ?? ""));
-            if ($tool === "workflow_sequence" || !isset($available[$tool]) ||
+            if (in_array($tool, ["workflow_sequence", "workflow_reconcile"], true) || !isset($available[$tool]) ||
                     $title === "" || core_text::strlen($title) > 160) {
                 throw new api_exception("invalid_workflow_items", 400);
             }
@@ -183,6 +184,7 @@ final class sequence {
             "type" => $identity->type,
             "courseid" => $courseid,
             "items" => $clean,
+            "reconciliation_version" => 1,
             "index" => 0,
             "state" => "ready",
             "completed" => [],
@@ -237,17 +239,22 @@ final class sequence {
      * @param string $tool Tool name.
      * @param context $context Actual tool context.
      * @param int|null $generation Expected generation, if supplied.
+     * @param string|null $argshash Hash of the normalized tool arguments.
      * @return void
      */
     public static function claim(string $id, authenticated_identity $identity, int $step,
-                                  string $tool, context $context, ?int $generation = null): void {
-        self::locked($id, function() use ($id, $identity, $step, $tool, $context, $generation): void {
+                                  string $tool, context $context, ?int $generation = null, ?string $argshash = null): void {
+        self::locked($id, function() use ($id, $identity, $step, $tool, $context, $generation, $argshash): void {
             $currentgeneration = self::assert_current($id, $identity, $step, $tool, $context);
             if ($generation !== null && $generation !== $currentgeneration) {
                 throw new api_exception("workflow_step_mismatch", 409);
             }
             $coursecontext = $context->get_course_context(false);
             $data = self::load($id, $identity, (int)$coursecontext->instanceid);
+            $condition = $data["items"][$data["index"]]["postcondition"] ?? null;
+            if ($condition !== null && ($argshash === null || !hash_equals($condition["argshash"], $argshash))) {
+                throw new api_exception("workflow_postcondition_mismatch", 409);
+            }
             $data["state"] = "executing";
             self::save($id, $data);
         });
@@ -337,11 +344,135 @@ final class sequence {
                 throw new api_exception("workflow_step_mismatch", 409);
             }
             if ($data["state"] === "done" && isset($data["items"][$data["index"] + 1])) {
+                $last = end($data["completed"]);
+                if (($last["completion_method"] ?? "") === "reconciled") {
+                    reconciliation_service::verify($data["items"][$data["index"]]["postcondition"], $identity, $courseid);
+                }
                 $data["index"]++;
                 $data["state"] = "ready";
                 self::save($id, $data);
             }
             return self::snapshot($id, $data);
+        });
+    }
+
+
+    /**
+     * Bind a server-generated postcondition from the first official preview.
+     *
+     * This records intent only, not approval or execution. Legacy plans cannot
+     * acquire a condition retroactively. Subsequent previews cannot retarget it.
+     *
+     * @param string $id Workflow ID.
+     * @param authenticated_identity $identity Connection.
+     * @param int $step Current step.
+     * @param context $context Original activity context.
+     * @param int $generation Current generation.
+     * @param string $argshash Normalized original arguments hash.
+     * @param array|null $condition Trusted verifier output.
+     * @return void
+     */
+    public static function bind_postcondition(string $id, authenticated_identity $identity, int $step,
+            context $context, int $generation, string $argshash, ?array $condition): void {
+        self::locked($id, function() use ($id, $identity, $step, $context, $generation, $argshash, $condition): void {
+            if (self::assert_current($id, $identity, $step, "set_activity_completion", $context) !== $generation) {
+                throw new api_exception("workflow_step_mismatch", 409);
+            }
+            $courseid = (int)$context->get_course_context(false)->instanceid;
+            $data = self::load($id, $identity, $courseid);
+            if (($data["reconciliation_version"] ?? 0) !== 1) {
+                return;
+            }
+            $index = $data["index"];
+            $existing = $data["items"][$index]["postcondition"] ?? null;
+            if ($existing !== null) {
+                if (!hash_equals($existing["argshash"], $argshash) ||
+                        (int)$existing["contextid"] !== (int)$context->id ||
+                        ($condition !== null && $existing !== $condition)) {
+                    throw new api_exception("workflow_postcondition_mismatch", 409);
+                }
+                return;
+            }
+            if ($condition !== null) {
+                if (!hash_equals($condition["argshash"], $argshash) ||
+                        (int)$condition["contextid"] !== (int)$context->id) {
+                    throw new api_exception("workflow_postcondition_mismatch", 409);
+                }
+                $data["items"][$index]["postcondition"] = $condition;
+                self::save($id, $data);
+            }
+        });
+    }
+
+    /**
+     * Retrieve the immutable condition of the current eligible stage.
+     *
+     * @param string $id Workflow ID.
+     * @param authenticated_identity $identity Connection.
+     * @param int $courseid Course ID.
+     * @param int $step Expected stage.
+     * @param int $generation Expected generation.
+     * @return array
+     */
+    public static function reconciliation_candidate(string $id, authenticated_identity $identity, int $courseid,
+            int $step, int $generation): array {
+        $data = self::load($id, $identity, $courseid);
+        if ($step !== (int)$data["index"] + 1 || $generation !== (int)($data["generation"] ?? 0)) {
+            throw new api_exception("workflow_step_mismatch", 409);
+        }
+        if (!in_array($data["state"], ["ready", "failed"], true)) {
+            throw new api_exception("workflow_reconciliation_required", 409);
+        }
+        $item = $data["items"][$data["index"]];
+        if (($data["reconciliation_version"] ?? 0) !== 1 || empty($item["postcondition"]) ||
+                $item["tool"] !== "set_activity_completion") {
+            throw new api_exception("workflow_postcondition_unavailable", 409);
+        }
+        return ["condition" => $item["postcondition"], "state" => $data["state"]];
+    }
+
+    /**
+     * Record a verified existing condition; never execute the original WRITE.
+     *
+     * @param string $id Workflow ID.
+     * @param authenticated_identity $identity Connection.
+     * @param int $courseid Course ID.
+     * @param int $step Expected step.
+     * @param int $generation Expected generation.
+     * @param string $expectedhash Hash bound to the fresh confirmation.
+     * @return array
+     */
+    public static function reconcile(string $id, authenticated_identity $identity, int $courseid,
+            int $step, int $generation, string $expectedhash): array {
+        return self::locked($id, function() use ($id, $identity, $courseid, $step, $generation, $expectedhash): array {
+            $preview = reconciliation_service::preview($id, $identity, $courseid, $step, $generation);
+            if (!hash_equals($preview["reconciliation_sha256"], $expectedhash)) {
+                throw new api_exception("workflow_postcondition_mismatch", 409);
+            }
+            $data = self::load($id, $identity, $courseid);
+            $data["state"] = "done";
+            $data["generation"] = $generation + 1;
+            unset($data["failure"]);
+            $data["completed"][] = [
+                "step" => $step,
+                "tool" => "set_activity_completion",
+                "result_id" => $preview["cmid"],
+                "completion_method" => "reconciled",
+                "verified" => true,
+                "reconciledby" => $identity->userid,
+                "reconciledat" => time(),
+                "generation" => $data["generation"],
+                "academic_records_changed" => false,
+            ];
+            self::save($id, $data);
+            return [
+                "cmid" => $preview["cmid"],
+                "workflow_step" => $step,
+                "workflow_generation" => $data["generation"],
+                "completion_method" => "reconciled",
+                "academic_records_changed" => false,
+                "workflow" => self::snapshot($id, $data),
+            ];
         });
     }
 

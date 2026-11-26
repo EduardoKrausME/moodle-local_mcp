@@ -29,6 +29,7 @@ use local_mcp\write\tool\replace_course_completion_activity;
 use local_mcp\extension\manager;
 use local_mcp\extension\tool_provider_loader;
 use local_mcp\write\tool\workflow_sequence;
+use local_mcp\write\tool\workflow_reconcile;
 use local_mcp\write\tool\set_grade_item_visibility;
 use local_mcp\write\tool\copy_activity_images;
 use local_mcp\write\tool\create_group;
@@ -79,6 +80,7 @@ final class registry {
     public static function get_tools(?array &$conflicts = null): array {
         $classes = [
             workflow_sequence::class,
+            workflow_reconcile::class,
             copy_activity_images::class,
             delete_course_module::class,
             move_activity::class,

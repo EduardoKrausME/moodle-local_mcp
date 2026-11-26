@@ -71,6 +71,11 @@ final class summary {
             }
         }
         if ($result !== null) {
+            if ($tool === "workflow_reconcile" && ($result["completion_method"] ?? "") === "reconciled") {
+                $metadata["completion_method"] = "reconciled";
+                $metadata["workflow_step"] = $result["workflow_step"];
+                $metadata["workflow_generation"] = $result["workflow_generation"];
+            }
             $resultids = [];
             self::collect_ids($result, $resultids);
             if ($resultids) {
@@ -97,6 +102,14 @@ final class summary {
      */
     public static function sanitise(array $metadata): array {
         $safe = [];
+        if (($metadata["completion_method"] ?? "") === "reconciled") {
+            $safe["completion_method"] = "reconciled";
+            foreach (["workflow_step", "workflow_generation"] as $key) {
+                if (isset($metadata[$key]) && is_int($metadata[$key]) && $metadata[$key] >= 0) {
+                    $safe[$key] = $metadata[$key];
+                }
+            }
+        }
         foreach (['request_id', 'error_code'] as $key) {
             if (isset($metadata[$key]) && is_string($metadata[$key]) &&
                     preg_match('/^[a-zA-Z0-9_:-]{1,64}$/', $metadata[$key])) {

@@ -504,7 +504,7 @@ final class mcp_server {
                     . 'Then repeat the same tool with identical original arguments plus this token.',
             ];
         }
-        if ($iswrite && $tool->get_name() !== "workflow_sequence") {
+        if ($iswrite && !in_array($tool->get_name(), ["workflow_sequence", "workflow_reconcile"], true)) {
             $schema["properties"]["workflow_id"] = [
                 "type" => "string", "pattern" => "^[a-f0-9]{24}$",
                 "description" => "Optional ID returned by workflow_sequence. "
@@ -631,7 +631,7 @@ final class mcp_server {
         $confirmationarguments = $arguments;
         $workflowid = "";
         $workflowstep = 0;
-        if ($iswrite && $name !== "workflow_sequence") {
+        if ($iswrite && !in_array($name, ["workflow_sequence", "workflow_reconcile"], true)) {
             $workflowid = (string)($arguments["workflow_id"] ?? "");
             $workflowstep = (int)($arguments["workflow_step"] ?? 0);
             unset($arguments["workflow_id"], $arguments["workflow_step"]);
@@ -694,7 +694,11 @@ final class mcp_server {
             // This protects old callers that do not send the optional position hash.
             $positionpreview = null;
             $replacementpreview = null;
-            if ($name === "move_activity") {
+            $reconciliationpreview = null;
+            if ($name === "workflow_reconcile") {
+                $reconciliationpreview = $tool->preview($arguments, $identity);
+                $confirmationarguments["_reconciliation_sha256"] = $reconciliationpreview["reconciliation_sha256"];
+            } else if ($name === "move_activity") {
                 $positionpreview = $tool->preview($arguments, $identity);
                 $confirmationarguments["_position_sha256"] = $positionpreview["position_sha256"];
             } else if ($name === "replace_course_completion_activity") {
@@ -702,7 +706,12 @@ final class mcp_server {
                 $confirmationarguments["_replacement_sha256"] = $replacementpreview["replacement_sha256"];
             }
             if ($confirmation === '') {
-                $preview = $positionpreview ?? $replacementpreview ?? $tool->preview($arguments, $identity);
+                $preview = $reconciliationpreview ?? $positionpreview ?? $replacementpreview ?? $tool->preview($arguments, $identity);
+                if ($workflowid !== "" && $name === "set_activity_completion") {
+                    $condition = \local_mcp\workflow\reconciliation_service::capture($arguments, $preview, $identity, $context);
+                    sequence::bind_postcondition($workflowid, $identity, $workflowstep, $context, $generation,
+                        confirmation_service::args_hash($arguments), $condition);
+                }
                 $token = confirmation_service::issue(
                     $identity, $rawtoken, $name, $confirmationarguments, $context);
                 logger::record('tool_called', $identity, $name, 'write', $context,
@@ -730,6 +739,9 @@ final class mcp_server {
             }
             confirmation_service::consume(
                 $confirmation, $identity, $rawtoken, $name, $confirmationarguments, $context);
+            if ($reconciliationpreview !== null) {
+                $arguments["_expected_reconciliation_sha256"] = $reconciliationpreview["reconciliation_sha256"];
+            }
             if ($positionpreview !== null) {
                 $arguments["expected_position_sha256"] = $positionpreview["position_sha256"];
             }
@@ -745,7 +757,8 @@ final class mcp_server {
         // Only one approved call can claim a workflow step, even if several
         // preview tokens were issued before either was confirmed.
         if ($workflowid !== "") {
-            sequence::claim($workflowid, $identity, $workflowstep, $name, $context, $generation);
+            sequence::claim($workflowid, $identity, $workflowstep, $name, $context, $generation,
+                confirmation_service::args_hash($arguments));
         }
         $started = microtime(true);
         try {
