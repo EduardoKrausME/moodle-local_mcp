@@ -30,12 +30,14 @@ use core\lock\lock_config;
 use core_text;
 use local_mcp\exception\api_exception;
 use local_mcp\security\authenticated_identity;
+use local_mcp\security\confirmation_service;
 use local_mcp\write\registry;
 
 /**
  * Persist one independently confirmed operation per workflow step.
  *
- * Only labels and tool names are persisted, never tool arguments or tokens.
+ * Manual plans store labels and tool names. An explicitly approved plan also stores
+ * exact operation arguments and an expiring credential-bound authorization, never raw tokens.
  */
 final class sequence {
     /** Maximum number of planned operations. */
@@ -129,6 +131,10 @@ final class sequence {
         $next = $data["state"] === "done" && isset($items[$index + 1])
             ? ["step" => $index + 2, "title" => $items[$index + 1]["title"],
                "tool" => $items[$index + 1]["tool"]] : null;
+        $approval = $data["approved"] ?? null;
+        $approvalstate = $approval === null ? null : ($approval["blocked"] ? "blocked" :
+            ($approval["nextstep"] > count($items) ? "completed" :
+                ($approval["expires"] <= time() ? "expired" : "authorized")));
         return [
             "id" => $id,
             "courseid" => (int)$data["courseid"],
@@ -138,7 +144,7 @@ final class sequence {
             "tool" => $current["tool"],
             "state" => $data["state"],
             "next" => $next,
-            "next_action" => $next !== null
+            "next_action" => $next !== null && $approval === null
                 ? ["label" => get_string("next"), "requires_explicit_user_action" => true,
                    "action" => "workflow_sequence", "courseid" => (int)$data["courseid"],
                    "workflow_id" => $id] : null,
@@ -146,7 +152,10 @@ final class sequence {
             "failure" => $data["failure"] ?? null,
             "generation" => (int)($data["generation"] ?? 0),
             "expires" => (int)$data["expires"],
-        ];
+        ] + ($approval === null ? [] : ["approval" => [
+            "state" => $approvalstate, "plan_sha256" => $approval["plan_sha256"],
+            "expires" => $approval["expires"], "nextstep" => $approval["nextstep"],
+        ]]);
     }
 
     /**
@@ -215,7 +224,8 @@ final class sequence {
      * @return int Current generation of the stage.
      */
     public static function assert_current(string $id, authenticated_identity $identity, int $step,
-                                           string $tool, context $context): int {
+                                           string $tool, context $context, ?array $approvedarguments = null,
+                                           ?string $accesshash = null): int {
         $coursecontext = $context->get_course_context(false);
         if (!$coursecontext) {
             throw new api_exception("workflow_context_mismatch", 409);
@@ -223,6 +233,19 @@ final class sequence {
         $data = self::load($id, $identity, (int)$coursecontext->instanceid);
         if ($data["state"] !== "ready" || $step !== (int)$data["index"] + 1 ||
                 $tool !== $data["items"][$data["index"]]["tool"]) {
+            throw new api_exception("workflow_step_mismatch", 409);
+        }
+        if (isset($data["approved"])) {
+            $approval = $data["approved"];
+            $entry = $approval["steps"][$step - $approval["firststep"]] ?? null;
+            if ($approvedarguments === null || $accesshash === null || $approval["blocked"] ||
+                    $approval["expires"] <= time() || $approval["nextstep"] !== $step || !$entry ||
+                    !hash_equals($approval["accesshash"], $accesshash) ||
+                    !hash_equals(confirmation_service::args_hash($entry["arguments"]),
+                        confirmation_service::args_hash($approvedarguments))) {
+                throw new api_exception("workflow_step_mismatch", 409);
+            }
+        } else if ($approvedarguments !== null || $accesshash !== null) {
             throw new api_exception("workflow_step_mismatch", 409);
         }
         return (int)($data["generation"] ?? 0);
@@ -240,9 +263,12 @@ final class sequence {
      * @return void
      */
     public static function claim(string $id, authenticated_identity $identity, int $step,
-                                  string $tool, context $context, ?int $generation = null): void {
-        self::locked($id, function() use ($id, $identity, $step, $tool, $context, $generation): void {
-            $currentgeneration = self::assert_current($id, $identity, $step, $tool, $context);
+                                  string $tool, context $context, ?int $generation = null,
+                                  ?array $approvedarguments = null, ?string $accesshash = null): void {
+        self::locked($id, function() use ($id, $identity, $step, $tool, $context, $generation,
+                $approvedarguments, $accesshash): void {
+            $currentgeneration = self::assert_current($id, $identity, $step, $tool, $context,
+                $approvedarguments, $accesshash);
             if ($generation !== null && $generation !== $currentgeneration) {
                 throw new api_exception("workflow_step_mismatch", 409);
             }
@@ -286,6 +312,7 @@ final class sequence {
                     get_string("workflowreconciliationrequired", "local_mcp"));
             }
             $data["generation"] = (int)($data["generation"] ?? 0) + 1;
+            unset($data["approved"]);
             $data["state"] = "ready";
             self::save($id, $data);
             return self::snapshot($id, $data);
@@ -336,12 +363,101 @@ final class sequence {
                     ($expectedgeneration !== null && $expectedgeneration !== (int)($data["generation"] ?? 0))) {
                 throw new api_exception("workflow_step_mismatch", 409);
             }
+            if (isset($data["approved"])) {
+                throw new api_exception("workflow_reconciliation_required", 409, "", [],
+                    "An approved sequence advances only after a verified run_next operation.");
+            }
             if ($data["state"] === "done" && isset($data["items"][$data["index"] + 1])) {
                 $data["index"]++;
                 $data["state"] = "ready";
                 self::save($id, $data);
             }
             return self::snapshot($id, $data);
+        });
+    }
+
+    /** Internal state access for the immutable plan service; never expose through status. */
+    public static function plan_state(string $id, authenticated_identity $identity, int $courseid): array {
+        return self::load($id, $identity, $courseid);
+    }
+
+    /** Bind an already-confirmed complete plan to the current step and credential. */
+    public static function authorize_plan(array $plan, authenticated_identity $identity, string $accesshash): array {
+        $id = $plan["workflow_id"];
+        $courseid = $plan["courseid"];
+        return self::locked($id, function() use ($id, $courseid, $plan, $identity, $accesshash): array {
+            $data = self::load($id, $identity, $courseid);
+            $step = (int)$data["index"] + 1;
+            $generation = (int)($data["generation"] ?? 0);
+            if ($data["state"] !== "ready" || $plan["firststep"] !== $step ||
+                    $plan["generation"] !== $generation ||
+                    count($plan["steps"]) !== count($data["items"]) - $data["index"]) {
+                throw new api_exception("workflow_step_mismatch", 409);
+            }
+            $data["generation"] = $generation + 1;
+            $ttl = (int)get_config("local_mcp", "confirmationttl") ?: 1800;
+            $data["approved"] = [
+                "firststep" => $step,
+                "nextstep" => $step,
+                "steps" => array_map(static fn(array $item): array =>
+                    ["tool" => $item["tool"], "arguments" => $item["arguments"]], $plan["steps"]),
+                "baseline" => $plan["initial_sha256"],
+                "plan_sha256" => $plan["plan_sha256"],
+                "accesshash" => $accesshash,
+                "blocked" => false,
+                "expires" => min((int)$data["expires"], time() + $ttl),
+            ];
+            self::save($id, $data);
+            return self::snapshot($id, $data);
+        });
+    }
+
+    /** Return only the exact current approved call, to the server-side runner. */
+    public static function approved_current(string $id, authenticated_identity $identity, int $courseid,
+            int $step, int $generation, string $accesshash): array {
+        $data = self::load($id, $identity, $courseid);
+        $approval = $data["approved"] ?? null;
+        if (!$approval || $approval["blocked"] || $approval["expires"] <= time() ||
+                $approval["nextstep"] !== $step || $step !== (int)$data["index"] + 1 ||
+                $generation !== (int)($data["generation"] ?? 0) || $data["state"] !== "ready" ||
+                !hash_equals($approval["accesshash"], $accesshash)) {
+            throw new api_exception("workflow_step_mismatch", 409, "", [],
+                "No current valid approval for this step. Read the status and obtain a fresh approval if required.");
+        }
+        return ["entry" => $approval["steps"][$step - $approval["firststep"]], "baseline" => $approval["baseline"]];
+    }
+
+    /** Advance only after the ordinary WRITE has succeeded and its result has been independently verified. */
+    public static function advance_approved(string $id, authenticated_identity $identity, int $courseid,
+            int $step, int $generation, string $afterhash): array {
+        return self::locked($id, function() use ($id, $identity, $courseid, $step, $generation, $afterhash): array {
+            $data = self::load($id, $identity, $courseid);
+            if (!isset($data["approved"]) || $data["approved"]["blocked"] ||
+                    $data["approved"]["nextstep"] !== $step || $step !== (int)$data["index"] + 1 ||
+                    $generation !== (int)($data["generation"] ?? 0) || $data["state"] !== "done") {
+                throw new api_exception("workflow_step_mismatch", 409);
+            }
+            $data["approved"]["baseline"] = $afterhash;
+            $data["approved"]["nextstep"] = $step + 1;
+            if (isset($data["items"][$data["index"] + 1])) {
+                $data["index"]++;
+                $data["state"] = "ready";
+            }
+            self::save($id, $data);
+            return self::snapshot($id, $data);
+        });
+    }
+
+    /** Stop an uncertain or failed plan; do not claim that already committed writes were rolled back. */
+    public static function block_approved(string $id, authenticated_identity $identity, int $courseid,
+            int $step, int $generation): void {
+        self::locked($id, function() use ($id, $identity, $courseid, $step, $generation): void {
+            $data = self::load($id, $identity, $courseid);
+            if (isset($data["approved"]) && $data["approved"]["nextstep"] === $step &&
+                    $generation === (int)($data["generation"] ?? 0)) {
+                $data["approved"]["blocked"] = true;
+                self::save($id, $data);
+            }
         });
     }
 
