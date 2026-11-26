@@ -41,12 +41,14 @@ use local_mcp\extension\tool_provider_loader;
 use local_mcp\security\confirmation_service;
 use local_mcp\security\rate_limiter;
 use local_mcp\security\scope;
+use local_mcp\security\secret;
 use local_mcp\security\token_resolver;
 use local_mcp\security\untrusted_content;
 use local_mcp\security\user_access;
 use local_mcp\write\registry;
 use local_mcp\write\tool_interface;
 use local_mcp\workflow\sequence;
+use local_mcp\workflow\approved_plan;
 use stdClass;
 use Throwable;
 
@@ -497,7 +499,8 @@ final class mcp_server {
      */
     private function normalized_tool_schema(object $tool, bool $iswrite, bool &$invalid): array {
         $schema = $tool->get_input_schema();
-        if ($iswrite && ($tool->requires_confirmation() || $tool->is_destructive())) {
+        if ($iswrite && ($tool->requires_confirmation() || $tool->is_destructive() ||
+                $tool->get_name() === "workflow_sequence")) {
             $schema['properties']['confirmation_token'] = [
                 'type' => 'string',
                 'description' => 'One-time token returned when confirmation_required is true. '
@@ -570,11 +573,12 @@ final class mcp_server {
      * @param authenticated_identity $identity Parameter identity.
      * @param string $rawtoken Parameter rawtoken.
      * @param mixed $originalarguments Original JSON arguments preserving objects and arrays.
+     * @param bool $planexecution Internal dispatcher call from a verified, explicitly approved sequence.
      * @return array Return value.
      */
     private function call_tool($name, $arguments, $params,
                                $identity, $rawtoken,
-                               $originalarguments = null) {
+                               $originalarguments = null, bool $planexecution = false) {
         $tools = $this->get_tools();
         if (!isset($tools[$name])) {
             throw new api_exception('tool_not_found', 404);
@@ -640,6 +644,24 @@ final class mcp_server {
                 throw new api_exception("invalid_workflow", 400);
             }
         }
+        $workflowaction = $name === "workflow_sequence" ? ($arguments["action"] ?? "") : "";
+        if ($workflowaction === "authorize" || $workflowaction === "run_next") {
+            if (!isset($arguments["workflow_id"], $arguments["expectedstep"], $arguments["expectedgeneration"]) ||
+                    isset($arguments["items"]) || $dryrun ||
+                    ($workflowaction === "authorize" && !isset($arguments["steps"])) ||
+                    ($workflowaction === "run_next" && (isset($arguments["steps"]) || $confirmation !== ""))) {
+                throw new api_exception("invalid_workflow", 400);
+            }
+        } else if ($name === "workflow_sequence" && ($confirmation !== "" || isset($arguments["steps"]))) {
+            throw new api_exception("invalid_workflow", 400);
+        }
+        if ($planexecution && ($workflowid === "" || $confirmation !== "" || $dryrun ||
+                !$tool->requires_confirmation() || $tool->is_destructive())) {
+            throw new api_exception("workflow_step_mismatch", 409);
+        }
+        // Only the private server-side dispatcher can pass this authorization; it is not an input parameter.
+        $planarguments = $planexecution ? $arguments : null;
+        $planaccesshash = $planexecution ? secret::hash($rawtoken) : null;
         $context = $tool->resolve_context($arguments);
         capability_guard::check($tool->get_required_capability(), $context, $identity->userid);
         // Recheck at execution, including previews and confirmation retries.
@@ -647,7 +669,8 @@ final class mcp_server {
             $policy->authorize_tool($identity->userid, $name, $iswrite, $context, $arguments);
         }
         if ($workflowid !== "") {
-            $generation = sequence::assert_current($workflowid, $identity, $workflowstep, $name, $context);
+            $generation = sequence::assert_current($workflowid, $identity, $workflowstep, $name, $context,
+                $planarguments, $planaccesshash);
             if ($generation > 0) {
                 $confirmationarguments["_workflow_generation"] = $generation;
             }
@@ -690,13 +713,23 @@ final class mcp_server {
             return ['dry_run' => true, 'preview' => $preview];
         }
 
-        if ($tool->requires_confirmation() || $tool->is_destructive()) {
+        $requiresconfirmation = $tool->requires_confirmation() || $tool->is_destructive() ||
+            $workflowaction === "authorize";
+        $planpreview = null;
+        if ($requiresconfirmation) {
             // Bind the actual ordering shown to the teacher to the one-time token.
             // This protects old callers that do not send the optional position hash.
             $positionpreview = null;
             $replacementpreview = null;
             $metadatapreview = null;
-            if ($name === "move_activity") {
+            $sectionpreview = null;
+            if ($workflowaction === "authorize") {
+                $planpreview = approved_plan::preview($arguments, $identity);
+                $confirmationarguments["_plan_sha256"] = $planpreview["plan_sha256"];
+            } else if ($name === "update_section") {
+                $sectionpreview = $tool->preview($arguments, $identity);
+                $confirmationarguments["_section_sha256"] = $sectionpreview["section_sha256"];
+            } else if ($name === "move_activity") {
                 $positionpreview = $tool->preview($arguments, $identity);
                 $confirmationarguments["_position_sha256"] = $positionpreview["position_sha256"];
             } else if ($name === "rename_course_module") {
@@ -706,8 +739,13 @@ final class mcp_server {
                 $replacementpreview = $tool->preview($arguments, $identity);
                 $confirmationarguments["_replacement_sha256"] = $replacementpreview["replacement_sha256"];
             }
-            if ($confirmation === '') {
-                $preview = $positionpreview ?? $replacementpreview ?? $metadatapreview ?? $tool->preview($arguments, $identity);
+            if ($planexecution) {
+                // The exact arguments are already bound to the approved plan and checked again on claim.
+                // Run the same native preview; never issue or fabricate an individual approval token.
+                $preview = $positionpreview ?? $sectionpreview ?? $tool->preview($arguments, $identity);
+            } else if ($confirmation === '') {
+                $preview = $planpreview ?? $positionpreview ?? $replacementpreview ?? $metadatapreview ??
+                    $sectionpreview ?? $tool->preview($arguments, $identity);
                 $confirmationmetadata = null;
                 $token = confirmation_service::issue(
                     $identity, $rawtoken, $name, $confirmationarguments, $context, $confirmationmetadata);
@@ -733,8 +771,13 @@ final class mcp_server {
                     sequence::status($workflowid, $identity,
                         (int)$context->get_course_context(false)->instanceid)] : []);
             }
-            confirmation_service::consume(
-                $confirmation, $identity, $rawtoken, $name, $confirmationarguments, $context);
+            if (!$planexecution) {
+                confirmation_service::consume(
+                    $confirmation, $identity, $rawtoken, $name, $confirmationarguments, $context);
+            }
+            if ($sectionpreview !== null) {
+                $arguments["expected_section_sha256"] = $sectionpreview["section_sha256"];
+            }
             if ($positionpreview !== null) {
                 $arguments["expected_position_sha256"] = $positionpreview["position_sha256"];
             }
@@ -747,17 +790,28 @@ final class mcp_server {
             diagnostics::event('confirmation_accepted', [
                 'tool' => $name, 'userid' => $identity->userid,
                 'contextid' => (int)$context->id,
-                'status' => 'approved',
+                'status' => $planexecution ? 'approved_workflow' : 'approved',
             ]);
         }
         // Only one approved call can claim a workflow step, even if several
         // preview tokens were issued before either was confirmed.
         if ($workflowid !== "") {
-            sequence::claim($workflowid, $identity, $workflowstep, $name, $context, $generation);
+            sequence::claim($workflowid, $identity, $workflowstep, $name, $context, $generation,
+                $planarguments, $planaccesshash);
         }
         $started = microtime(true);
         try {
-            $result = $tool->execute($arguments, $identity);
+            if ($workflowaction === "authorize") {
+                $result = ["workflow" => approved_plan::authorize($arguments, $identity, $rawtoken,
+                    $planpreview["plan_sha256"]), "message" =>
+                    "The exact plan is approved. Use run_next with the returned step and generation, one call at a time."];
+            } else if ($workflowaction === "run_next") {
+                $result = approved_plan::run_next($arguments, $identity, $rawtoken,
+                    fn(string $child, array $args): array =>
+                        $this->call_tool($child, $args, [], $identity, $rawtoken, null, true));
+            } else {
+                $result = $tool->execute($arguments, $identity);
+            }
         } catch (\Throwable $failure) {
             if ($workflowid !== "") {
                 try {
@@ -779,7 +833,7 @@ final class mcp_server {
         }
         logger::record('tool_called', $identity, $name, 'write', $context,
             summary::from_call($name, $arguments, $result),
-            $tool->is_destructive(), false, ($tool->requires_confirmation() || $tool->is_destructive()),
+            $tool->is_destructive(), false, $requiresconfirmation,
             'ok', (int)round((microtime(true) - $started) * 1000));
         $eventclass = $tool->is_destructive()
             ? destructive_operation_executed::class
