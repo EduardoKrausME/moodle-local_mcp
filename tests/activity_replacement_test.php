@@ -93,4 +93,77 @@ final class activity_replacement_test extends advanced_testcase {
         $this->assertEquals($beforeactivity, $DB->get_record("course_modules_completion", ["id" => $activityhistoryid]));
         $this->assertFalse($DB->record_exists("course_modules_completion", ["coursemoduleid" => $target->cmid]));
     }
+
+    /** Reviewable organisation and access differences must not block replacement. */
+    public function test_access_differences_are_warnings(): void {
+        global $CFG, $DB, $USER;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        require_once($CFG->libdir . "/completionlib.php");
+        $CFG->enablecompletion = 1;
+        $course = $this->getDataGenerator()->create_course(["enablecompletion" => 1, "numsections" => 2]);
+        $source = $this->getDataGenerator()->create_module("page", ["course" => $course->id],
+            ["completion" => 2, "completionview" => 1, "section" => 1]);
+        $target = $this->getDataGenerator()->create_module("page", ["course" => $course->id],
+            ["completion" => 2, "completionview" => 1, "section" => 2]);
+        $sourcecm = $DB->get_record("course_modules", ["id" => $source->cmid], "*", MUST_EXIST);
+        $targetcm = $DB->get_record("course_modules", ["id" => $target->cmid], "*", MUST_EXIST);
+        $this->assertNotEquals($sourcecm->section, $targetcm->section);
+        $DB->set_field("course_modules", "visible", 0, ["id" => $source->cmid]);
+        $DB->set_field("course_modules", "visibleoncoursepage", 0, ["id" => $target->cmid]);
+        $availability = json_encode(["op" => "&", "showc" => [true], "c" => [
+            ["type" => "date", "d" => ">=", "t" => time() - 3600],
+        ]]);
+        $DB->set_field("course_modules", "availability", $availability, ["id" => $source->cmid]);
+        $DB->set_field("course_sections", "availability", $availability, ["id" => $targetcm->section]);
+        $criterionid = $DB->insert_record("course_completion_criteria", (object)["course" => $course->id,
+            "criteriatype" => COMPLETION_CRITERIA_TYPE_ACTIVITY, "module" => "page", "moduleinstance" => $source->cmid]);
+        $identity = new authenticated_identity($USER->id, "test", ["mcp:write"]);
+        $args = ["courseid" => (int)$course->id, "sourcecmid" => (int)$source->cmid,
+            "targetcmid" => (int)$target->cmid, "preservehistory" => true, "dependencies_reviewed" => true,
+            "expected_criteria_sha256" => activity_replacement::fingerprint($course->id)];
+        $plan = activity_replacement::preview($args, $identity);
+        $this->assertSame((int)$criterionid, $plan["criteriaid"]);
+        $this->assertSame([], $plan["dependencies"]);
+        $this->assertEqualsCanonicalizing([
+            "completion_source_hidden", "completion_target_stealth", "completion_sections_differ",
+            "completion_source_restricted", "completion_target_restricted", "completion_availability_differs",
+        ], array_column($plan["warnings"], "code"));
+        $DB->set_field("course_sections", "availability", null, ["id" => $targetcm->section]);
+        try {
+            activity_replacement::preview($args + ["expected_replacement_sha256" => $plan["replacement_sha256"]], $identity);
+            $this->fail("Stale section access approval was accepted.");
+        } catch (\local_mcp\exception\api_exception $e) {
+            $this->assertSame("completion_criteria_changed", $e->machinecode);
+        }
+        $DB->set_field("course_modules", "visible", 0, ["id" => $target->cmid]);
+        try {
+            activity_replacement::preview($args, $identity);
+            $this->fail("A hidden destination was accepted.");
+        } catch (\local_mcp\exception\api_exception $e) {
+            $this->assertSame("completion_target_hidden", $e->machinecode);
+        }
+        $DB->set_field("course_modules", "visible", 1, ["id" => $target->cmid]);
+        $DB->set_field("course_sections", "visible", 0, ["id" => $targetcm->section]);
+        try {
+            activity_replacement::preview($args, $identity);
+            $this->fail("A hidden destination section was accepted.");
+        } catch (\local_mcp\exception\api_exception $e) {
+            $this->assertSame("completion_target_section_hidden", $e->machinecode);
+        }
+        $DB->set_field("course_sections", "visible", 1, ["id" => $targetcm->section]);
+        $DB->set_field("course_modules", "availability", json_encode(["op" => "&", "showc" => [true], "c" => [
+            ["type" => "completion", "cm" => (int)$target->cmid, "e" => 1],
+        ]]), ["id" => $target->cmid]);
+        try {
+            activity_replacement::preview($args, $identity);
+            $this->fail("A circular completion dependency was accepted.");
+        } catch (\local_mcp\exception\api_exception $e) {
+            $this->assertSame("completion_dependencies_present", $e->machinecode);
+        }
+        $DB->set_field("course_modules", "availability", null, ["id" => $target->cmid]);
+        $this->assertTrue(activity_replacement::execute($args, $identity)["updated"]);
+        $this->assertSame((int)$target->cmid, (int)$DB->get_field("course_completion_criteria", "moduleinstance",
+            ["id" => $criterionid]));
+    }
 }
