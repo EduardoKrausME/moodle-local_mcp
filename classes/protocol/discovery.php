@@ -90,12 +90,15 @@ final class discovery {
             . "checked for each operation. WRITE tools can require confirmation. "
             . "When the user requests multiple Moodle changes, create a workflow_sequence plan "
             . "with the ordered item titles and their WRITE tool names (maximum 30). "
-            . "Prepare, preview, approve, execute and check exactly one item at a time. "
+            . "In manual mode prepare, preview, approve, execute and check exactly one item at a time. "
             . "Pass workflow_id and workflow_step to each planned WRITE operation. "
-            . "Do not preview or perform later items before the user selects Next. "
-            . "After a successful confirmed WRITE, present the Next action supplied by the connector. "
-            . "Next advances the workflow plan only; it never approves or executes a Moodle WRITE. "
-            . "Do not silently advance, batch confirmations, or claim that a preview changed Moodle.";
+            . "After a confirmed manual WRITE, present Next; it advances only the plan. "
+            . "When the teacher requests a single approval for course organisation, use workflow_sequence "
+            . "action=authorize with exact arguments for every remaining supported step. Show the complete "
+            . "official preview and obtain explicit approval before sending its confirmation_token. "
+            . "Once authorized, call run_next one at a time using the returned step and generation, "
+            . "and stop immediately on a failure, expiry or unexpected state. Never invent or alter "
+            . "approved arguments, bypass restrictions, or claim that a preview changed Moodle.";
     }
 
     /**
