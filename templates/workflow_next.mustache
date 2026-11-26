@@ -61,6 +61,7 @@
   <span id="label-loading">{{loading}}</span>
   <span id="label-nodata">{{nodata}}</span>
   <span id="label-ready">{{ready}}</span>
+  <span id="label-authorized">{{authorized}}</span>
   <span id="label-executing">{{executing}}</span>
   <span id="label-done">{{done}}</span>
   <span id="label-finished">{{finished}}</span>
@@ -154,10 +155,13 @@
     el("reference").hidden = typeof reference !== "string" || !/^[a-zA-Z0-9_-]{1,64}$/.test(reference);
     el("reference").textContent = el("reference").hidden ? "" : reference;
     let key = w.state;
-    const canNext = w.state === "done" && w.next && w.next.step === w.step + 1 && w.step < w.total;
+    const approval = w.approval && w.approval.state;
+    const canNext = !approval && w.state === "done" && w.next && w.next.step === w.step + 1 && w.step < w.total;
     const canRetry = w.state === "failed" && w.tool === "move_activity";
     if (w.state === "done" && !canNext) key = "finished";
     if (w.state === "failed" && !canRetry) key = "reconcile";
+    if (approval === "blocked" || approval === "expired") key = "reconcile";
+    if (approval === "authorized" && w.state === "ready") key = "authorized";
     if (busy) key = "sending";
     else if (submitted) key = "sent";
     else if (!interactive() && (canNext || canRetry || ["ready", "executing", "failed"].includes(w.state))) key = "unsupported";
@@ -165,7 +169,7 @@
     if (!interactive()) return;
     el("next").hidden = !canNext;
     el("retry").hidden = !canRetry;
-    el("refresh").hidden = !["failed", "executing", "ready"].includes(w.state);
+    el("refresh").hidden = !["failed", "executing", "ready"].includes(w.state) && approval !== "blocked";
     buttons.forEach(button => { button.disabled = busy || submitted; });
   }
   function accept(result) {
