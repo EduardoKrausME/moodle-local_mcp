@@ -63,8 +63,8 @@ final class approved_plan {
                             'sectionnum' => ['type' => 'integer', 'minimum' => 0],
                             'expectedsectionnum' => ['type' => 'integer', 'minimum' => 0],
                             'cmid' => ['type' => 'integer', 'minimum' => 1],
-                            'name' => ['type' => 'string', 'minLength' => 1],
-                            'summary' => ['type' => 'string'],
+                            'name' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 255],
+                            'summary' => ['type' => 'string', 'maxLength' => 32768],
                             'summaryformat' => ['type' => 'integer', 'enum' => [1]],
                         ],
                     ],
@@ -92,7 +92,8 @@ final class approved_plan {
                 'summaryformat' => (int)$section->summaryformat,
                 'visible' => (bool)$section->visible,
                 'availability' => (string)($section->availability ?? ''),
-                'sequence' => array_map('intval', array_filter(explode(',', (string)$section->sequence), 'strlen')),
+                'sequence' => array_values(array_map('intval',
+                    array_filter(explode(',', (string)$section->sequence), 'strlen'))),
             ];
         }
         $modules = [];
@@ -282,7 +283,8 @@ final class approved_plan {
             throw new api_exception('workflow_step_mismatch', 409);
         }
         $entries = $arguments['steps'] ?? [];
-        if (count($entries) !== count($state['items']) - $state['index']) {
+        if (count($entries) !== count($state['items']) - $state['index'] ||
+                strlen(json_encode($entries, JSON_UNESCAPED_UNICODE)) > 262144) {
             self::invalid();
         }
         $initial = self::snapshot($courseid);
@@ -313,11 +315,29 @@ final class approved_plan {
     /** Persist approval only after the protocol has consumed its bound confirmation. */
     public static function authorize(array $arguments, authenticated_identity $identity, string $rawaccess,
             string $expectedhash): array {
-        $plan = self::preview($arguments, $identity);
-        if (!hash_equals($expectedhash, $plan['plan_sha256'])) {
+        $id = $arguments['workflow_id'];
+        $lock = lock_config::get_lock_factory('local_mcp')->get_lock('workflow_plan_run_' . $id, 5);
+        if (!$lock) {
+            throw new api_exception('workflow_busy', 409);
+        }
+        try {
+            $plan = self::preview($arguments, $identity);
+            if (!hash_equals($expectedhash, $plan['plan_sha256'])) {
+                self::changed();
+            }
+            return sequence::authorize_plan($plan, $identity, secret::hash($rawaccess));
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /** Recheck the structural baseline after the native preview and immediately before claiming a WRITE. */
+    public static function assert_baseline(string $id, int $courseid, int $step, int $generation,
+            authenticated_identity $identity, string $accesshash): void {
+        $approval = sequence::approved_current($id, $identity, $courseid, $step, $generation, $accesshash);
+        if (!hash_equals($approval['baseline'], confirmation_service::args_hash(self::snapshot($courseid)))) {
             self::changed();
         }
-        return sequence::authorize_plan($plan, $identity, secret::hash($rawaccess));
     }
 
     /**
